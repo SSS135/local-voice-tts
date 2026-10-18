@@ -1,0 +1,1 @@
+{"actions":[{"type":"close","bytes":800},{"type":"truncate","drop_bytes":1},{"type":"stall","seconds":6},{"type":"success","fragment_bytes":1031}],"repeat_last":true}

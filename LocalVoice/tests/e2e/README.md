@@ -1,0 +1,9 @@
+# Android public-client test drivers
+
+These Python stdlib drivers target only `LOCALVOICE_TEST_SERIAL` (default `emulator-5582`); set it explicitly to a disposable test clone before use. `ANDROID_HOME` or `ANDROID_SDK_ROOT` selects adb. They write captures to the extracted workspace sibling `evidence/` folder. The parent folder must contain `LocalVoice/` as in the source archive.
+
+Build/install the probe APK and the app, explicitly download/enable the catalog models, and preserve the test device default TTS engine/settings before running. The release suite toggles only that emulator's airplane/WiFi state and uses real Microsoft speech for canned public text; it requires your explicit online opt-in. Restore device settings afterward. It does not download model weights or modify VN Reader.
+
+`run_fault_suite.py` requires the debug APK plus androidTest instrumentation in `edge-fixture` mode, the loopback server described in `../edge-fault-fixture/README.md`, and adb reverse for this serial only. Remove the test APK, stop instrumentation/server, remove reverse and install the signed release after the controlled suite. Never run the fault suite against the default real Edge backend. The fixture returns a generated tone, not an actual voice, and PCM equality proves commit/order behavior rather than intelligibility.
+
+`run_edge_recovery.py` exercises real Microsoft pending QUEUE_ADD recovery. `run_release_suite.py` captures final local/online PCM, offline connectivity, rate, restart and playback Stop. The probe also supports `repeatText` to issue a second same-binding request from first onDone for true warm onset, and `checkData` for the system data-intent contract. Some negative tests intentionally create header-only/cancelled files; do not count them as completed audio. These drivers are a reproducibility aid; inspect terminal callbacks and assertion results, not launch success alone.

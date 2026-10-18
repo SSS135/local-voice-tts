@@ -1,0 +1,29 @@
+[
+  {
+    "component": "sherpa-onnx",
+    "license": "Apache-2.0",
+    "commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+    "file": "sherpa-onnx-11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf.zip",
+    "url": "https://codeload.github.com/k2-fsa/sherpa-onnx/zip/11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+    "size": 15973229,
+    "sha256": "1e546178d875fae6e74ffd9aa15a13546b9a4a13d0c90c60524ca5022a113edf"
+  },
+  {
+    "component": "piper-phonemize",
+    "license": "MIT",
+    "commit": "f3ff95afc03640bc1399e113e83361192a2fafb4",
+    "file": "piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip",
+    "url": "https://codeload.github.com/csukuangfj/piper-phonemize/zip/f3ff95afc03640bc1399e113e83361192a2fafb4",
+    "size": 9805962,
+    "sha256": "d9cca4e2bdc7d6dd8dffb96a4668283dbd3f77a9c194a3e530c1e8eba9406a5d"
+  },
+  {
+    "component": "espeak-ng",
+    "license": "GPL-3.0-or-later",
+    "commit": "7251208ee427ef87e94f39d0e99b15d287224ed6",
+    "file": "espeak-ng-7251208ee427ef87e94f39d0e99b15d287224ed6.zip",
+    "url": "https://codeload.github.com/csukuangfj/espeak-ng/zip/7251208ee427ef87e94f39d0e99b15d287224ed6",
+    "size": 18011656,
+    "sha256": "909375fe289133fea765ee2e2369834b78b6ebc49d3fbeb4eaf3aa9d7fd685d4"
+  }
+]

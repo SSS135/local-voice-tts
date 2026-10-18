@@ -1,0 +1,28 @@
+plugins { id 'com.android.application' }
+def localStorePath = System.getenv('LOCAL_VOICE_KEYSTORE')
+def localStore = localStorePath ? file(localStorePath) : rootProject.file('signing/local-voice.keystore')
+def localStorePassword = System.getenv('LOCAL_VOICE_STORE_PASSWORD')
+def useLocalSigning = localStore.isFile() && localStorePassword != null && !localStorePassword.isEmpty()
+if (localStorePath && !localStore.isFile()) throw new GradleException('LOCAL_VOICE_KEYSTORE does not name an existing file')
+android {
+    namespace 'org.localvoice.tts'
+    compileSdk 36
+    defaultConfig { applicationId 'org.localvoice.tts'; minSdk 26; targetSdk 36; versionCode 1; versionName '1.0.0'; testInstrumentationRunner 'org.localvoice.tts.NativeBenchInstrumentation'; ndk { abiFilters 'arm64-v8a','x86_64' } }
+    signingConfigs {
+        if (useLocalSigning) {
+            local {
+                storeFile localStore
+                storePassword localStorePassword
+                keyAlias System.getenv('LOCAL_VOICE_KEY_ALIAS') ?: 'localvoice'
+                keyPassword System.getenv('LOCAL_VOICE_KEY_PASSWORD') ?: localStorePassword
+            }
+        }
+    }
+    buildTypes {
+        release { if (useLocalSigning) signingConfig signingConfigs.local; minifyEnabled false }
+        debug { if (useLocalSigning) signingConfig signingConfigs.local }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    packaging { jniLibs { useLegacyPackaging false } }
+}
+dependencies { implementation files('libs/sherpa-onnx-1.13.8.aar'); implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.3.21'; implementation 'com.squareup.okhttp3:okhttp:5.4.0'; constraints { implementation('androidx.tracing:tracing:1.2.0') } }

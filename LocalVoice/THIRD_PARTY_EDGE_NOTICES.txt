@@ -1,0 +1,30 @@
+LocalVoice Edge online speech adapter
+
+Java protocol/authentication/transport adapted 2026-10-18 from the tested VN
+Reader Next 3.4.4 Kotlin Edge client (GPLv3 application) and edge-tts 7.3.1
+by rany and contributors, LGPLv3:
+https://github.com/rany2/edge-tts
+Pinned upstream commit: 360fa8e1de354e1dda74c09bd695887d6a44df74
+
+Adapted source files: EdgeGec.java, EdgeProtocol.java, EdgeBackend.java.
+Changes: Java synchronous SpeechBackend interface; direct cancellation hook;
+bounded in-memory MP3/MediaCodec mono PCM decoding; Unicode-safe text turns;
+no initialization/catalog request, retry after authentication denial, or fallback.
+Each online turn buffers its complete MP3 response in memory (maximum 2 MiB)
+then validates complete MP3 frames and stages all MediaCodec decoded PCM
+before the first client PCM write. Staged PCM is capped at 180 seconds mono
+24 kHz float audio (4,320,000 samples, about 17 MiB) per turn. This is not a
+live network-to-decoder stream; first PCM begins after full turn validation.
+There is a 45-second network attempt deadline and a 20-second codec attempt
+deadline. Recoverable failures retry the same uncommitted chunk indefinitely
+with cancellation-aware network waits and exponential jittered backoff capped
+at 15 seconds; supplied Retry-After delays are also honored. Authentication,
+invalid voice/configuration, and unsupported format errors fail immediately.
+No audio from a failed attempt reaches the client; previously committed chunks
+are not retried. User cancellation closes the socket and stops waiting/output.
+This is chunk-level recovery and does not claim exact-word playback resume.
+
+LocalVoice is licensed under GPLv3; its complete corresponding source and build
+instructions accompany the APK. See LICENSE and EDGE_TTS_LICENSE.txt.
+The Microsoft online service is independent of these software licenses.
+No affiliation with or endorsement by Microsoft is claimed.
