@@ -93,12 +93,17 @@ public final class ModelStore {
         Catalog.Model model = Catalog.findModel(id);
         if (model == null) return false;
         if (model.network) return prefs.onlineEnabled(id);
+        String path=directory(model,false).getAbsolutePath();
         if(Looper.myLooper()==Looper.getMainLooper()) {
             refreshInstalled();
-            return Boolean.TRUE.equals(INSTALLED.get(directory(model,false).getAbsolutePath()));
+            return Boolean.TRUE.equals(INSTALLED.get(path));
         }
+        // TTS metadata calls arrive in bursts (Chromium probes ~900 locales per engine bind); re-statting every
+        // model file per call took minutes. Serve the snapshot, refresh it in the background; synthesis still verifies.
+        Boolean cached=INSTALLED.get(path);
+        if(cached!=null){refreshInstalled();return cached;}
         boolean result=inspectInstalled(model);
-        INSTALLED.put(directory(model,false).getAbsolutePath(),result);
+        INSTALLED.put(path,result);
         return result;
         } finally {StorageMetrics.elapsed(StorageMetrics.INSTALLED_NANOS,before);}
     }

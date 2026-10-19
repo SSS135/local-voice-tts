@@ -18,7 +18,7 @@ No third-party skill scripts were installed or executed. Compose-specific framew
 - Shared light/dark color tokens, native type scaling, 4/8 dp spacing, rounded surfaces, ripple feedback, 24 dp vector selection marks, and at least 48 dp controls. Selection has both a check mark and accessible checked state.
 - One root handles system bars, cutouts, and IME insets. List headers scroll with rows so large fonts and short landscape windows keep controls reachable. Content width is bounded on wide windows.
 - Download cards retain progress, cancel, retry, and complete error detail. Model terms and full notices are accessible before confirmation. Online privacy disclosure appears at the explicit enable action. Unsupported models have no fake download button.
-- Shtorm's verified file pack uses **Install file** with Android's Storage Access Framework. The picker is offered only for a trusted catalog record marked `installMode=import`. The selected URI and pinned model ID go to ModelStore; archive configuration never becomes UI configuration. Store owns temporary/persistable read-grant cleanup. The pending model ID survives picker rotation; retries choose the file again. No hosted download is implied.
+- Shtorm uses the normal **Download** action (pinned GitHub release assets). A catalog record marked `installMode=import` (none currently) instead uses **Install file** with Android's Storage Access Framework. The picker is offered only for a trusted catalog record marked `installMode=import`. The selected URI and pinned model ID go to ModelStore; archive configuration never becomes UI configuration. Store owns temporary/persistable read-grant cleanup. The pending model ID survives picker rotation; retries choose the file again.
 
 ## Verification
 

@@ -23,7 +23,6 @@ public final class LocalVoiceService extends TextToSpeechService {
         else if(key!=null&&key.startsWith("online.")&&key.substring(7).equals(activeModel)&&!prefs.getBoolean(key,false))cancelFromUi();
     };
     private final ModelStore.Listener modelChanges=()->{String model=activeModel;if(model!=null&&store!=null&&!store.isInstalled(model))cancelFromUi();};
-    private volatile String loadedVoice;
     @Override public void onCreate() { store = new ModelStore(this);host=new AndroidBackendHost(this);preferences=getSharedPreferences("voices",MODE_PRIVATE);preferences.registerOnSharedPreferenceChangeListener(preferenceChanges);store.addListener(modelChanges);BackendStatus.controller(this,this::cancelFromUi);super.onCreate(); }
     private void cancelFromUi(){synchronized(requests){if(activeToken>=0){cancelledByUiToken=activeToken;backend.cancel();host.reportStatus("stopped",0);}}}
     @Override protected String[] onGetLanguage() {
@@ -39,7 +38,9 @@ public final class LocalVoiceService extends TextToSpeechService {
             return null;
         }
         String selected = store.selectedVoice();
-        for (Catalog.VoiceSpec voice : available) if (voice.id.equals(selected) && matches(voice,language,country)) return voice;
+        // The voice picked in Local Voice is the system voice for its whole language: clients such as browsers
+        // request the page/device region (en-US) and must still get a selected en-GB voice. Country ranks the rest.
+        for (Catalog.VoiceSpec voice : available) if (voice.id.equals(selected) && matches(voice,language,"")) return voice;
         for (Catalog.VoiceSpec voice : available) if (!Catalog.findModel(voice.modelId).network && matches(voice,language,country)) return voice;
         // Prefer a locally installed language even when only another country variant is present.
         if(country != null && !country.isEmpty())
@@ -50,24 +51,25 @@ public final class LocalVoiceService extends TextToSpeechService {
         if(country != null && !country.isEmpty()) return choose(null,language,"");
         return null;
     }
+    /** language tag -> {language, ISO3 language, country, ISO3 country}; parsed once, matched ~10^5 times per browser bind. */
+    private static final Map<String,String[]> TAGS = new java.util.concurrent.ConcurrentHashMap<>();
     private static boolean matches(Catalog.VoiceSpec voice,String language,String country) {
-        Locale locale = Locale.forLanguageTag(voice.languageTag);
-        return (language == null || language.isEmpty() || language.equals(locale.getLanguage()) || language.equals(LocaleTags.language(locale)))
-            && (country == null || country.isEmpty() || country.equals(locale.getCountry()) || country.equals(LocaleTags.country(locale)));
+        String[] tag = TAGS.computeIfAbsent(voice.languageTag,key->{Locale locale=Locale.forLanguageTag(key);return new String[]{locale.getLanguage(),LocaleTags.language(locale),locale.getCountry(),LocaleTags.country(locale)};});
+        return (language == null || language.isEmpty() || language.equals(tag[0]) || language.equals(tag[1]))
+            && (country == null || country.isEmpty() || country.equals(tag[2]) || country.equals(tag[3]));
     }
     @Override protected int onIsLanguageAvailable(String lang,String country,String variant) {
-        Catalog.VoiceSpec voice = choose(null,lang,country);
-        if (voice != null) return country != null && !country.isEmpty() && matches(voice,lang,country) ? TextToSpeech.LANG_COUNTRY_AVAILABLE : TextToSpeech.LANG_AVAILABLE;
+        // Availability reports what is installed, independent of which voice choose() prefers for the locale.
+        List<Catalog.VoiceSpec> installed = store.installedVoices();
+        boolean withCountry = country != null && !country.isEmpty();
+        for (Catalog.VoiceSpec voice : installed) if (matches(voice,lang,country)) return withCountry ? TextToSpeech.LANG_COUNTRY_AVAILABLE : TextToSpeech.LANG_AVAILABLE;
+        for (Catalog.VoiceSpec voice : installed) if (matches(voice,lang,"")) return TextToSpeech.LANG_AVAILABLE;
         // Catalog support is distinct from installed availability.
         for (Catalog.Model model : Catalog.MODELS) for (Catalog.VoiceSpec candidate : model.voices)
             if (matches(candidate,lang,"")) return TextToSpeech.LANG_MISSING_DATA;
         return TextToSpeech.LANG_NOT_SUPPORTED;
     }
-    @Override protected int onLoadLanguage(String lang,String country,String variant) {
-        int result = onIsLanguageAvailable(lang,country,variant);
-        if (result >= 0) { Catalog.VoiceSpec voice = choose(null,lang,country); loadedVoice = voice.id; }
-        return result;
-    }
+    @Override protected int onLoadLanguage(String lang,String country,String variant) { return onIsLanguageAvailable(lang,country,variant); }
     @Override public List<Voice> onGetVoices() {
         ArrayList<Voice> voices = new ArrayList<>();
         for (Catalog.VoiceSpec voice : store.installedVoices()) {
@@ -78,10 +80,7 @@ public final class LocalVoiceService extends TextToSpeechService {
         return voices;
     }
     @Override public int onIsValidVoiceName(String name) { return name != null && !name.isEmpty() && choose(name,"","") != null ? TextToSpeech.SUCCESS : TextToSpeech.ERROR; }
-    @Override public int onLoadVoice(String name) {
-        if (onIsValidVoiceName(name) != TextToSpeech.SUCCESS) return TextToSpeech.ERROR;
-        loadedVoice = name; return TextToSpeech.SUCCESS;
-    }
+    @Override public int onLoadVoice(String name) { return onIsValidVoiceName(name); }
     @Override public String onGetDefaultVoiceNameFor(String lang,String country,String variant) {
         Catalog.VoiceSpec voice = choose(null,lang,country); return voice == null ? null : voice.id;
     }

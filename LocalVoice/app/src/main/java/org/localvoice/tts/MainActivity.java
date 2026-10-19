@@ -44,7 +44,6 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private final Handler uiHandler=new Handler(Looper.getMainLooper());
     private Runnable pendingFilter;
     private int filterGeneration;
-    private final Runnable backendListener=()->{if(speechStatus!=null)setTextIfChanged(speechStatus,BackendStatus.text());};
     private final Runnable catalogListener=()->changed();
     private static final class DownloadCard { TextView metadata,status; ProgressBar progress; Button action,cancel; Catalog.Model boundModel; }
 
@@ -58,13 +57,13 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
         createNavigation();
         if(state!=null){destination=state.getInt("destination",0);languageTag=state.getString("language","");pendingImportModel=state.getString("pendingImportModel","");search.setText(state.getString("search",""));sample.setText(state.getString("sample",""));}
         showDestination(destination);changed();OnlineCatalogUi.initialize(this,catalogWorker);
-        tts=new TextToSpeech(this,status->runOnUiThread(()->{if(isDestroyed())return;ttsReady=status==TextToSpeech.SUCCESS;if(!ttsReady)speechStatus.setText("TTS unavailable. Reopen Local Voice.");}),getPackageName());
+        tts=new TextToSpeech(this,status->runOnUiThread(()->{if(isDestroyed())return;ttsReady=status==TextToSpeech.SUCCESS;if(!ttsReady)showStatus("TTS unavailable. Reopen Local Voice.");}),getPackageName());
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
             private void update(String id,Runnable action){runOnUiThread(()->{if(previews.accepts(id)&&!isDestroyed())action.run();});}
-            @Override public void onStart(String id){update(id,()->setTextIfChanged(speechStatus,"Speaking"));}
-            @Override public void onDone(String id){update(id,()->finishPreview("Preview complete"));}
+            @Override public void onStart(String id){}
+            @Override public void onDone(String id){update(id,()->finishPreview(""));}
             @Override public void onError(String id){update(id,()->finishPreview("Preview failed. Check model or connection."));}
-            @Override public void onStop(String id,boolean interrupted){update(id,()->finishPreview("Preview stopped"));}
+            @Override public void onStop(String id,boolean interrupted){update(id,()->finishPreview(""));}
         });
     }
 
@@ -92,8 +91,7 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
         list.addHeaderView(header,null,false);
         LinearLayout footer=ui.column();footer.setGravity(Gravity.CENTER);empty=ui.text(footer,"No voices installed",18,ui.ink,true);empty.setGravity(Gravity.CENTER);getVoices=ui.button(footer,"Get voices",true);getVoices.setOnClickListener(v->showDestination(1));list.addFooterView(footer,null,false);
         voiceAdapter=new VoiceAdapter();list.setAdapter(voiceAdapter);page.addView(list,new LinearLayout.LayoutParams(-1,0,1));
-        speechStatus=ui.text(page,BackendStatus.text(),14,ui.muted,false);speechStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
-        Button cancel=ui.quiet(page,"Cancel current request");cancel.setContentDescription("Cancel current speech request");cancel.setOnClickListener(v->{BackendStatus.cancel();stopPreview();speechStatus.setText("Request cancelled");});
+        speechStatus=ui.text(page,"",14,ui.muted,false);speechStatus.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);speechStatus.setVisibility(View.GONE);
         search.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){filterVoices();}public void afterTextChanged(Editable value){}});
         page.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->{int side=Math.max(ui.dp(20),((r-l)-ui.dp(640))/2);if(page.getPaddingLeft()!=side)page.setPadding(side,0,side,0);});
         return page;
@@ -168,17 +166,19 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
         });
         uiHandler.postDelayed(pendingFilter,100);
     }
-    private void chooseVoice(Catalog.VoiceSpec voice){stopPreview();try{store.selectVoice(voice.id);}catch(IllegalArgumentException unavailable){speechStatus.setText("Voice unavailable. Check Downloads.");voiceSignature="uninitialized";changed();return;}selectedVoice=voice.id;voiceAdapter.notifyDataSetChanged();if(ttsReady)applyAndroidVoice(voice.id);}
+    private void chooseVoice(Catalog.VoiceSpec voice){stopPreview();try{store.selectVoice(voice.id);}catch(IllegalArgumentException unavailable){showStatus("Voice unavailable. Check Downloads.");voiceSignature="uninitialized";changed();return;}selectedVoice=voice.id;voiceAdapter.notifyDataSetChanged();if(ttsReady)applyAndroidVoice(voice.id);}
     private boolean applyAndroidVoice(String id){Set<Voice> voices=tts.getVoices();if(voices!=null)for(Voice voice:voices)if(voice.getName().equals(id))return tts.setVoice(voice)==TextToSpeech.SUCCESS;return false;}
     private void listen(Catalog.VoiceSpec voice){
-        if(voice.id.equals(previews.voice())){stopPreview();return;}if(!ttsReady){speechStatus.setText("TTS is connecting. Try again.");return;}if(!store.isInstalled(voice.modelId)){speechStatus.setText("Voice unavailable. Check Downloads.");return;}
+        if(voice.id.equals(previews.voice())){stopPreview();return;}if(!ttsReady){showStatus("TTS is connecting. Try again.");return;}if(!store.isInstalled(voice.modelId)){showStatus("Voice unavailable. Check Downloads.");return;}
         String utterance=previews.begin(voice.id);tts.stop();
         if(!applyAndroidVoice(voice.id)){finishPreview("Voice unavailable. Reopen Local Voice.");return;}tts.setSpeechRate(1f);
         String text=sample.getText().toString().trim();if(text.isEmpty())text=voice.languageTag.startsWith("ru")?"Здравствуйте! Это пример звучания голоса.":"Hello! This is a voice preview.";
-        int result=tts.speak(text,TextToSpeech.QUEUE_FLUSH,new Bundle(),utterance);if(result==TextToSpeech.SUCCESS){speechStatus.setText("Preparing preview");voiceAdapter.notifyDataSetChanged();}else finishPreview("Could not start preview. Try again.");
+        int result=tts.speak(text,TextToSpeech.QUEUE_FLUSH,new Bundle(),utterance);if(result==TextToSpeech.SUCCESS){showStatus("");voiceAdapter.notifyDataSetChanged();}else finishPreview("Could not start preview. Try again.");
     }
-    private void stopPreview(){boolean wasPlaying=!previews.voice().isEmpty();previews.clear();if(tts!=null)tts.stop();if(wasPlaying){if(speechStatus!=null)setTextIfChanged(speechStatus,"Preview stopped");if(voiceAdapter!=null)voiceAdapter.notifyDataSetChanged();}}
-    private void finishPreview(String message){previews.clear();speechStatus.setText(message);voiceAdapter.notifyDataSetChanged();}
+    private void stopPreview(){boolean wasPlaying=!previews.voice().isEmpty();previews.clear();if(tts!=null)tts.stop();if(wasPlaying&&voiceAdapter!=null)voiceAdapter.notifyDataSetChanged();}
+    private void finishPreview(String message){previews.clear();showStatus(message);voiceAdapter.notifyDataSetChanged();}
+    /** Only actionable problems are shown; an empty message hides the line. */
+    private void showStatus(String message){setTextIfChanged(speechStatus,message);setVisibleIfChanged(speechStatus,message.isEmpty()?View.GONE:View.VISIBLE);}
 
     private final class VoiceAdapter extends BaseAdapter{
         public int getCount(){return filteredVoices.size();}public Object getItem(int position){return filteredVoices.get(position);}public long getItemId(int position){return position;}
@@ -197,7 +197,7 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private static final class VoiceRow{LinearLayout layout;ImageView check;TextView name,locale;Button listen;}
 
     private void confirmDownload(Catalog.Model model){
-        String message=model.network?"Text requested through Local Voice, including by other apps, is sent to Microsoft when an online voice is used. If no installed local voice matches a requested language, an enabled online voice may be chosen before speech starts. Internet required. No fallback after a speech error.":importsFile(model)?"Choose the Shtorm model ZIP. Installed size: "+formatBytes(model.bytes())+".":formatBytes(model.bytes())+" over your current connection.";
+        String message=model.network?"Text requested through Local Voice, including by other apps, is sent to Microsoft when an online voice is used. If no installed local voice matches a requested language, an enabled online voice may be chosen before speech starts. Internet required. No fallback after a speech error.":importsFile(model)?"Choose the model ZIP. Installed size: "+formatBytes(model.bytes())+".":formatBytes(model.bytes())+" over your current connection.";
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle(model.network?"Enable online voices?":importsFile(model)?"Install "+shortModel(model)+"?":"Download "+shortModel(model)+"?").setMessage(message+"\n\n"+model.license+"\n"+model.licenseText).setNegativeButton("Cancel",null).setNeutralButton("Full license",null).setPositiveButton(model.network?"Enable":importsFile(model)?"Choose file":"Download",(d,which)->{if(model.network)store.enableOnline(model.id);else if(importsFile(model))chooseModelPack(model);else store.download(model.id);changed();}).create();
         dialog.setOnShowListener(v->dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(button->AboutActivity.showLicense(this,model)));dialog.show();
     }
@@ -234,8 +234,8 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private static String languageLabel(String tag){return Locale.forLanguageTag(tag).getDisplayName(Locale.getDefault());}
     private static String speedText(float value){return String.format(Locale.ROOT,"%.1fx",value);}
     public static String formatBytes(long bytes){return String.format(Locale.ROOT,"%.1f MiB",bytes/1048576.0);}
-    @Override protected void onStart(){super.onStart();store.addListener(this);BackendStatus.addListener(backendListener);OnlineCatalogUi.addListener(catalogListener);backendListener.run();changed();}
-    @Override protected void onStop(){store.removeListener(this);BackendStatus.removeListener(backendListener);OnlineCatalogUi.removeListener(catalogListener);super.onStop();}
+    @Override protected void onStart(){super.onStart();store.addListener(this);OnlineCatalogUi.addListener(catalogListener);changed();}
+    @Override protected void onStop(){store.removeListener(this);OnlineCatalogUi.removeListener(catalogListener);super.onStop();}
     @Override protected void onDestroy(){previews.close();++filterGeneration;if(pendingFilter!=null)uiHandler.removeCallbacks(pendingFilter);if(tts!=null)tts.shutdown();catalogWorker.shutdown();voiceWorker.shutdownNow();super.onDestroy();}
     @Override protected void onSaveInstanceState(Bundle state){state.putInt("destination",destination);state.putString("language",languageTag);state.putString("pendingImportModel",pendingImportModel);state.putString("search",search.getText().toString());state.putString("sample",sample.getText().toString());super.onSaveInstanceState(state);}
 }

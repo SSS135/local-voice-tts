@@ -22,7 +22,7 @@ public final class AboutActivity extends Activity {
         LinearLayout technical=ui.card(page);ui.button(technical,"Technical details",false).setOnClickListener(v->{
             ModelStore store=new ModelStore(this);StringBuilder value=new StringBuilder("Android system TTS engine\n\n");
             for(Catalog.Model model:Catalog.MODELS)value.append(model.label).append("\nBackend: ").append(model.backend).append("\nRevision: ").append(model.revision).append("\n").append(model.description).append(model.network?"":"\nStorage: "+store.modelDirectory(model.id)).append("\n\n");
-            value.append("Cancel current request stops the active speech request. Other apps own their queued utterances; use their Stop control to clear their queue.");showText(this,"Technical details",value.toString());
+            showText(this,"Technical details",value.toString().trim());
         });
     }
     static void showLicense(Activity activity,Catalog.Model model){

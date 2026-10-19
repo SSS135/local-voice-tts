@@ -19,6 +19,6 @@ final class AndroidBackendHost implements SpeechBackend.Host,AutoCloseable {
             changed.wait(Math.min(50,remaining));
         }}
     }
-    @Override public synchronized void reportStatus(String phase,int attempts){if(!closed){BackendStatus.update(phase,attempts);Log.i("LocalVoiceStatus","phase="+phase+" attempts="+attempts);}}
+    @Override public synchronized void reportStatus(String phase,int attempts){if(!closed){Log.i("LocalVoiceStatus","phase="+phase+" attempts="+attempts);}}
     @Override public synchronized void close(){closed=true;connectivity.unregisterNetworkCallback(callback);wake();}
 }
