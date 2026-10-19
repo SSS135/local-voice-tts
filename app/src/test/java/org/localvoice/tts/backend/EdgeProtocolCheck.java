@@ -41,6 +41,15 @@ public final class EdgeProtocolCheck {
         assert EdgeProtocol.retryAfter("Sun, 31 Dec 2023 23:59:00 GMT",now)==0;
         assert EdgeProtocol.retryAfter("not a retry date",now)==0;
         assert EdgeProtocol.retryAfter("9223372036854775807",now)==0;
+        assert EdgeProtocol.config().contains("\"wordBoundaryEnabled\":\"true\"");
+        String metadata = "{\"Metadata\":[{\"Type\":\"WordBoundary\",\"Data\":{\"Offset\":1000000,\"Duration\":3000000,\"text\":{\"Text\":\"Tom's\",\"Length\":5,\"BoundaryType\":\"WordBoundary\"}}},"
+            + "{\"Type\":\"SessionEnd\",\"Data\":{\"Offset\":0}},{\"Type\":\"WordBoundary\",\"Data\":{\"Offset\":5000000,\"text\":{\"Text\":\"cat\"}}},"
+            + "{\"Type\":\"WordBoundary\",\"Data\":{\"Offset\":7000000,\"text\":{\"Text\":\"absent\"}}},{\"Type\":\"WordBoundary\",\"Data\":{\"Offset\":9000000,\"text\":{\"Text\":\"cat\"}}}]}";
+        java.util.List<long[]> words = EdgeProtocol.placeWords("Tom's cat & the cat.", EdgeProtocol.wordBoundaries(metadata), 24000);
+        assert words.size() == 3;
+        assert Arrays.equals(words.get(0), new long[]{2400, 0, 5}) && Arrays.equals(words.get(1), new long[]{12000, 6, 9});
+        assert Arrays.equals(words.get(2), new long[]{21600, 16, 19}) : "repeated words are placed in reading order";
+        assert EdgeProtocol.wordBoundaries("not json").isEmpty();
         System.out.println("Edge protocol/GEC/rate/XML/frame/catalog/Retry-After checks passed");
     }
 }

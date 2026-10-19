@@ -56,6 +56,8 @@ public class PocketBackend extends SherpaBackend {
         }
         return chunks;
     }
+    // Native Pocket decodes and emits its latent frames in 15-frame chunks after generation.
+    @Override public boolean streams(){return true;}
     @Override public void synthesize(String text,String languageTag,int speakerId,float speed,Cancellation cancellation,PcmSink sink) {
         if(cancellation.isCancelled())return;
         for(Prepared prepared:prepareChunks(text,cancellation)){

@@ -3,17 +3,18 @@ package org.localvoice.tts.backend;
 import java.nio.ShortBuffer;
 import java.util.Arrays;
 
-/** Bounded mono PCM speed adjustment, with unchanged sample rate and pitch. One instance per utterance. */
+/** Bounded mono PCM speed and pitch adjustment with unchanged sample rate; pitch keeps duration. One instance per stream. */
 public final class PcmTimeStretch {
     static final int CHUNK_SAMPLES=2048;
     private final Sonic sonic;
     private final short[] input=new short[CHUNK_SAMPLES],output=new short[CHUNK_SAMPLES];
     private boolean finished,stopped;
 
-    public PcmTimeStretch(int sampleRate,float speed) {
-        if(sampleRate<8000 || sampleRate>96000 || !Float.isFinite(speed) || speed<0.5f || speed>2f)
-            throw new IllegalArgumentException("Unsupported PCM sample rate or speed");
-        sonic=speed==1f?null:new Sonic(sampleRate,1,speed,1f,sampleRate);
+    public PcmTimeStretch(int sampleRate,float speed) { this(sampleRate,speed,1f); }
+    public PcmTimeStretch(int sampleRate,float speed,float pitch) {
+        if(sampleRate<8000 || sampleRate>96000 || !Float.isFinite(speed) || speed<0.5f || speed>2f || !Float.isFinite(pitch) || pitch<0.5f || pitch>2f)
+            throw new IllegalArgumentException("Unsupported PCM sample rate, speed or pitch");
+        sonic=speed==1f&&pitch==1f?null:new Sonic(sampleRate,1,speed,pitch,sampleRate);
     }
     public boolean write(float[] pcm,SpeechBackend.Cancellation cancellation,SpeechBackend.PcmSink sink) {
         if(stopped || cancellation.isCancelled()) return stop();

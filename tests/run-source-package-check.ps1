@@ -10,8 +10,8 @@ function Check([bool]$condition, [string]$message) {
 }
 Check ($ordered.Count -gt 150) 'Incomplete source inventory'
 Check (@($ordered.Name | Where-Object { $_.Contains([char]92) }).Count -eq 0) 'ZIP member has backslashes'
-Check (@($manifest.sourceArchives).Count -eq 6) 'Expected six pinned upstream source archives'
-Check (@($ordered.Name | Where-Object { $_ -match '^LocalVoice/third_party/native-source/.*\.zip$' }).Count -eq 3) 'Native GPL source snapshots missing'
+Check (@($manifest.sourceArchives).Count -eq 8) 'Expected eight pinned upstream source archives'
+Check (@($ordered.Name | Where-Object { $_ -match '^LocalVoice/third_party/native-source/.*\.zip$' }).Count -eq 5) 'Native GPL source snapshots missing'
 foreach ($required in @(
     'LocalVoice/docs/UI-DESIGN.md', 'LocalVoice/docs/EDGE-CATALOG.md', 'LocalVoice/docs/history/ENGLISH-POCKET-REVIEW.md',
     'LocalVoice/docs/history/VERIFICATION-PROFILE.md', 'LocalVoice/legal/THIRD_PARTY_SONIC_NOTICES.txt',
@@ -20,7 +20,9 @@ foreach ($required in @(
     'LocalVoice/app/src/main/assets/licenses/SENTENCEPIECE-LICENSE.txt',
     'LocalVoice/tools/models/shtorm/REPRODUCE.md', 'LocalVoice/tools/models/shtorm/prepare_config.py',
     'LocalVoice/tools/models/pocket-en/REPRODUCE.md', 'LocalVoice/tools/models/pocket-en/frontend-proof/result.json',
-    'LocalVoice/tools/models/silero-ru/REPRODUCE.md', 'LocalVoice/third_party/native-source/source-manifest.json')) {
+    'LocalVoice/tools/models/silero-ru/REPRODUCE.md', 'LocalVoice/third_party/native-source/source-manifest.json',
+    'LocalVoice/tools/models/neutts/REPRODUCE.md', 'LocalVoice/app/src/main/cpp/CMakeLists.txt',
+    'LocalVoice/third_party/onnxruntime-c-api-1.28.2/onnxruntime_c_api.h', 'LocalVoice/third_party/licenses/LLAMA-CPP-LICENSE')) {
     Check ($ordered.Name -contains $required) "Missing corresponding source: $required"
 }
 # Use an ordinary public README as the source for every rejection case. Only the

@@ -25,6 +25,7 @@ Repository root = Gradle root (modules `app`, `probe`, `hosttest`). Source ZIPs 
 
 - JDK 17+ (Android Studio JBR works), Android SDK Platform 36 (`ANDROID_HOME` or `local.properties`).
 - `.\fetch-runtime.ps1` once: fetches and verifies the sherpa-onnx 1.13.8 AAR into `app/libs/` (gitignored).
+- NDK 29.0.14206865 and CMake 3.22.1 (SDK packages; AGP installs them when licences are accepted): the app builds `libneutts_jni.so` from `app/src/main/cpp` and the llama.cpp/eSpeak NG zips in `third_party/native-source` (downloaded from their pinned URLs if absent).
 - Source-package check needs native source zips: `.\third_party\native-source\fetch-sources.ps1`.
 
 ## Commands (PowerShell, repo root)

@@ -39,17 +39,32 @@ public final class EdgeRetry {
         }
     };
     public static final Observer NO_OBSERVER = (waiting, attempts) -> {};
+    /** The caller's retry budget ran out: {@code timedOut} for the time budget, otherwise the retry count. */
+    public static final class ExhaustedException extends IOException {
+        public final boolean timedOut;
+        public ExhaustedException(boolean timedOut, Throwable cause) {
+            super(timedOut ? "Edge retry time budget exhausted" : "Edge retry count exhausted", cause); this.timedOut = timedOut;
+        }
+    }
 
     public static <T> T run(Attempt<T> attempt, SpeechBackend.Cancellation cancellation,
                             Network network, Observer observer) throws Exception {
+        return run(attempt, cancellation, network, observer, 0, -1);
+    }
+    /** {@code budgetMillis} 0 = no time budget; {@code retries} -1 = unlimited retries after the first attempt. */
+    public static <T> T run(Attempt<T> attempt, SpeechBackend.Cancellation cancellation,
+                            Network network, Observer observer, long budgetMillis, int retries) throws Exception {
         int attempts = 0;
         long delay = INITIAL_DELAY_MS;
+        long deadline = budgetMillis > 0 ? network.nowMillis() + budgetMillis : Long.MAX_VALUE;
         try {
             while (true) {
                 check(cancellation);
                 if (!network.isAvailable()) {
+                    long left = deadline - network.nowMillis();
+                    if (left <= 0) throw new ExhaustedException(true, null);
                     observer.waiting(true, attempts);
-                    network.await(MAX_DELAY_MS, cancellation);
+                    network.await(Math.min(MAX_DELAY_MS, left), cancellation);
                     continue;
                 }
                 try {
@@ -62,12 +77,16 @@ public final class EdgeRetry {
                     throw fatal;
                 } catch (IOException transientFailure) {
                     check(cancellation);
+                    if (retries >= 0 && attempts > retries) throw new ExhaustedException(false, transientFailure);
+                    long left = deadline - network.nowMillis();
+                    if (left <= 0) throw new ExhaustedException(true, transientFailure);
                     observer.waiting(true, attempts);
                     long floor = Math.max(INITIAL_DELAY_MS, delay * 3 / 4);
                     long jitter = ThreadLocalRandom.current().nextLong(delay - floor + 1);
-                    long wait = floor + jitter;
+                    long wait = Math.min(left, floor + jitter);
                     if (transientFailure instanceof TransientException && ((TransientException)transientFailure).retryAfterMillis > wait) {
                         long remaining = ((TransientException)transientFailure).retryAfterMillis;
+                        if (remaining > left) throw new ExhaustedException(true, transientFailure);
                         while (remaining > 0) {
                             check(cancellation);
                             long before = network.nowMillis();

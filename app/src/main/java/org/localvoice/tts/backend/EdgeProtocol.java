@@ -22,6 +22,14 @@ final class EdgeProtocol {
         int percent = Math.round((Math.max(0.5f, Math.min(2f, Float.isFinite(speed) ? speed : 1f)) - 1f) * 100);
         return (percent >= 0 ? "+" : "") + percent + "%";
     }
+    /**
+     * Pitch factor as relative SSML Hz, the prosody unit this endpoint is known to accept. 150 Hz approximates a
+     * mid speaking voice, so 2.0 lands near an octave up for lower voices and a fifth for higher ones.
+     */
+    static String pitch(float pitch) {
+        int hz = Math.round((Math.max(0.5f, Math.min(2f, Float.isFinite(pitch) ? pitch : 1f)) - 1f) * 150);
+        return (hz >= 0 ? "+" : "") + hz + "Hz";
+    }
     static long retryAfter(String value, long nowMillis) {
         if (value == null) return 0;
         try {
@@ -57,19 +65,21 @@ final class EdgeProtocol {
 
     static String config() {
         return "X-Timestamp:" + timestamp() + "\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n"
-                + "{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":\"true\",\"wordBoundaryEnabled\":\"false\"},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n";
+                + "{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{\"sentenceBoundaryEnabled\":\"false\",\"wordBoundaryEnabled\":\"true\"},\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}\r\n";
     }
 
-    static String ssml(String text, String voice, float speed, String id) throws IOException {
+    static String ssml(String text, String voice, float speed, String id) throws IOException { return ssml(text,voice,speed,1f,id); }
+    static String ssml(String text, String voice, float speed, float pitch, String id) throws IOException {
         if (!voice.matches("[a-z]{2,3}-[A-Z]{2}-[A-Za-z0-9-]+")) throw new IOException("Invalid Edge voice");
         String escaped = xml(text);
         if (escaped.getBytes(StandardCharsets.UTF_8).length > 4096) throw new IOException("Edge speech chunk too long");
         int dash = voice.indexOf('-', voice.indexOf('-') + 1);
         String locale = voice.substring(0, dash);
         String name = "Microsoft Server Speech Text to Speech Voice (" + locale + ", " + voice.substring(dash + 1) + ")";
-        return ssml(text,voice,name,locale,speed,id);
+        return ssml(text,voice,name,locale,speed,pitch,id);
     }
-    static String ssml(String text,String voice,String name,String locale,float speed,String id) throws IOException {
+    static String ssml(String text,String voice,String name,String locale,float speed,String id) throws IOException { return ssml(text,voice,name,locale,speed,1f,id); }
+    static String ssml(String text,String voice,String name,String locale,float speed,float pitch,String id) throws IOException {
         if(!locale.matches("[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){1,3}") || !voice.startsWith(locale+"-")
                 || !voice.substring(locale.length()+1).matches("[A-Za-z0-9-]+")
                 || !name.equals("Microsoft Server Speech Text to Speech Voice ("+locale+", "+voice.substring(locale.length()+1)+")"))
@@ -78,8 +88,46 @@ final class EdgeProtocol {
         if(escaped.getBytes(StandardCharsets.UTF_8).length>4096) throw new IOException("Edge speech chunk too long");
         return "X-RequestId:" + id + "\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:" + timestamp() + "Z\r\nPath:ssml\r\n\r\n"
                 + "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='" + locale + "'>"
-                + "<voice name='" + xml(name) + "'><prosody pitch='+0Hz' rate='" + rate(speed) + "' volume='+0%'>"
+                + "<voice name='" + xml(name) + "'><prosody pitch='" + pitch(pitch) + "' rate='" + rate(speed) + "' volume='+0%'>"
                 + escaped + "</prosody></voice></speak>";
+    }
+
+    /** Spoken word and its audio offset (100 ns ticks from the turn's audio start) from an audio.metadata body. */
+    static final class Boundary {
+        final long ticks; final String text;
+        Boundary(long ticks,String text){this.ticks=ticks;this.text=text;}
+    }
+    static java.util.List<Boundary> wordBoundaries(String body) {
+        java.util.List<Boundary> out=new java.util.ArrayList<>();
+        try {
+            org.json.JSONArray metadata=new org.json.JSONObject(body).getJSONArray("Metadata");
+            for(int i=0;i<metadata.length();i++) {
+                org.json.JSONObject item=metadata.getJSONObject(i);
+                if(!"WordBoundary".equals(item.optString("Type")))continue;
+                org.json.JSONObject data=item.getJSONObject("Data");
+                long ticks=data.getLong("Offset");
+                String text=data.getJSONObject("text").getString("Text");
+                if(ticks>=0&&!text.isEmpty())out.add(new Boundary(ticks,text));
+            }
+        } catch(org.json.JSONException malformed) {
+            // Highlighting metadata is optional; malformed entries never fail the audio turn.
+        }
+        return out;
+    }
+    /**
+     * Places boundaries in the turn text in reading order: {sample offset, start, end} per word found. Microsoft
+     * reports unescaped spoken words; one missing from the remaining text (normalized by the service) is skipped.
+     */
+    static java.util.List<long[]> placeWords(String text,java.util.List<Boundary> boundaries,int sampleRate) {
+        java.util.List<long[]> out=new java.util.ArrayList<>();
+        int cursor=0;
+        for(Boundary boundary:boundaries) {
+            int at=text.indexOf(boundary.text,cursor);
+            if(at<0)continue;
+            cursor=at+boundary.text.length();
+            out.add(new long[]{boundary.ticks*sampleRate/10_000_000L,at,cursor});
+        }
+        return out;
     }
 
     static String path(String headers) {

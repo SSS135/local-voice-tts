@@ -27,18 +27,28 @@ public final class SerializedBackend implements AutoCloseable {
         }
         return backend;
     }
-    public synchronized void execute(long token,String id,String kind,File directory,Map<String,String> config,
+    public void execute(long token,String id,String kind,File directory,Map<String,String> config,
             String text,String language,int sid,float speed,Ready ready,SpeechBackend.PcmSink sink) throws Exception {
+        execute(token,id,kind,directory,config,text,language,sid,speed,SpeechBackend.Options.DEFAULT,ready,sink);
+    }
+    public synchronized void execute(long token,String id,String kind,File directory,Map<String,String> config,
+            String text,String language,int sid,float speed,SpeechBackend.Options options,Ready ready,SpeechBackend.PcmSink sink) throws Exception {
         if (cancelled(token)) return;
         SpeechBackend loaded = load(id,kind,directory,config);
         if (cancelled(token)) return;
         if (cancelled(token)) return; ready.onReady(loaded.sampleRate());
+        loaded.options(options);
         boolean[] accepting = {true};
-        loaded.synthesize(text,language,sid,speed,()->cancelled(token),samples->{
-            if (!accepting[0] || cancelled(token)) return false;
-            accepting[0] = sink.write(samples); return accepting[0];
+        loaded.synthesize(text,language,sid,speed,()->cancelled(token),new SpeechBackend.PcmSink() {
+            @Override public boolean write(float[] samples) {
+                if (!accepting[0] || cancelled(token)) return false;
+                accepting[0] = sink.write(samples); return accepting[0];
+            }
+            @Override public void word(long sample,int start,int end) { if (accepting[0] && !cancelled(token)) sink.word(sample,start,end); }
         });
     }
+    /** Whether the loaded adapter streams; call from Ready.onReady on the executing thread. */
+    public synchronized boolean streams() { return backend != null && backend.streams(); }
     public interface Ready { void onReady(int sampleRate) throws Exception; }
     private void closeLoaded() { if (backend != null) backend.close(); backend = null; modelId = null; backendKind = null; modelDirectory = null; loadedConfig = null; }
     @Override public void close() { cancel(); synchronized(this) { closeLoaded(); } }

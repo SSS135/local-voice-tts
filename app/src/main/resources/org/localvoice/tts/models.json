@@ -494,6 +494,7 @@
       "revision": "2026-10-01-fast-onnx-fp32-v1",
       "network": false,
       "available": true,
+      "latency": 400,
       "languages": ["ru-RU"],
       "license": "CC-BY-4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
@@ -580,6 +581,7 @@
       "revision": "kyutai-english-2026-09-2-onnx-int8-v1",
       "network": false,
       "available": true,
+      "latency": 400,
       "languages": ["en-GB"],
       "license": "CC-BY-4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
@@ -601,7 +603,7 @@
         "numThreads": "2"
       },
       "voices": [
-        {"name":"alba","label":"Alba MacKenna","language":"en-GB","speaker":0}
+        {"name":"alba","label":"Alba MacKenna","language":"en-GB","speaker":0,"aliases":["pocket-en-alba:alba"]}
       ],
       "files": [
         {"path":"decoder.int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/decoder.int8.onnx","bytes":22725583,"sha256":"4be022e1d6df8d479e2779ecfbab5c659cd4eec43383cd1a38e150238549451d"},
@@ -614,6 +616,65 @@
         {"path":"vocab.json","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/vocab.json","bytes":69479,"sha256":"a2673c232cf49dd6eb1ad850e7c7682f6443c2ab64040d1150e9d8f2a7e3587b"},
         {"path":"LICENSE","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/LICENSE","bytes":18657,"sha256":"9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"},
         {"path":"README.md","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/README.md","bytes":2579,"sha256":"3faa2291437c6f02ae781508feb9ebf5e95582610da38013dd2649d4dab795ca"}
+      ]
+    },
+    {
+      "id": "neutts-nano-en",
+      "label": "NeuTTS Nano · English",
+      "backend": "llama-neutts",
+      "revision": "neutts-nano-q4-ac69851f-v1",
+      "network": false,
+      "available": true,
+      "latency": 500,
+      "languages": ["en-GB", "en-US"],
+      "license": "NeuTTS Open License 1.0",
+      "licenseUrl": "https://huggingface.co/neuphonic/neutts-nano-q4-gguf/blob/main/LICENCE",
+      "licenseText": "NeuTTS Nano by Neuphonic Ltd (Q4_0 GGUF backbone, reference voices dave, jo, emily, paul, sophie, steven): NeuTTS Open License v1.0, free for research and limited commercial use, paid licence above Neuphonic's revenue threshold. NeuCodec int8 ONNX decoder: Apache-2.0. eSpeak NG English data: GPL-3.0-or-later. Files redistributed unchanged except the reference codes (torch tensors converted to integer text). Full attribution: https://github.com/SSS135/local-voice-tts/releases/tag/neutts-nano-model-v1",
+      "licenseAsset": "NEUTTS-LICENSE.txt",
+      "description": "Six English voices cloned from Neuphonic's reference samples; 229M-parameter speech language model plus NeuCodec, 24 kHz. Heavy: about real time on a Pixel 7 Pro CPU, warms the phone. Processed on this device.",
+      "config": {
+        "model": "neutts-nano-Q4_0.gguf",
+        "decoder": "neucodec-decoder-int8.onnx",
+        "espeakData": "espeak-ng-data",
+        "espeakVoice": "en-us",
+        "voiceDir": "voices",
+        "voices": "dave,jo,emily,paul,sophie,steven",
+        "numThreads": "2",
+        "batchThreads": "4",
+        "decoderThreads": "3",
+        "contextSize": "2048"
+      },
+      "voices": [
+        {"name":"dave","label":"NeuTTS Dave","language":"en-GB","speaker":0},
+        {"name":"jo","label":"NeuTTS Jo","language":"en-US","speaker":1},
+        {"name":"emily","label":"NeuTTS Emily","language":"en-US","speaker":2},
+        {"name":"paul","label":"NeuTTS Paul","language":"en-US","speaker":3},
+        {"name":"sophie","label":"NeuTTS Sophie","language":"en-GB","speaker":4},
+        {"name":"steven","label":"NeuTTS Steven","language":"en-GB","speaker":5}
+      ],
+      "files": [
+        {"path":"neutts-nano-Q4_0.gguf","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/neutts-nano-Q4_0.gguf","bytes":194600640,"sha256":"85466ca06aeb487e5e8d0263367166e125969e3f4b07245db009aee223702c86"},
+        {"path":"neucodec-decoder-int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/neucodec-decoder-int8.onnx","bytes":312292102,"sha256":"3ddd9e56396e6029e0e948ac0255c89c803f981f23dcf4c154f50820bd74a6b3"},
+        {"path":"voices/dave.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-dave.codes","bytes":2180,"sha256":"ca58618b9ee515538050b092337f323a46b61975c65d52a6618d3d635f39020f"},
+        {"path":"voices/dave.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-dave.txt","bytes":172,"sha256":"2b94a10f7bc2e181e29fa400267771bbc8f258e36ec19846607864906c4cd9fa"},
+        {"path":"voices/jo.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-jo.codes","bytes":3820,"sha256":"f4a994f5fe48f03b69a87f1ae1631672d730bb7a6170c16a810be78ad5e58f25"},
+        {"path":"voices/jo.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-jo.txt","bytes":262,"sha256":"8b3c68273b0caceb71b78aaaf9482ad33afd27b0d2fe0eab37d35e06236bd5f3"},
+        {"path":"voices/emily.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-emily.codes","bytes":2305,"sha256":"60dbd43855d0a71c715e1c4477f0c5c642966a592389a09cc634c74cc3c52dff"},
+        {"path":"voices/emily.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-emily.txt","bytes":148,"sha256":"67e1879c73b2d72a092d2c9e032c7a9d7063210d9f33d856b58c75f2274b4013"},
+        {"path":"voices/paul.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-paul.codes","bytes":1658,"sha256":"100b902d4ca1cbdb1fed9f8483c602b8b79d80f9b306299b10298cce08221cd8"},
+        {"path":"voices/paul.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-paul.txt","bytes":105,"sha256":"5403d28c01a48485cc5889f141ac1947b3d1d7d9f7e0f157e1a4c4e30d8fcff5"},
+        {"path":"voices/sophie.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-sophie.codes","bytes":1010,"sha256":"f6e163b9e4f96faed4a0150b86864b44c4c24c7f139da5f62f65e03d27a2e16e"},
+        {"path":"voices/sophie.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-sophie.txt","bytes":58,"sha256":"5af2031e932873d4f37f060def1d0da8c0aca5fd8848ef322796e46a78142e3b"},
+        {"path":"voices/steven.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-steven.codes","bytes":1476,"sha256":"a576447aabf124db865413289ef62b764ddce5d6407d512f714f2203f660a9e8"},
+        {"path":"voices/steven.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-steven.txt","bytes":115,"sha256":"67fc5a023aa21335eeed8e3fb180d43b0ebb64dfc436cbfe0b6f74f833d00c46"},
+        {"path":"espeak-ng-data/phontab","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-phontab","bytes":61228,"sha256":"51987c75e1bc46fa312a8e294fddd22bdbcafc4e7e2221668ab5759debdd86ff"},
+        {"path":"espeak-ng-data/phonindex","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-phonindex","bytes":46782,"sha256":"014f6dec6b3bdc176d55fee2fe833a664230e00bc9c736c7309d2777e66eae32"},
+        {"path":"espeak-ng-data/phondata","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-phondata","bytes":554740,"sha256":"74f2f4f74e2e4fa2ff0848c9b183eb0cc105fac45634d2813e61e08a92872d1f"},
+        {"path":"espeak-ng-data/intonations","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-intonations","bytes":2312,"sha256":"031a105bf6bb2ebcd73a2c579ccfb42469b27266db0078af65ae298fd3588b21"},
+        {"path":"espeak-ng-data/en_dict","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-en_dict","bytes":168208,"sha256":"0348fa93ffa5a102cde4c5098f3f7866ba448ed65d90e44818e974f32f41dd0e"},
+        {"path":"espeak-ng-data/lang/gmw/en-US","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-lang-gmw-en-US","bytes":272,"sha256":"4c5f247313a4206d2d5b2b411b973a007b0617f0633add363a74717aba8d421c"},
+        {"path":"LICENCE-NeuTTS-Open-1.0.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/LICENCE-NeuTTS-Open-1.0.txt","bytes":11084,"sha256":"2d398562eabe1e74541435859baaca9c9747bd040b5a14df85c6172e5671f14a"},
+        {"path":"ATTRIBUTION.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/ATTRIBUTION.txt","bytes":1193,"sha256":"9455341c74d429a339239ee1af1149c7cade4726b3f956d3879a912abf4d3a95"}
       ]
     }
   ]

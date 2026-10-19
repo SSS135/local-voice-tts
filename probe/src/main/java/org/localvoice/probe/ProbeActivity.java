@@ -13,7 +13,7 @@ import org.json.*;
 /** Separate application using only Android's public TextToSpeech client API. */
 public final class ProbeActivity extends Activity {
     TextToSpeech tts; TextView status; final Handler handler=new Handler(Looper.getMainLooper());
-    final JSONArray events=new JSONArray(); long began;
+    final JSONArray events=new JSONArray(); long began; volatile JSONArray chain;
     final java.util.concurrent.ConcurrentHashMap<String,Long> pcmBytes=new java.util.concurrent.ConcurrentHashMap<>(),lastPcm=new java.util.concurrent.ConcurrentHashMap<>();
     final Set<String> stopped=java.util.concurrent.ConcurrentHashMap.newKeySet();
     void event(String name,String detail) {
@@ -25,9 +25,19 @@ public final class ProbeActivity extends Activity {
         tts=new TextToSpeech(this,result->handler.post(()->{
             event("init",Integer.toString(result));if(result!=TextToSpeech.SUCCESS)return;
             try {
+                // chainEngine: measure another installed engine (e.g. Google TTS baseline) with the same chained requests.
+                if(getIntent().getStringExtra("chainEngine")!=null){
+                    tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
+                        @Override public void onStart(String id){event("start",id);}
+                        @Override public void onRangeStart(String id,int start,int end,int frame){event("range",id+":"+start+":"+end+":"+frame);}
+                        @Override public void onError(String id){event("error",id);}
+                        @Override public void onDone(String id){event("done",id);int next=Integer.parseInt(id.substring(6))+1;if(next<chain.length())handler.post(()->{try{event("request","chain-"+next+":"+tts.speak(chain.getString(next),TextToSpeech.QUEUE_FLUSH,new Bundle(),"chain-"+next));}catch(Exception e){event("exception",e.toString());}});}
+                    });
+                    chain=new JSONArray(getIntent().getStringExtra("chain"));event("request","chain-0:"+tts.speak(chain.getString(0),TextToSpeech.QUEUE_FLUSH,new Bundle(),"chain-0"));return;
+                }
                 boolean registered=false;for(TextToSpeech.EngineInfo engine:tts.getEngines())if("org.localvoice.tts".equals(engine.name))registered=true;
                 event("engineRegistered",Boolean.toString(registered));if(!registered)throw new IllegalStateException("Local Voice engine missing");
-                JSONArray voices=new JSONArray();for(Voice voice:tts.getVoices()){if(!voice.getName().startsWith("kokoro-en:")&&!voice.getName().startsWith("supertonic-3:")&&!voice.getName().startsWith("edge:")&&!voice.getName().startsWith("pocket-en-v2:")&&!voice.getName().startsWith("shtorm-pocket-ru-fast:")&&!voice.getName().startsWith("silero-ru:"))throw new IllegalStateException("Unexpected fallback voice "+voice.getName());JSONObject row=new JSONObject();row.put("name",voice.getName());row.put("language",voice.getLocale().toLanguageTag());row.put("network",voice.isNetworkConnectionRequired());voices.put(row);}event("voices",voices.toString());
+                JSONArray voices=new JSONArray();for(Voice voice:tts.getVoices()){if(voice.getName().indexOf(':')<0)throw new IllegalStateException("Unexpected fallback voice "+voice.getName());JSONObject row=new JSONObject();row.put("name",voice.getName());row.put("language",voice.getLocale().toLanguageTag());row.put("network",voice.isNetworkConnectionRequired());row.put("notInstalled",voice.getFeatures().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED));voices.put(row);}event("voices",voices.toString());
                 event("enAvailability",Integer.toString(tts.isLanguageAvailable(Locale.US)));event("ruAvailability",Integer.toString(tts.isLanguageAvailable(Locale.forLanguageTag("ru-RU"))));
                 String requested=getIntent().getStringExtra("voice");if(requested==null) return;
                 Voice selected=null;
@@ -37,8 +47,12 @@ public final class ProbeActivity extends Activity {
                 if(selected==null){event("missingVoice",requested);return;}
                 int voiceResult=tts.setVoice(selected);event("setVoice",Integer.toString(voiceResult));if(voiceResult!=TextToSpeech.SUCCESS){event("invalidVoiceRejected",requested);return;}tts.setSpeechRate(getIntent().getFloatExtra("rate",1f));
                 tts.setOnUtteranceProgressListener(new UtteranceProgressListener(){
-                    @Override public void onStart(String id){event("start",id);}
-                    @Override public void onDone(String id){event("done",id+":bytes="+pcmBytes.getOrDefault(id,0L)+":lastPcmMs="+lastPcm.getOrDefault(id,0L));String repeat=getIntent().getStringExtra("repeatText");if(repeat!=null&&!id.equals("warm"))handler.post(()->event("warmRequest","warm:"+tts.synthesizeToFile(repeat,new Bundle(),new File(getExternalFilesDir(null),"warm.wav"),"warm")));}
+                    @Override public void onStart(String id){event("start",id);int restart=getIntent().getIntExtra("restartMs",0);// restartMs: Edge-style tap/skip, stop() then speak() of the next text while chain-0 plays.
+                        if(restart>0&&"chain-0".equals(id))handler.postDelayed(()->{try{event("stopCalling","chain-0");tts.stop();event("request","chain-1:"+tts.speak(chain.getString(1),TextToSpeech.QUEUE_FLUSH,new Bundle(),"restart-1"));}catch(Exception e){event("exception",e.toString());}},restart);}
+                    @Override public void onRangeStart(String id,int start,int end,int frame){event("range",id+":"+start+":"+end+":"+frame);}
+                    @Override public void onDone(String id){event("done",id+":bytes="+pcmBytes.getOrDefault(id,0L)+":lastPcmMs="+lastPcm.getOrDefault(id,0L));
+                        // chain: speak the next text only after onDone, as browsers (Chromium TtsController) and Edge Read Aloud do.
+                        if(chain!=null&&id.startsWith("chain-")){int next=Integer.parseInt(id.substring(6))+1;if(next<chain.length())handler.post(()->{try{event("request","chain-"+next+":"+tts.speak(chain.getString(next),TextToSpeech.QUEUE_FLUSH,new Bundle(),"chain-"+next));}catch(Exception e){event("exception",e.toString());}});}String repeat=getIntent().getStringExtra("repeatText");if(repeat!=null&&!id.equals("warm"))handler.post(()->event("warmRequest","warm:"+tts.synthesizeToFile(repeat,new Bundle(),new File(getExternalFilesDir(null),"warm.wav"),"warm")));}
                     @Override public void onError(String id){event("error",id);}
                     @Override public void onError(String id,int code){event("error",id+":"+code);}
                     @Override public void onStop(String id,boolean interrupted){stopped.add(id);event("stop",id+":"+interrupted+":bytes="+pcmBytes.getOrDefault(id,0L));}
@@ -53,13 +67,15 @@ public final class ProbeActivity extends Activity {
                     return;
                 }
                 final String utteranceName=name;
+                String chained=getIntent().getStringExtra("chain");
+                if(chained!=null){chain=new JSONArray(chained);event("request","chain-0:"+tts.speak(chain.getString(0),TextToSpeech.QUEUE_FLUSH,new Bundle(),"chain-0"));return;}
                 String queue=getIntent().getStringExtra("queue");
                 if(queue!=null){JSONArray texts=new JSONArray(queue);for(int i=0;i<texts.length();i++){String id=name+"-"+i;event("request",id+":"+tts.synthesizeToFile(texts.getString(i),new Bundle(),new File(getExternalFilesDir(null),id+".wav"),id));}return;}
                 event("request",name+":"+(getIntent().getBooleanExtra("speak",false)?tts.speak(text,TextToSpeech.QUEUE_FLUSH,new Bundle(),name):tts.synthesizeToFile(text,new Bundle(),new File(getExternalFilesDir(null),name+".wav"),name)));
                 int stop=getIntent().getIntExtra("stopMs",0);if(stop>0)handler.postDelayed(()->{long start=SystemClock.elapsedRealtime();event("stopCalling",utteranceName);int stopResult=tts.stop();event("stopRequested",stopResult+":durationMs="+(SystemClock.elapsedRealtime()-start));},stop);
                 String replacement=getIntent().getStringExtra("replacement");if(replacement!=null){final String second=replacement;handler.postDelayed(()->{tts.stop();String replacementVoice=getIntent().getStringExtra("replacementVoice");if(replacementVoice!=null)for(Voice candidate:tts.getVoices())if(candidate.getName().equals(replacementVoice))event("replacementVoice",replacementVoice+":"+tts.setVoice(candidate));event("replaceRequested",Integer.toString(tts.synthesizeToFile(second,new Bundle(),new File(getExternalFilesDir(null),"replacement.wav"),"replacement")));},getIntent().getIntExtra("replaceMs",200));}
             } catch(Exception e){event("exception",e.toString());}
-        }),"org.localvoice.tts");
+        }),getIntent().getStringExtra("chainEngine")!=null?getIntent().getStringExtra("chainEngine"):"org.localvoice.tts");
         if(getIntent().getBooleanExtra("checkData",false))startActivityForResult(new Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA).setPackage("org.localvoice.tts"),42);
     }
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==42)event("checkDataResult",result+":available="+(data==null?"none":data.getStringArrayListExtra(TextToSpeech.Engine.EXTRA_AVAILABLE_VOICES))+":missing="+(data==null?"none":data.getStringArrayListExtra(TextToSpeech.Engine.EXTRA_UNAVAILABLE_VOICES)));}

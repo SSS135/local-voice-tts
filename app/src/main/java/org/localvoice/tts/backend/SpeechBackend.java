@@ -12,11 +12,34 @@ public interface SpeechBackend extends AutoCloseable {
     }
     default void setHost(Host host) {}
     interface Cancellation { boolean isCancelled(); }
-    interface PcmSink { boolean write(float[] samples); }
+    interface PcmSink {
+        boolean write(float[] samples);
+        /**
+         * Exact word timing, for adapters whose engine reports it: text[start,end) of the synthesize() text begins
+         * at this output sample (counted from the call's first written sample). Call before writing that sample.
+         */
+        default void word(long sample, int start, int end) {}
+    }
+    /** Per-request settings beyond synthesize()'s arguments. */
+    final class Options {
+        public static final Options DEFAULT = new Options(1f, 0, -1);
+        /** Pitch factor (1 = unchanged), for adapters that render pitch natively; the service shapes the rest. */
+        public final float pitch;
+        /** Network adapters: retry budget per server turn in ms (0 = unbounded) and retries after the first attempt (-1 = unbounded). */
+        public final long networkTimeoutMs;
+        public final int networkRetries;
+        public Options(float pitch, long networkTimeoutMs, int networkRetries) {
+            this.pitch = pitch; this.networkTimeoutMs = networkTimeoutMs; this.networkRetries = networkRetries;
+        }
+    }
+    /** Called on the synthesis thread before each synthesize() with that request's options. */
+    default void options(Options options) {}
     void load(File directory, Map<String,String> config) throws Exception;
     int sampleRate();
     void synthesize(String text, String languageTag, int speakerId, float speed,
                     Cancellation cancellation, PcmSink sink) throws Exception;
+    /** True when one synthesize() call writes PCM progressively during its compute, not once at its end. */
+    default boolean streams() { return false; }
     /** May be called concurrently; must not free inference resources. */
     default void cancel() {}
     @Override void close();

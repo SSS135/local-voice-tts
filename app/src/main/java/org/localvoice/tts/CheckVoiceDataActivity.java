@@ -18,6 +18,14 @@ public final class CheckVoiceDataActivity extends Activity {
                     ArrayList<String> list=installed?available:missing;if(!list.contains(id))list.add(id);
                 }
             }
+            // A selected online voice is what locale-only requests speak; report its locale (metadata only, no network)
+            // so Settings enables Play and the rate/pitch sliders. installedVoices() loads the cached online catalog.
+            store.installedVoices();
+            Catalog.VoiceSpec selected=Catalog.findVoice(store.selectedVoice());
+            if(selected!=null&&Catalog.findModel(selected.modelId).network){
+                Locale locale=Locale.forLanguageTag(selected.languageTag);String id=LocaleTags.language(locale)+"-"+LocaleTags.country(locale);
+                if(!available.contains(id))available.add(id);
+            }
             missing.removeAll(available);Intent data=new Intent();data.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_AVAILABLE_VOICES,available);
             data.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_UNAVAILABLE_VOICES,missing);
             runOnUiThread(()->{

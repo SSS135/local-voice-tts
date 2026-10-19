@@ -46,6 +46,9 @@ public final class EdgeBackend implements SpeechBackend {
         this.endpoint = endpoint; this.attemptTimeoutMillis = attemptTimeoutMillis;
     }
     @Override public void setHost(Host host) { this.host = host; }
+    private volatile Options options = Options.DEFAULT;
+    /** Pitch goes into SSML prosody; network timeout/retry counts bound the retry loop of each server turn. */
+    @Override public void options(Options options) { this.options = options == null ? Options.DEFAULT : options; }
 
     @Override public void load(File directory, Map<String,String> config) throws IOException {
         voice = config.get("voice");
@@ -93,6 +96,7 @@ public final class EdgeBackend implements SpeechBackend {
         EdgeRetry.Observer observer = currentHost == null ? EdgeRetry.NO_OBSERVER
                 : (waiting, attempts) -> currentHost.reportStatus(waiting ? (currentHost.isNetworkAvailable() ? "retrying" : "waiting_network") : "ready", attempts);
         int start = 0;
+        long emitted = 0;
         // Bound individual server turns after XML escaping, including non-ASCII/surrogate pairs.
         while (start < text.length() && !stopped(cancellation)) {
             int end = start, bytes = 0, boundary = -1;
@@ -105,20 +109,26 @@ public final class EdgeBackend implements SpeechBackend {
             }
             if (end < text.length() && boundary > start) end = boundary;
             String chunk = text.substring(start, end);
+            java.util.List<EdgeProtocol.Boundary> boundaries = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+            Options request = options;
             EdgeAudio.Pcm pcm = EdgeRetry.run(() -> {
-                byte[] mp3 = request(chunk, speed, cancellation);
+                boundaries.clear();
+                byte[] mp3 = request(chunk, speed, request.pitch, request.networkTimeoutMs, cancellation, boundaries);
                 if (mp3 == null || stopped(cancellation)) throw new EdgeRetry.CancelledException();
                 EdgeAudio.validateMp3(mp3);
                 return decode(mp3, cancellation);
-            }, pending, network, observer);
+            }, pending, network, observer, request.networkTimeoutMs, request.networkRetries);
+            for (long[] word : EdgeProtocol.placeWords(chunk, boundaries, sampleRate()))
+                if (word[0] < pcm.samples()) sink.word(emitted + word[0], start + (int) word[1], start + (int) word[2]);
             if (!pcm.commit(pending, sink)) return;
+            emitted += pcm.samples();
             start = end;
         }
     }
 
-    private byte[] request(String text, float speed, Cancellation cancellation) throws Exception {
-        String ssml = voiceName==null ? EdgeProtocol.ssml(text, voice, speed, id())
-                : EdgeProtocol.ssml(text,voice,voiceName,voiceLocale,speed,id());
+    private byte[] request(String text, float speed, float pitch, long budgetMillis, Cancellation cancellation, java.util.List<EdgeProtocol.Boundary> boundaries) throws Exception {
+        String ssml = voiceName==null ? EdgeProtocol.ssml(text, voice, speed, pitch, id())
+                : EdgeProtocol.ssml(text,voice,voiceName,voiceLocale,speed,pitch,id());
         Request request = headers(endpoint == null ? url("/edge/v1").addQueryParameter("ConnectionId", id()).build().toString() : endpoint)
                 .header("Pragma", "no-cache").header("Cache-Control", "no-cache").header("Origin", EdgeProtocol.ORIGIN).build();
         CountDownLatch done = new CountDownLatch(1);
@@ -150,7 +160,10 @@ public final class EdgeBackend implements SpeechBackend {
                         if (bytes.size() == 0) error[0] = new IOException("Edge returned no audio");
                         ws.close(1000, "complete"); done.countDown();
                     }
-                } else if (!path.equals("turn.start") && !path.equals("response") && !path.equals("audio.metadata")) {
+                } else if (path.equals("audio.metadata")) {
+                    String[] parts = message.split("\r\n\r\n", 2);
+                    if (parts.length == 2) boundaries.addAll(EdgeProtocol.wordBoundaries(parts[1]));
+                } else if (!path.equals("turn.start") && !path.equals("response")) {
                     fail(ws, "Unexpected Edge response");
                 }
             }
@@ -191,7 +204,7 @@ public final class EdgeBackend implements SpeechBackend {
         });
         activeSocket = socket;
         try {
-            long deadline = SystemClock.elapsedRealtime() + attemptTimeoutMillis;
+            long deadline = SystemClock.elapsedRealtime() + (budgetMillis > 0 ? Math.min(attemptTimeoutMillis, budgetMillis) : attemptTimeoutMillis);
             while (!done.await(25, TimeUnit.MILLISECONDS)) {
                 if (stopped(cancellation)) return null;
                 if (SystemClock.elapsedRealtime() > deadline) throw new IOException("Edge request timed out");

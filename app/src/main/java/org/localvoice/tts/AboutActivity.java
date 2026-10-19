@@ -23,7 +23,7 @@ public final class AboutActivity extends Activity {
             Log.w(TAG,"Cannot read package version",error);
         }
         ui.text(app,"Version "+version,14,ui.muted,false);
-        ui.button(app,"Open-source notices",false).setOnClickListener(v->showText(this,"Open-source notices",Catalog.ATTRIBUTION+"\n\n"+notice("SENTENCEPIECE-NOTICE.txt")+"\n\n"+notice("SENTENCEPIECE-LICENSE.txt")+"\n\n"+notice("DARTS-CLONE-LICENSE.txt")+"\n\n"+noticeAsset("legal/THIRD_PARTY_SONIC_NOTICES.txt")+"\n\n"+noticeAsset("legal/SONIC-APACHE-2.0-LICENSE.txt")+"\n\n"+noticeAsset("legal/THIRD_PARTY_POCKET_NOTICES.txt")+"\n\n"+noticeAsset("legal/POCKET-TTS-MIT-LICENSE.txt")));
+        ui.button(app,"Open-source notices",false).setOnClickListener(v->showText(this,"Open-source notices",Catalog.ATTRIBUTION+"\n\n"+notice("SENTENCEPIECE-NOTICE.txt")+"\n\n"+notice("SENTENCEPIECE-LICENSE.txt")+"\n\n"+notice("DARTS-CLONE-LICENSE.txt")+"\n\n"+notice("LLAMA-CPP-LICENSE.txt")+"\n\n"+noticeAsset("legal/THIRD_PARTY_SONIC_NOTICES.txt")+"\n\n"+noticeAsset("legal/SONIC-APACHE-2.0-LICENSE.txt")+"\n\n"+noticeAsset("legal/THIRD_PARTY_POCKET_NOTICES.txt")+"\n\n"+noticeAsset("legal/POCKET-TTS-MIT-LICENSE.txt")));
         ui.heading(page,"Model licenses");
         for(Catalog.Model model:Catalog.MODELS){LinearLayout card=ui.card(page);ui.text(card,model.label,17,ui.ink,true);ui.text(card,model.license,14,ui.muted,false);ui.quiet(card,"Read license").setOnClickListener(v->showLicense(this,model));}
         LinearLayout technical=ui.card(page);ui.button(technical,"Technical details",false).setOnClickListener(v->{

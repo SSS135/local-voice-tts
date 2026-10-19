@@ -52,6 +52,7 @@
     "third_party/licenses/PIPER-PHONEMIZE-LICENSE",
     "third_party/licenses/SHERPA-LICENSE",
     "third_party/licenses/ONNXRUNTIME-LICENSE",
+    "third_party/licenses/LLAMA-CPP-LICENSE",
     "third_party/licenses/SUPERTONIC-UPSTREAM-LICENSE",
     "third_party/licenses/SUPERTONIC-MIRROR-LICENSE",
     "tools/models/shtorm/ATTRIBUTION.txt",
@@ -114,7 +115,25 @@
     "tools/models/pocket-en/host-eval-result.json",
     "tools/models/pocket-en/frontend_probe.py",
     "tools/models/pocket-en/frontend-proof/result.json",
-    "tools/models/pocket-en/frontend-proof/expected.json"
+    "tools/models/pocket-en/frontend-proof/expected.json",
+    "third_party/native-source/llama.cpp-412a363c655b479279d3050d0d1c67a5733697b4.zip",
+    "third_party/native-source/espeak-ng-69bfd1efde0236654ccc117a28d04aef27673a30.zip",
+    "third_party/onnxruntime-c-api-1.28.2/onnxruntime_c_api.h",
+    "third_party/onnxruntime-c-api-1.28.2/onnxruntime_ep_c_api.h",
+    "third_party/onnxruntime-c-api-1.28.2/onnxruntime_error_code.h",
+    "tools/models/neutts/REPRODUCE.md",
+    "tools/models/neutts/ATTRIBUTION.txt",
+    "tools/models/neutts/source-input-manifest.json",
+    "tools/models/neutts/runtime-manifest.json",
+    "tools/models/neutts/download-inputs.ps1",
+    "tools/models/neutts/build_pack.py",
+    "tools/models/neutts/phoneme_parity.py",
+    "tools/models/neutts/frontend-parity.json",
+    "tools/models/neutts/sentences.txt",
+    "tools/models/neutts/passage.txt",
+    "tools/models/neutts/build-cli.ps1",
+    "tools/models/neutts/cli/NeuTtsCli.java",
+    "tools/models/neutts/device-results.json"
   ],
   "sourceArchives": [
     {
@@ -131,6 +150,16 @@
       "path": "third_party/native-source/espeak-ng-7251208ee427ef87e94f39d0e99b15d287224ed6.zip",
       "bytes": 18011656,
       "sha256": "909375fe289133fea765ee2e2369834b78b6ebc49d3fbeb4eaf3aa9d7fd685d4"
+    },
+    {
+      "path": "third_party/native-source/llama.cpp-412a363c655b479279d3050d0d1c67a5733697b4.zip",
+      "bytes": 40571127,
+      "sha256": "252c63125e87d2e8d0ddd6f622243f75c1764a54c32047fe67b67698dc5f4788"
+    },
+    {
+      "path": "third_party/native-source/espeak-ng-69bfd1efde0236654ccc117a28d04aef27673a30.zip",
+      "bytes": 20202918,
+      "sha256": "ffa1a5453f556c4361abc3f41adb04212f3eefb9402460c2109638be1f8143e2"
     },
     {
       "path": "tools/models/shtorm/lookbe-source.zip",
