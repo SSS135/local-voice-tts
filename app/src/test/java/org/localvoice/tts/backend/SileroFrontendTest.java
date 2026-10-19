@@ -18,17 +18,18 @@ public final class SileroFrontendTest {
     @Test public void prepareMatchesUpstreamTextCleanup() {
         assertEquals("привет, мир. как дела?", SileroFrontend.prepare("  Привет, Мир\nКак дела?  "));
         assertEquals("раз, два", SileroFrontend.prepare("Раз,\nдва"));
-        assertEquals("а – б - в", SileroFrontend.prepare("A а — б ‑ в"));
-        assertEquals("ёлка стоит", SileroFrontend.prepare("Ёлка «quoted» стоит"));
+        assertEquals("эй а – б – в", SileroFrontend.prepare("A а — б ‑ в"));
+        assertEquals("ёлка квотед стоит", SileroFrontend.prepare("Ёлка «quoted» стоит"));
         assertEquals("з+амок", SileroFrontend.prepare("з+амок^"));
     }
 
     @Test public void numbersAreSpokenNotDropped() {
-        assertEquals("в две тысячи двадцать шесть году", SileroFrontend.prepare("В 2026 году"));
+        assertEquals("в две тысячи двадцать шестом году", SileroFrontend.prepare("В 2026 году"));
         assertEquals("двенадцать тридцать", SileroFrontend.prepare("12:30"));
         assertEquals("ноль ноль семь агент", SileroFrontend.prepare("007 агент"));
         assertEquals("сорок два человека", SileroFrontend.prepare("42 человека"));
-        assertEquals("в двадцать один веке", SileroFrontend.prepare("в21веке"));
+        assertEquals("в двадцать первом веке", SileroFrontend.prepare("в21веке"));
+        assertEquals("скидка от пяти до семи процентов до тридцать первого декабря.", SileroFrontend.prepare("Скидка 5–7% до 31.12."));
     }
 
     @Test public void sentenceTypesFollowClassifySentence() {
@@ -52,7 +53,8 @@ public final class SileroFrontendTest {
             assertTrue(p.text.length() <= SileroFrontend.MAX_PIECE);
             assertEquals(2, p.type);
         }
-        assertTrue(SileroFrontend.pieces("Hello 😀 ...").isEmpty());
+        assertTrue(SileroFrontend.pieces("😀 ... 李明").isEmpty());
+        assertEquals("[st:хеллоу…]", SileroFrontend.pieces("Hello 😀 ...").toString());
         assertEquals("те да~", SileroFrontend.encode("т.е. да?!"));
         for (char c : SileroFrontend.encode(SileroFrontend.pieces("Ой: а? Нет.").get(0).text).toCharArray())
             assertTrue(".:?!".indexOf(c) < 0);

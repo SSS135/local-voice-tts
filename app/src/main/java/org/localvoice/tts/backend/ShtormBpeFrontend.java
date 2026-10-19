@@ -16,6 +16,8 @@ public final class ShtormBpeFrontend {
     private static final int VOCAB_SIZE=4000, MAX_FILE=2*1024*1024, MAX_INPUT=32768, MAX_NORMALIZED=262144;
     private final Map<String,Integer> vocabulary=new HashMap<>();
     private final Map<String,Float> scores=new HashMap<>();
+    /** Code points that are pieces on their own: BPE output over these alone never hits <unk>. */
+    private final Set<Integer> singles=new HashSet<>();
     private final int[] trie;
     private final byte[] replacements;
 
@@ -33,6 +35,7 @@ public final class ShtormBpeFrontend {
                 int id=((Number)rawId).intValue();float score=((Number)rawScore).floatValue();
                 if(id<0 || id>=VOCAB_SIZE || ((Number)rawId).doubleValue()!=id || ids[id] || !Float.isFinite(score))throw new IOException("Invalid Shtorm piece ID or score");
                 ids[id]=true;vocabulary.put(piece,id);scores.put(piece,score);
+                if(id>=3 && piece.codePointCount(0,piece.length())==1)singles.add(piece.codePointAt(0));
             }
             if(!Integer.valueOf(0).equals(vocabulary.get("<unk>")) || !Integer.valueOf(1).equals(vocabulary.get("<s>")) || !Integer.valueOf(2).equals(vocabulary.get("</s>")))throw new IOException("Unexpected Shtorm reserved pieces");
         } catch(JSONException error){throw new IOException("Invalid Shtorm vocabulary JSON",error);}
@@ -75,6 +78,34 @@ public final class ShtormBpeFrontend {
             int cp=normalized.codePointAt(i);i+=Character.charCount(cp);
             if(Character.UnicodeScript.of(cp)==Character.UnicodeScript.LATIN)throw new IllegalArgumentException("Shtorm supports Russian text; Latin text is unsupported");
         }
+        return encodeNormalized(normalized);
+    }
+
+    /**
+     * Never throws on content: malformed UTF-16 and over-long input are cut, then every normalized code point that
+     * is not a vocabulary piece by itself (Latin, digits, emoji, other OOV) is dropped before BPE.
+     */
+    public int[] encodeSpeakable(String input) {
+        if(input==null)return new int[0];
+        StringBuilder clean=new StringBuilder(Math.min(input.length(),MAX_INPUT));
+        for(int i=0;i<input.length() && clean.length()<MAX_INPUT-1;i++) {
+            char c=input.charAt(i);
+            if(Character.isHighSurrogate(c) && i+1<input.length() && Character.isLowSurrogate(input.charAt(i+1))){clean.append(c).append(input.charAt(++i));}
+            else if(!Character.isSurrogate(c))clean.append(c);
+        }
+        String normalized=normalize(clean.toString());
+        StringBuilder kept=new StringBuilder(normalized.length());
+        for(int i=0;i<normalized.length();) {
+            int cp=normalized.codePointAt(i);i+=Character.charCount(cp);
+            boolean space=cp=='▁';
+            if(space? kept.length()>0 && kept.charAt(kept.length()-1)!='▁' : singles.contains(cp) && Character.UnicodeScript.of(cp)!=Character.UnicodeScript.LATIN)kept.appendCodePoint(cp);
+        }
+        while(kept.length()>0 && kept.charAt(kept.length()-1)=='▁')kept.setLength(kept.length()-1);
+        if(kept.length()==0 || kept.charAt(0)!='▁')kept.insert(0,'▁');
+        return kept.length()==1?new int[0]:encodeNormalized(kept.toString());
+    }
+
+    private int[] encodeNormalized(String normalized) {
         if(normalized.isEmpty())return new int[0];
         List<Symbol> symbols=new ArrayList<>();
         for(int i=0;i<normalized.length();) {

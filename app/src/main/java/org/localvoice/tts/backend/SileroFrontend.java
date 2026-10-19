@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 
 /**
  * Silero v5_6_ru plain-text frontend (PartTTSModelMultiAcc_v3.apply_tts without SSML/emphasis), split into
- * sentence pieces that each become one sherpa-onnx VITS call. Upstream drops digits; this app first spells
- * integers out with {@link RussianCardinals}.
+ * sentence pieces that each become one sherpa-onnx VITS call. Upstream drops digits and Latin; this app first
+ * runs {@link RussianNormalizer}.
  */
 final class SileroFrontend {
     /** TYPE2ID order: st, wh_q, general_q, alternative_q, tag_q, exclam. */
@@ -19,7 +19,6 @@ final class SileroFrontend {
     /** Upper bound per synthesis call: keeps decoder frames far below the 5000-row positional table at speed 0.5. */
     static final int MAX_PIECE = 200;
     private static final Pattern SENTENCE_SPLIT = Pattern.compile("(?<=[.!?])\\s+");
-    private static final Pattern DIGITS = Pattern.compile("[0-9]+");
     private static final Pattern WORD = Pattern.compile("[а-яёa-z]+", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     private static final Pattern TAG = Pattern.compile(
         "(?:[,\\s]+(правда|верно|да)\\s*\\?$)|(?:[,\\s]+(не\\s+так\\s+ли|не\\s+правда\\s+ли|разве\\s+не\\s+так|ведь\\s+так)\\s*\\?$)|(?:[,\\s]+ведь\\s*\\?$)|(?:[,\\s]+а\\s*\\?$)",
@@ -51,7 +50,7 @@ final class SileroFrontend {
         return out;
     }
 
-    /** prepare_tts_model_input + prepare_text_input for plain text, after app-owned digit expansion. */
+    /** prepare_tts_model_input + prepare_text_input for plain text, after app-owned {@link RussianNormalizer}. */
     static String prepare(String text) {
         text = text.trim();
         StringBuilder lines = new StringBuilder(text.length() + 8);
@@ -60,7 +59,7 @@ final class SileroFrontend {
             if (c == '\n') lines.append(i > 0 && ",;:.!?".indexOf(text.charAt(i - 1)) >= 0 ? " " : ". ");
             else lines.append(c);
         }
-        text = expandNumbers(lines.toString()).toLowerCase(Locale.ROOT)
+        text = RussianNormalizer.apply(lines.toString()).toLowerCase(Locale.ROOT)
             .replace('—', '–').replace('‑', '-');
         StringBuilder kept = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
@@ -69,34 +68,6 @@ final class SileroFrontend {
             else if (Character.isWhitespace(c) || Character.isSpaceChar(c)) kept.append(' ');
         }
         return kept.toString().replaceAll(" +", " ").trim();
-    }
-
-    /** Integers become nominative cardinals; a separator between two digit runs becomes a space. */
-    static String expandNumbers(String text) {
-        Matcher m = DIGITS.matcher(text);
-        StringBuilder out = new StringBuilder(text.length() + 32);
-        int copied = 0;
-        while (m.find()) {
-            int start = m.start(), end = m.end();
-            String gap = text.substring(copied, start);
-            // "12:30", "3.5", "2026-10-19": the single separator would otherwise glue the spoken numbers.
-            if (copied > 0 && gap.length() == 1 && ":.,/-".indexOf(gap.charAt(0)) >= 0 && Character.isDigit(text.charAt(copied - 1))) gap = " ";
-            out.append(gap);
-            String digits = m.group();
-            String words;
-            if (digits.length() <= 9 && (digits.length() == 1 || digits.charAt(0) != '0')) {
-                words = RussianCardinals.spellout(Long.parseLong(digits));
-            } else {
-                StringBuilder each = new StringBuilder();
-                for (int i = 0; i < digits.length(); i++) { if (i > 0) each.append(' '); each.append(RussianCardinals.spellout(digits.charAt(i) - '0')); }
-                words = each.toString();
-            }
-            if (start > 0 && Character.isLetter(text.charAt(start - 1))) out.append(' ');
-            out.append(words);
-            if (end < text.length() && Character.isLetter(text.charAt(end))) out.append(' ');
-            copied = end;
-        }
-        return out.append(text, copied, text.length()).toString();
     }
 
     /** The upstream has_text check: some Cyrillic (а-я), hyphen or space content besides spaces. */

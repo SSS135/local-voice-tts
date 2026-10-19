@@ -4,9 +4,10 @@
 
 - `normalize(text)` returns the exact escaped SentencePiece form, including the dummy `▁` prefix.
 - `encode(text)` returns actual IDs. It rejects unknown tokens, Latin text, malformed UTF-16, and overlong input before synthesis. It preserves Cyrillic case and acute stress marks. Empty or whitespace-only input yields an empty array.
+- `encodeSpeakable(text)` is the synthesis path and never throws on content. It cuts malformed UTF-16 and over-long input, normalizes, drops every code point that is not a single-character vocabulary piece (Latin, digits, emoji, OOV), and then runs the same BPE. On supported text it equals `encode`.
 - `encodeBridge(text)` emits bare `U+E000 + tokenId` symbols. It adds no prefix or suffix. The separately verified 8,000-entry native bridge vocabulary consumes Sherpa's own dummy prefix together with the first symbol.
 
-The Android adapter owns explicit number expansion; the helper does not guess pronunciation, transliterate, case-fold, or replace unsupported text.
+`ShtormBackend` runs `RussianNormalizer` (numbers, dates, units, Latin transliteration; see `docs/RUSSIAN-NORMALIZER.md`) before chunking. The helper itself does not guess pronunciation, transliterate, or case-fold.
 
 ## Provenance
 

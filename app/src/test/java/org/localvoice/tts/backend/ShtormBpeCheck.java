@@ -39,6 +39,11 @@ public final class ShtormBpeCheck {
         reject(()->frontend.encode("Привет\uD800"),"Malformed UTF16 must be rejected");
         check(!Arrays.equals(frontend.encode("Привет"),frontend.encode("ПРИВЕТ")),"Tokenizer must not case fold");
         check(!Arrays.equals(frontend.encode("Привет"),frontend.encode("Приве\u0301т")),"Russian stress accent must be preserved");
+        // The synthesis path never rejects content: OOV code points are dropped, supported text encodes identically.
+        for(int index=0;index<fixtures.length();index++){String text=fixtures.getJSONObject(index).getString("text");int[] lenient=frontend.encodeSpeakable(text);
+            if(!fixtures.getJSONObject(index).getBoolean("hasUnknown")&&text.codePoints().noneMatch(cp->Character.UnicodeScript.of(cp)==Character.UnicodeScript.LATIN))check(Arrays.equals(lenient,frontend.encode(text)),"encodeSpeakable differs on supported case "+index);}
+        check(Arrays.equals(frontend.encodeSpeakable("Привет🙂 N мир\uD800"),frontend.encode("Привет мир")),"OOV, Latin and malformed UTF-16 are dropped");
+        check(frontend.encodeSpeakable("🙂 123 abc").length==0,"Nothing speakable yields no tokens");
         Path corrupt=Files.createTempFile("shtorm-normalizer-invalid",".bin");
         try{Files.write(corrupt,new byte[1029]);try{new ShtormBpeFrontend(folder.resolve("vocab.json").toFile(),folder.resolve("token_scores.json").toFile(),corrupt.toFile());throw new AssertionError("Corrupt map accepted");}catch(IOException expected){checks++;}}finally{Files.delete(corrupt);}
         System.out.println("PASS: "+fixtures.length()+" genuine SentencePiece fixtures, "+exact+" exact token-ID/PUA cases, "+rejected+" unsupported cases rejected; "+checks+" assertions including normalization, case/stress, malformed Unicode and corrupt normalizer");

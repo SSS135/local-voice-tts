@@ -14,16 +14,14 @@ public final class ShtormBackend extends PocketBackend {
             new File(path(directory,config,"bpeNormalizer")));
     }
     @Override protected java.util.List<Prepared> prepareChunks(String text,Cancellation cancellation) {
-        // Exact pinned SentencePiece normalization precedes app-owned bounded cardinal expansion.
-        String normalized=frontend.normalize(text);
-        if(normalized.startsWith("\u2581"))normalized=normalized.substring(1);
-        normalized=normalized.replace('\u2581',' ');
-        String expanded=RussianCardinals.expand(normalized,RussianCardinals::spellout);
+        // App-owned Russian normalization (numbers, dates, units, Latin); the pinned tokenizer drops any leftover OOV.
+        String expanded=RussianNormalizer.apply(text);
         java.util.List<Prepared> chunks=new java.util.ArrayList<>();
         for(String chunk:PocketPrompt.boundedChunks(expanded)){
         if(cancellation.isCancelled())return java.util.Collections.emptyList();
         String spoken=PocketPrompt.prepare(chunk);
-        int[] ids=frontend.encode(spoken);
+        int[] ids=frontend.encodeSpeakable(spoken);
+        if(ids.length==0)continue;
         // 127 voice/BOS frames + 256 text tokens + 500 generated frames fit the pinned 1000-slot KV cache.
         if(ids.length>256)throw new IllegalArgumentException("Shtorm sentence exceeds its supported token budget");
         StringBuilder bridge=new StringBuilder(ids.length);
