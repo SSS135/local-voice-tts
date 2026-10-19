@@ -67,13 +67,12 @@ speech request.
 
 ## Checks
 
-`tests/run-edge-catalog.ps1` exercises the actual parser, cache, dynamic catalog,
-stable IDs, and exact SSML configuration for every bundled voice. Pass a test-only
-Android-compatible JSON runtime with `-JsonJar` (for example Maven coordinate
-`com.vaadin.external.google:android-json:0.0.20131108.vaadin1`). Production uses
-Android's platform JSON implementation and adds no JSON library dependency.
+`EdgeCatalogCheck` (`app/src/test`, run by `gradlew test`) exercises the actual parser, cache, dynamic catalog,
+stable IDs, and exact SSML configuration for every bundled voice. Tests use
+Android's org.json implementation (`com.vaadin.external.google:android-json`,
+test-only); production adds no JSON library dependency.
 
-`tests/run-edge-catalog-repository.ps1` additionally executes the actual repository
+`EdgeCatalogRepositoryCheck` additionally executes the actual repository
 and OkHttp transport against an isolated loopback HTTP fixture: offline startup,
 queued cancellation without HTTP, full publication, truncated refresh retention,
 active socket cancellation, offline cache restart, and corrupt-cache recovery.

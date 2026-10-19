@@ -5,12 +5,13 @@ Kokoro English, Supertonic English/Russian, Pocket English and Shtorm Russian
 models, plus explicitly enabled online Microsoft Edge voices. Application source is GPL-3.0; native libraries
 and models retain their own licenses. No model weights are committed here.
 
-The frozen application, probe, tests and architecture live in [LocalVoice](LocalVoice/).
-Start with its [README](LocalVoice/README.md) and [architecture](LocalVoice/ARCHITECTURE.md).
+- App, build, tests and licensing: [LocalVoice/README.md](LocalVoice/README.md)
+- Layout, commands and contributor rules: [AGENTS.md](AGENTS.md)
+- Model/native provenance: [research/README.md](research/README.md)
 
 ## Build
 
-Install JDK 17 or newer and Android SDK Platform 36, then run in PowerShell:
+Install JDK 17 or newer and Android SDK Platform 36, then in PowerShell:
 
 ```powershell
 cd LocalVoice
@@ -18,40 +19,13 @@ cd LocalVoice
 .\build.ps1 -JavaHome 'C:\path\to\jdk' -AndroidSdk 'C:\path\to\Android\Sdk'
 ```
 
-`fetch-runtime.ps1` retrieves the official sherpa-onnx 1.13.8 AAR and verifies
-its exact size and SHA-256 before installation. The runtime is ignored by Git.
-The original app build configuration and model/checksum catalog are unchanged.
-Builds use your own debug key or an explicitly configured private signing key.
-No original signing material is stored in this repository.
+`fetch-runtime.ps1` fetches the sherpa-onnx 1.13.8 AAR and verifies its size and
+SHA-256. Source deliveries additionally need `.\research\native-source\fetch-sources.ps1`
+before `LocalVoice\package-source.ps1`.
 
-## Native source and source packages
+## Provenance
 
-Pinned native source URLs, revisions, checksums, build files and licenses live
-under [research/native-source](research/native-source/). Download and verify the
-complete sherpa-onnx, piper-phonemize and eSpeak NG source snapshots with:
-
-```powershell
-.\research\native-source\fetch-sources.ps1
-```
-
-The large unmodified source archives are ignored by Git. Fetch them and the
-runtime before running `LocalVoice\package-source.ps1` to produce a complete
-source delivery, including required native source and license material. Read
-the [native rebuild limitations](research/native-source/BUILD-AND-SOURCE-NOTES.txt).
-The native runtime was not independently rebuilt or proved byte reproducible.
-
-## Validation and provenance
-
-1.1.1 verification and its limits are recorded in
-[RELEASE-1.1.1.md](LocalVoice/RELEASE-1.1.1.md); earlier profiles are in
-[VERIFICATION-PROFILE.md](LocalVoice/VERIFICATION-PROFILE.md). Physical-phone
-performance, battery and thermal behavior remain unmeasured.
-
-The current import comes from `LocalVoice-source-1.1.1.zip`, SHA-256
+Imported from `LocalVoice-source-1.1.1.zip`, SHA-256
 `b21d43e8ab334b1ed3ea4e51552afc99d6903eec493c8020b7ead575916be628`
 (1.0.0: `f50b518a24fd0390b2e1c1474094fd6a989938ef695f07730fb3d2c740e85e73`).
-Source member checksums were verified before import. Repository preparation
-added this entry point and the runtime fetch helper, updated packaging/docs,
-and normalized text line endings. It did not change application behavior.
-Private review reports, keys, credentials, recordings, model downloads, caches,
-APKs and generated build products are excluded.
+Release verification: [LocalVoice/docs/history](LocalVoice/docs/history/).

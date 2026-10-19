@@ -1,6 +1,6 @@
 # Hosted English PocketTTS fixed-Alba validation
 
-This is the soniqo July 14 2026 INT8 export at immutable Hugging Face revision `ad5d3fae3fb2f10024583708597afca8337c094c`. It derives from historical Kyutai checkpoint `tts_b6369a24` at `d4fdd22ae8c8e1cb3634e150ebeff1dab2d16df3`, not the newer September checkpoint. It contains one fixed Alba MacKenna voice. Model and voice are CC-BY-4.0; the downloaded full LICENSE and README preserve attribution and modifications. Additional attribution and source/exporter pins are in `runtime-manifest.json`. See `LocalVoice/ENGLISH-POCKET-REVIEW.md` for the independent historical license check.
+This is the soniqo July 14 2026 INT8 export at immutable Hugging Face revision `ad5d3fae3fb2f10024583708597afca8337c094c`. It derives from historical Kyutai checkpoint `tts_b6369a24` at `d4fdd22ae8c8e1cb3634e150ebeff1dab2d16df3`, not the newer September checkpoint. It contains one fixed Alba MacKenna voice. Model and voice are CC-BY-4.0; the downloaded full LICENSE and README preserve attribution and modifications. Additional attribution and source/exporter pins are in `runtime-manifest.json`. See `LocalVoice/docs/history/ENGLISH-POCKET-REVIEW.md` for the independent historical license check.
 
 Use the Python 3.11 CPU venv/dependency versions described in sibling `shtorm/REPRODUCE.md`. The matching `sherpa-onnx-core==1.13.8` is essential. From this directory:
 

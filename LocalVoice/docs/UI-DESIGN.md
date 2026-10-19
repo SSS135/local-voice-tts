@@ -1,6 +1,6 @@
 # Local Voice UI
 
-The 1.0 baseline is preserved in `../evidence/ui-baseline/MainActivity-1.0.java`; screenshots `release-install-data-manager.png` and `fixture-global-cancel-before.png` show the old repeated instructions and large license controls.
+The 1.0 baseline is preserved in `../../evidence/ui-baseline/MainActivity-1.0.java`; screenshots `release-install-data-manager.png` and `fixture-global-cancel-before.png` show the old repeated instructions and large license controls.
 
 ## References read as text
 
@@ -18,11 +18,11 @@ No third-party skill scripts were installed or executed. Compose-specific framew
 - Shared light/dark color tokens, native type scaling, 4/8 dp spacing, rounded surfaces, ripple feedback, 24 dp vector selection marks, and at least 48 dp controls. Selection has both a check mark and accessible checked state.
 - One root handles system bars, cutouts, and IME insets. List headers scroll with rows so large fonts and short landscape windows keep controls reachable. Content width is bounded on wide windows.
 - Download cards retain progress, cancel, retry, and complete error detail. Model terms and full notices are accessible before confirmation. Online privacy disclosure appears at the explicit enable action. Unsupported models have no fake download button.
-- Shtorm uses the normal **Download** action (pinned GitHub release assets). A catalog record marked `installMode=import` (none currently) instead uses **Install file** with Android's Storage Access Framework. The picker is offered only for a trusted catalog record marked `installMode=import`. The selected URI and pinned model ID go to ModelStore; archive configuration never becomes UI configuration. Store owns temporary/persistable read-grant cleanup. The pending model ID survives picker rotation; retries choose the file again.
+- Every local model, including Shtorm, uses the normal **Download** action (pinned HTTPS assets). There is no file-import path.
 
 ## Verification
 
-The engine owner compiled the redesigned Java UI successfully. `tests/run-ui-state.ps1` passes 20 JVM cases using the actual filter and preview-session helpers: catalog replacement/removal, empty data, English discoverability, Unicode/locale matching, and late preview callbacks after replacement, stop, or destruction. Results: `build/verification/ui-state-checks.txt`. Eight light/dark text pairs pass 4.5:1 contrast (`../evidence/ui-static-contrast.json`).
+The engine owner compiled the redesigned Java UI successfully. `VoiceFilterCheck` (`gradlew test`) passes 20 JVM cases using the actual filter and preview-session helpers: catalog replacement/removal, empty data, English discoverability, Unicode/locale matching, and late preview callbacks after replacement, stop, or destruction. Results: `build/verification/ui-state-checks.txt`. Eight light/dark text pairs pass 4.5:1 contrast (`../../evidence/ui-static-contrast.json`).
 
 Static lifecycle review verified paired start/stop listeners, destroyed-activity guards, generation checks for worker results, preference-backed selection/rate unaffected by destination changes, and refresh cancellation tokens created before a worker is queued. Actual Android interaction and device rendering remain separate evidence.
 

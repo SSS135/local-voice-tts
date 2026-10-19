@@ -13,8 +13,9 @@ Check (@($ordered.Name | Where-Object { $_.Contains([char]92) }).Count -eq 0) 'Z
 Check (@($manifest.sourceArchives).Count -eq 6) 'Expected six pinned upstream source archives'
 Check (@($ordered.Name | Where-Object { $_ -match '^research/native-source/.*\.zip$' }).Count -eq 3) 'Native GPL source snapshots missing'
 foreach ($required in @(
-    'LocalVoice/UI-DESIGN.md', 'LocalVoice/EDGE-CATALOG.md', 'LocalVoice/ENGLISH-POCKET-REVIEW.md',
-    'LocalVoice/VERIFICATION-PROFILE.md', 'LocalVoice/THIRD_PARTY_SONIC_NOTICES.txt',
+    'LocalVoice/docs/UI-DESIGN.md', 'LocalVoice/docs/EDGE-CATALOG.md', 'LocalVoice/docs/history/ENGLISH-POCKET-REVIEW.md',
+    'LocalVoice/docs/history/VERIFICATION-PROFILE.md', 'LocalVoice/legal/THIRD_PARTY_SONIC_NOTICES.txt',
+    'LocalVoice/fetch-runtime.ps1', 'AGENTS.md', 'README.md', 'research/licenses/ESPEAK-NG-COPYING',
     'LocalVoice/third_party/androidx-media3-sonic/Sonic.java',
     'LocalVoice/app/src/main/assets/licenses/SENTENCEPIECE-LICENSE.txt',
     'research/shtorm/REPRODUCE.md', 'research/shtorm/prepare_config.py',
