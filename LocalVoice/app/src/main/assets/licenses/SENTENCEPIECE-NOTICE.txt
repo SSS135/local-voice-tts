@@ -1,0 +1,12 @@
+Shtorm BPE frontend
+
+SentencePiece behavior ported from Google SentencePiece 0.2.2.
+Copyright 2016 Google Inc. Apache License 2.0.
+Source commit: e0cce7d37b065b5140349dbe12c6bcf6192fdd78
+https://github.com/google/sentencepiece
+
+The compiled normalizer trie format originates in Darts-clone.
+Copyright (c) 2008-2011, Susumu Yata. BSD-3-Clause.
+https://github.com/google/sentencepiece/tree/e0cce7d37b065b5140349dbe12c6bcf6192fdd78/third_party/darts_clone
+
+The separately installed Shtorm tokenizer and normalizer data retain their original model license; they are not licensed by this implementation notice.

@@ -1,0 +1,9 @@
+{
+  "runtime": "sherpa-onnx1.13.8",
+  "diagnosticOnly": true,
+  "all4000IdsAndAll4000LeadingCompoundsExact": true,
+  "sequencesVerified": 4160,
+  "traceSha256": "3dd9333c29fe5da5480e49f017e99a769d10f049fa2b9f61e12cfabc2e612721",
+  "traceHashEncoding": "raw-file-bytes",
+  "note": "Constant diagnostic graphs isolate real native tokenizer; authentic audio tested separately."
+}

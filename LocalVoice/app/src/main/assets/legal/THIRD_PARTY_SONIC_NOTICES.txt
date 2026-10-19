@@ -1,0 +1,21 @@
+Sonic time stretching core from AndroidX Media3 1.5.1
+Copyright (C) 2017 The Android Open Source Project
+Copyright (C) 2010 Bill Cox, Sonic Library
+Apache License 2.0; full license: app/src/main/assets/legal/SONIC-APACHE-2.0-LICENSE.txt
+
+Official source pinned to commit 76088cd6af7f263aba238b7a48d64bd4f060cb8b:
+https://github.com/androidx/media/blob/76088cd6af7f263aba238b7a48d64bd4f060cb8b/libraries/common/src/main/java/androidx/media3/common/audio/Sonic.java
+Unmodified source SHA-256: 6396a43776a2fc8059b77e61de4413a34a6890424f2cb2ab284d28daa0886d3e
+Unmodified source and LICENSE are retained in third_party/androidx-media3-sonic/.
+
+Local modifications, 2026-10-18: changed Java package to org.localvoice.tts.backend;
+replaced the single AndroidX Assertions.checkState dependency with a local
+IllegalStateException check; widened the two AMDF pitch-comparison products to
+long to prevent integer overflow at high sample rates (96 kHz tone regression).
+No complete Media3 library or dependency is added.
+
+PcmTimeStretch is a mono float-PCM adapter with bounded 2048-sample input/output
+blocks. Speed 1 bypasses Sonic without quantization. Other speeds use Sonic's
+16-bit core with pitch fixed at 1 and identical input/output sample rates.
+Its per-utterance lifecycle checks cancellation around processing and output,
+discards pending audio after cancellation or sink rejection, and flushes once.

@@ -1,0 +1,4 @@
+Pocket TTS prompt preparation
+Source: https://github.com/kyutai-labs/pocket-tts/blob/41cbc84af539ea78a804ffca5f9c6edc1a22ce44/pocket_tts/models/text_chunking.py
+License: MIT (full text in POCKET-TTS-MIT-LICENSE.txt).
+PocketPrompt.java adapts bounded prompt preparation to Java; Russian cardinal expansion, chunk budgeting and cancellation are application code. Model weights and reference voice have separate CC-BY-4.0 licenses and attributions.

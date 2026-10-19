@@ -1,0 +1,8 @@
+{
+  "pack": "shtorm-pocket-ru-fast-onnx-fp32-v1.zip",
+  "size": 440049147,
+  "sha256": "8b9892ae5f14539535d8d803a0161e4382ce1e590f4661efc7c180acc139ae88",
+  "runtimeFiles": 14,
+  "runtimeBytes": 440043847,
+  "delivery": "import_only"
+}

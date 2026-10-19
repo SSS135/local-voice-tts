@@ -1,8 +1,8 @@
-# Local Voice 1.0.0
+# Local Voice 1.1.1
 
 Android system text-to-speech engine (`org.localvoice.tts`) with downloadable
-Kokoro English and Supertonic English/Russian models, plus explicitly enabled
-online Microsoft Edge voices. Application source is GPL-3.0; native libraries
+Kokoro English, Supertonic English/Russian, Pocket English and Shtorm Russian
+models, plus explicitly enabled online Microsoft Edge voices. Application source is GPL-3.0; native libraries
 and models retain their own licenses. No model weights are committed here.
 
 The frozen application, probe, tests and architecture live in [LocalVoice](LocalVoice/).
@@ -42,13 +42,14 @@ The native runtime was not independently rebuilt or proved byte reproducible.
 
 ## Validation and provenance
 
-The implementer's frozen release passed 14 backend contract checks, 26 retry
-and audio fault checks, and documented emulator audio/recovery checks. Those
-results and their limitations are recorded in the app README. Physical-phone
-performance, Kokoro Russian, and Shtorm remain unverified or deferred.
+1.1.1 verification and its limits are recorded in
+[RELEASE-1.1.1.md](LocalVoice/RELEASE-1.1.1.md); earlier profiles are in
+[VERIFICATION-PROFILE.md](LocalVoice/VERIFICATION-PROFILE.md). Physical-phone
+performance, battery and thermal behavior remain unmeasured.
 
-The import comes from `LocalVoice-source-1.0.0.zip`, SHA-256
-`f50b518a24fd0390b2e1c1474094fd6a989938ef695f07730fb3d2c740e85e73`.
+The current import comes from `LocalVoice-source-1.1.1.zip`, SHA-256
+`b21d43e8ab334b1ed3ea4e51552afc99d6903eec493c8020b7ead575916be628`
+(1.0.0: `f50b518a24fd0390b2e1c1474094fd6a989938ef695f07730fb3d2c740e85e73`).
 Source member checksums were verified before import. Repository preparation
 added this entry point and the runtime fetch helper, updated packaging/docs,
 and normalized text line endings. It did not change application behavior.

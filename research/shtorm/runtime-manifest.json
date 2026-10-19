@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "shtorm-pocket-ru-fast",
+  "name": "Shtorm PocketTTS Russian v2 fast",
+  "backend": "sherpa-pocket",
+  "version": "2026-10-01-fast-onnx-fp32-v1",
+  "languages": [
+    "ru-RU"
+  ],
+  "license": "CC-BY-4.0",
+  "delivery": "import_only",
+  "downloadUrl": null,
+  "downloadUnavailableReason": "Author hosts safetensors; locally converted runtime graphs have not been published.",
+  "modelSource": {
+    "repo": "ArtShtorm/Shtorm-PocketTTS-RU",
+    "revision": "33f6c328d62c4da5c1227bbe081e89b574a6183a",
+    "file": "model_fast.safetensors",
+    "size": 438033312,
+    "sha256": "de8ad576d3d549372a34b40df03d6e6b8f668e857dac32f61934e9c5c1da8d52"
+  },
+  "config": {
+    "lmFlow": "flow_lm_flow.onnx",
+    "lmMain": "flow_lm_main.onnx",
+    "encoder": "mimi_encoder.onnx",
+    "decoder": "mimi_decoder.onnx",
+    "textConditioner": "text_conditioner.onnx",
+    "vocabJson": "bridge_vocab.json",
+    "tokenScoresJson": "bridge_token_scores.json",
+    "bpeVocab": "vocab.json",
+    "bpeScores": "token_scores.json",
+    "bpeNormalizer": "normalizer.bin",
+    "referenceAudio": "voice-vctk-p228-24k.wav",
+    "referenceSampleRate": "24000",
+    "numThreads": "2"
+  },
+  "voices": [
+    {
+      "id": "vctk-p228",
+      "name": "VCTK p228 reference",
+      "sid": 0,
+      "language": "ru-RU",
+      "referenceAudio": "voice-vctk-p228-24k.wav",
+      "license": "CC-BY-4.0"
+    }
+  ],
+  "files": [
+    {
+      "path": "flow_lm_flow.onnx",
+      "size": 39097095,
+      "sha256": "550bcc5149d3da3cd4a4bc51e59a010d461346172f4d186d2f6850e311f84d12"
+    },
+    {
+      "path": "flow_lm_main.onnx",
+      "size": 302615681,
+      "sha256": "a6db1823463d0eb90424c23108308de03f15dccce853073321dde344917a5be1"
+    },
+    {
+      "path": "mimi_encoder.onnx",
+      "size": 39274467,
+      "sha256": "775cd3994649b3a7b493d602e11ace95835c59537cd5b5407177dbd05a53b7fc"
+    },
+    {
+      "path": "mimi_decoder.onnx",
+      "size": 41457030,
+      "sha256": "f6b255adaa396ad5af742faf1324f206e07504f0d482d1832ce25f6f752c8cc7"
+    },
+    {
+      "path": "text_conditioner.onnx",
+      "size": 16388343,
+      "sha256": "18d4b285a0c154f179b14574b5ceb27bd2b071809c7635bc33faa45a04c70648"
+    },
+    {
+      "path": "vocab.json",
+      "size": 91638,
+      "sha256": "3a9363626af515e5faa080311a034dfd54021b04490b61de42b961932acb90bf"
+    },
+    {
+      "path": "token_scores.json",
+      "size": 103626,
+      "sha256": "6ef900857c845de7f84f09279ed80a3b2f7ae96f11205c37647a1bdd265c8616"
+    },
+    {
+      "path": "normalizer.bin",
+      "size": 240007,
+      "sha256": "5febaab28312e9dbddb42be695c9e4380367f7ebe65121cdf894fb5d59d37eed"
+    },
+    {
+      "path": "bridge_vocab.json",
+      "size": 137783,
+      "sha256": "47cca292fb50b80b8c64f57da63912032c26a234bd153001226856a013382e97"
+    },
+    {
+      "path": "bridge_token_scores.json",
+      "size": 132003,
+      "sha256": "9b2ce022e2cb94d63d4334f5e157fe2df137017e899c1dbaf4381657472ec129"
+    },
+    {
+      "path": "voice-vctk-p228-24k.wav",
+      "size": 483884,
+      "sha256": "4ba4bbc81fc4319c7f65a41ac0984143f611cee8964899fdd14f936bd7ea4f90"
+    },
+    {
+      "path": "LICENSE-CC-BY-4.0.txt",
+      "size": 18657,
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+    },
+    {
+      "path": "ATTRIBUTION.txt",
+      "size": 3069,
+      "sha256": "b485cc3d00a03a7ab63c6eaf29a7aab9cbeaaacdbb9778ddcb8d7b42b96e255f"
+    },
+    {
+      "path": "voice-provenance.json",
+      "size": 564,
+      "sha256": "92e376fe58f6bfdf8120b2bd02e1905ba93e74a70a4cfa098715625ea5d7d3aa"
+    }
+  ],
+  "totalBytes": 440043847
+}

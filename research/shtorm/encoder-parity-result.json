@@ -1,0 +1,45 @@
+{
+  "authenticModel": "ArtShtorm/Shtorm-PocketTTS-RU@33f6c328d62c4da5c1227bbe081e89b574a6183a",
+  "unmodifiedReferenceSource": "kyutai-labs/pocket-tts@41cbc84af539ea78a804ffca5f9c6edc1a22ce44",
+  "encoderBakedBosExactlyOnce": true,
+  "encoderCases": [
+    {
+      "samples": 1920,
+      "embeddingShape": [
+        1,
+        2,
+        1024
+      ],
+      "maxAbsoluteError": 4.76837158203125e-07
+    },
+    {
+      "samples": 24000,
+      "embeddingShape": [
+        1,
+        14,
+        1024
+      ],
+      "maxAbsoluteError": 1.1026859283447266e-06
+    },
+    {
+      "samples": 50000,
+      "embeddingShape": [
+        1,
+        28,
+        1024
+      ],
+      "maxAbsoluteError": 1.0635703802108765e-06
+    },
+    {
+      "samples": 241920,
+      "embeddingShape": [
+        1,
+        127,
+        1024
+      ],
+      "maxAbsoluteError": 1.0710209608078003e-06
+    }
+  ],
+  "textConditionerExactCases": 3,
+  "note": "Original PyTorch encoder versus exported graph including learned BOS; real public prompt and varying lengths."
+}

@@ -67,6 +67,15 @@ final class EdgeProtocol {
         int dash = voice.indexOf('-', voice.indexOf('-') + 1);
         String locale = voice.substring(0, dash);
         String name = "Microsoft Server Speech Text to Speech Voice (" + locale + ", " + voice.substring(dash + 1) + ")";
+        return ssml(text,voice,name,locale,speed,id);
+    }
+    static String ssml(String text,String voice,String name,String locale,float speed,String id) throws IOException {
+        if(!locale.matches("[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){1,3}") || !voice.startsWith(locale+"-")
+                || !voice.substring(locale.length()+1).matches("[A-Za-z0-9-]+")
+                || !name.equals("Microsoft Server Speech Text to Speech Voice ("+locale+", "+voice.substring(locale.length()+1)+")"))
+            throw new EdgeRetry.FatalException("Invalid Edge voice metadata");
+        String escaped=xml(text);
+        if(escaped.getBytes(StandardCharsets.UTF_8).length>4096) throw new IOException("Edge speech chunk too long");
         return "X-RequestId:" + id + "\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:" + timestamp() + "Z\r\nPath:ssml\r\n\r\n"
                 + "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='" + locale + "'>"
                 + "<voice name='" + xml(name) + "'><prosody pitch='+0Hz' rate='" + rate(speed) + "' volume='+0%'>"

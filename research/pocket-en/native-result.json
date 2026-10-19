@@ -1,0 +1,42 @@
+{
+  "runtime": "1.13.8",
+  "repoRevision": "ad5d3fae3fb2f10024583708597afca8337c094c",
+  "loadSeconds": 1.312999999965541,
+  "runs": [
+    {
+      "name": "clean",
+      "speedArgument": 1.0,
+      "seconds": 0.6400000000139698,
+      "samples": 23040,
+      "sampleRate": 24000,
+      "rms": 0.11924706466811894,
+      "pcmSha256": "47b9369b18d3e16a1c2d713fa0cc94d79a5c4fd64ba0ffb67da3ca935586cf62"
+    },
+    {
+      "name": "other-dummy-prompt",
+      "speedArgument": 1.0,
+      "seconds": 0.5779999999795109,
+      "samples": 23040,
+      "sampleRate": 24000,
+      "rms": 0.11924706466811894,
+      "pcmSha256": "47b9369b18d3e16a1c2d713fa0cc94d79a5c4fd64ba0ffb67da3ca935586cf62"
+    },
+    {
+      "name": "speed-1.5",
+      "speedArgument": 1.5,
+      "seconds": 0.5790000000270084,
+      "samples": 23040,
+      "sampleRate": 24000,
+      "rms": 0.11924706466811894,
+      "pcmSha256": "47b9369b18d3e16a1c2d713fa0cc94d79a5c4fd64ba0ffb67da3ca935586cf62"
+    }
+  ],
+  "fixedVoiceIgnoresDummyPrompt": true,
+  "speedIgnored": true,
+  "callbackStop": {
+    "calls": 1,
+    "samples": 1920,
+    "seconds": 0.34299999999348074
+  },
+  "limitation": "Callback stop begins only after latent generation. Android immediate cancellation/replacement remains device integration work."
+}

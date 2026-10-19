@@ -18,7 +18,10 @@ public final class LocalVoiceService extends TextToSpeechService {
     private volatile long activeToken=-1,cancelledByUiToken=-2;
     private volatile String activeModel;
     private SharedPreferences preferences;
-    private final SharedPreferences.OnSharedPreferenceChangeListener preferenceChanges=(prefs,key)->{if(key!=null&&(key.equals("voice")||key.startsWith("online.")))cancelFromUi();};
+    private final SharedPreferences.OnSharedPreferenceChangeListener preferenceChanges=(prefs,key)->{
+        if("voice".equals(key))cancelFromUi();
+        else if(key!=null&&key.startsWith("online.")&&key.substring(7).equals(activeModel)&&!prefs.getBoolean(key,false))cancelFromUi();
+    };
     private final ModelStore.Listener modelChanges=()->{String model=activeModel;if(model!=null&&store!=null&&!store.isInstalled(model))cancelFromUi();};
     private volatile String loadedVoice;
     @Override public void onCreate() { store = new ModelStore(this);host=new AndroidBackendHost(this);preferences=getSharedPreferences("voices",MODE_PRIVATE);preferences.registerOnSharedPreferenceChangeListener(preferenceChanges);store.addListener(modelChanges);BackendStatus.controller(this,this::cancelFromUi);super.onCreate(); }
@@ -27,7 +30,7 @@ public final class LocalVoiceService extends TextToSpeechService {
         Catalog.VoiceSpec voice = choose(null, "", "");
         if (voice == null) return new String[]{"", "", ""};
         Locale locale = Locale.forLanguageTag(voice.languageTag);
-        return new String[]{locale.getISO3Language(),locale.getISO3Country(),""};
+        return new String[]{LocaleTags.language(locale),LocaleTags.country(locale),""};
     }
     private Catalog.VoiceSpec choose(String name,String language,String country) {
         List<Catalog.VoiceSpec> available = store.installedVoices();
@@ -38,13 +41,19 @@ public final class LocalVoiceService extends TextToSpeechService {
         String selected = store.selectedVoice();
         for (Catalog.VoiceSpec voice : available) if (voice.id.equals(selected) && matches(voice,language,country)) return voice;
         for (Catalog.VoiceSpec voice : available) if (!Catalog.findModel(voice.modelId).network && matches(voice,language,country)) return voice;
+        // Prefer a locally installed language even when only another country variant is present.
+        if(country != null && !country.isEmpty())
+            for(Catalog.VoiceSpec voice:available) if(!Catalog.findModel(voice.modelId).network&&matches(voice,language,""))return voice;
+        // The online catalog is installed only after explicit opt-in. Selection happens before synthesis;
+        // failures never switch provider or fall back to a different voice.
+        for(Catalog.VoiceSpec voice:available) if(Catalog.findModel(voice.modelId).network&&matches(voice,language,country))return voice;
         if(country != null && !country.isEmpty()) return choose(null,language,"");
         return null;
     }
     private static boolean matches(Catalog.VoiceSpec voice,String language,String country) {
         Locale locale = Locale.forLanguageTag(voice.languageTag);
-        return (language == null || language.isEmpty() || language.equals(locale.getLanguage()) || language.equals(locale.getISO3Language()))
-            && (country == null || country.isEmpty() || country.equals(locale.getCountry()) || country.equals(locale.getISO3Country()));
+        return (language == null || language.isEmpty() || language.equals(locale.getLanguage()) || language.equals(LocaleTags.language(locale)))
+            && (country == null || country.isEmpty() || country.equals(locale.getCountry()) || country.equals(LocaleTags.country(locale)));
     }
     @Override protected int onIsLanguageAvailable(String lang,String country,String variant) {
         Catalog.VoiceSpec voice = choose(null,lang,country);
@@ -63,7 +72,7 @@ public final class LocalVoiceService extends TextToSpeechService {
         ArrayList<Voice> voices = new ArrayList<>();
         for (Catalog.VoiceSpec voice : store.installedVoices()) {
             boolean network = Catalog.findModel(voice.modelId).network;
-            voices.add(new Voice(voice.id,Locale.forLanguageTag(voice.languageTag),Voice.QUALITY_HIGH,
+            voices.add(new Voice(voice.id,Locale.forLanguageTag(voice.languageTag),network ? Voice.QUALITY_NORMAL : Voice.QUALITY_HIGH,
                 network ? Voice.LATENCY_NORMAL : Voice.LATENCY_LOW,network,Collections.emptySet()));
         }
         return voices;
@@ -83,16 +92,21 @@ public final class LocalVoiceService extends TextToSpeechService {
         Catalog.VoiceSpec voice = choose(request.getVoiceName(),request.getLanguage(),request.getCountry());
         if (voice == null) { callback.error(TextToSpeech.ERROR_NOT_INSTALLED_YET); callback.done(); synchronized(requests){if(activeToken==token)activeToken=-1;} return; }
         Catalog.Model model = Catalog.findModel(voice.modelId);
-        activeModel=model.id;host.reportStatus("synthesizing",0);
+        synchronized(requests) {
+            activeModel=model.id;
+            // Consent may have changed after choose() captured the voice but before publication.
+            if(model.network&&!store.isInstalled(model.id)){cancelledByUiToken=token;backend.cancel();}
+        }
+        if(!backend.cancelled(token))host.reportStatus("synthesizing",0);
         boolean[] didStart = {false},firstPcm={false};
         try {
             if (!model.network) store.verifyInstalled(model.id);
             Map<String,String> config = new HashMap<>(model.config); config.putAll(voice.config);
-            String text = request.getCharSequenceText().toString().trim();
+            String text = trimWhitespace(request.getCharSequenceText().toString());
             if (text.length() > 100000) throw new IllegalArgumentException("Utterance too long");
-            float speed = Math.max(.5f,Math.min(2f,request.getSpeechRate()/100f));
+            float speed = SpeechRatePolicy.effective(request.getSpeechRate(),preferences.getFloat(SpeechRatePolicy.PREFERENCE,1f));
             // Supertonic native compute cannot be interrupted mid-chunk; bound work and discard cancelled PCM.
-            for (String chunk : chunks(text,180)) {
+            for (String chunk : "backend".equals(config.get("chunking"))?java.util.Collections.singletonList(text):chunks(text,180)) {
                 if (backend.cancelled(token)) break;
                 backend.execute(token,model.id,model.backend,model.network ? getFilesDir() : store.modelDirectory(model.id),config,
                     chunk,voice.languageTag,voice.speakerId,speed,rate -> {
@@ -149,9 +163,16 @@ public final class LocalVoiceService extends TextToSpeechService {
                 if (boundary>offset) end=boundary;
                 if (Character.isHighSurrogate(text.charAt(end-1))) end--;
             }
-            String chunk=text.substring(offset,end).trim(); if (!chunk.isEmpty()) result.add(chunk); offset=end;
+            String chunk=trimWhitespace(text.substring(offset,end)); if (!chunk.isEmpty()) result.add(chunk); offset=end;
         }
         return result;
     }
+    private static String trimWhitespace(String text) {
+        int start=0,end=text.length();
+        while(start<end&&space(text.codePointAt(start)))start+=Character.charCount(text.codePointAt(start));
+        while(end>start&&space(text.codePointBefore(end)))end-=Character.charCount(text.codePointBefore(end));
+        return text.substring(start,end);
+    }
+    private static boolean space(int c){return Character.isSpaceChar(c)||(c>=9&&c<=13)||c==0x85;}
     @Override public void onDestroy() { backend.cancel();preferences.unregisterOnSharedPreferenceChangeListener(preferenceChanges);store.removeListener(modelChanges);BackendStatus.clearController(this);host.close();new Thread(backend::close,"LocalVoice-close").start();super.onDestroy(); }
 }

@@ -1,0 +1,44 @@
+[
+  {
+    "file": "model_fast.safetensors",
+    "url": "https://huggingface.co/ArtShtorm/Shtorm-PocketTTS-RU/resolve/33f6c328d62c4da5c1227bbe081e89b574a6183a/model_fast.safetensors",
+    "size": 438033312,
+    "sha256": "de8ad576d3d549372a34b40df03d6e6b8f668e857dac32f61934e9c5c1da8d52"
+  },
+  {
+    "file": "tokenizer.model",
+    "url": "https://huggingface.co/ArtShtorm/Shtorm-PocketTTS-RU/resolve/33f6c328d62c4da5c1227bbe081e89b574a6183a/tokenizer.model",
+    "size": 316834,
+    "sha256": "95d0b8e61951408c7744e09fb5b87ff8e318612b0c8168cc593ea0a812f34f81"
+  },
+  {
+    "file": "config_fast.yaml",
+    "url": "https://huggingface.co/ArtShtorm/Shtorm-PocketTTS-RU/resolve/33f6c328d62c4da5c1227bbe081e89b574a6183a/config_fast.yaml",
+    "size": 1219,
+    "sha256": "846a765376d4482997950a8493b30dfd6a54ccfd1ac8831ae23e674469781ff2"
+  },
+  {
+    "file": "voice-vctk-p228.wav",
+    "url": "https://huggingface.co/kyutai/tts-voices/resolve/323332d33f997de8394f24a193e1a76df720e01a/vctk/p228_023_enhanced.wav",
+    "size": 804630,
+    "sha256": "0a6de25cf12bf1540beb85979f306a92be81fecc051c547c5395e7e5237a3856"
+  },
+  {
+    "file": "lookbe-source.zip",
+    "url": "https://codeload.github.com/lookbe/pocket-tts-onnx-export/zip/2b25e5a09d7b243edc4bbff7589363dc57a0204e",
+    "size": 152759,
+    "sha256": "e639306d009410685caa2727bfb7ca3eecaab4596b6cf645f7e2199c14443f73"
+  },
+  {
+    "file": "pocket-export-base.zip",
+    "url": "https://codeload.github.com/kyutai-labs/pocket-tts/zip/41cbc84af539ea78a804ffca5f9c6edc1a22ce44",
+    "size": 884387,
+    "sha256": "07959eab741ee181cd976b4e0b387fc23e887290ce95f2a7db2e43159f37a2b7"
+  },
+  {
+    "file": "pocket-tts-source.zip",
+    "url": "https://codeload.github.com/kyutai-labs/pocket-tts/zip/1df6b3da17cb43eff8c4c4e077f785520492adff",
+    "size": 893804,
+    "sha256": "b46447fbc363e1779e66cc5b990410299f4efcce3fa68fec080ed20d83dc99d1"
+  }
+]

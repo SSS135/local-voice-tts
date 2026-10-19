@@ -31,7 +31,6 @@ public final class EdgeProtocolCheck {
         for (byte[] bad : new byte[][]{ {}, {0}, {1,0,7}, {0,1,1} }) {
             try { EdgeProtocol.audioPayload(bad); throw new AssertionError(); } catch (IOException expected) {}
         }
-        assert EdgeVoices.BASELINE.size()==4;
         long now=java.time.Instant.parse("2024-01-01T00:00:00Z").toEpochMilli();
         assert EdgeProtocol.retryAfter(null,now)==0;
         assert EdgeProtocol.retryAfter(" 60 ",now)==60000;

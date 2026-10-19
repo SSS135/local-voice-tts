@@ -1,4 +1,4 @@
-param([string]$OutputPath = '', [switch]$ListOnly)
+param([string]$OutputPath = '', [switch]$ListOnly, [switch]$Audit)
 $ErrorActionPreference = 'Stop'
 $workspace = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'SOURCE-PACKAGE.json') -Raw | ConvertFrom-Json
@@ -7,12 +7,27 @@ $members = [System.Collections.Generic.List[object]]::new()
 function Add-MemberFile([string]$Source, [string]$Destination) {
     $sourceFile = Get-Item -LiteralPath $Source -ErrorAction Stop
     if ($sourceFile.PSIsContainer -or ($sourceFile.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Not a regular source file: $Destination" }
-    $name = $Destination.Replace('\','/')
-    if ($name -match '(^|/)(\.gradle|build|build-cache|signing|downloads|models|android-home|__pycache__)(/|$)' -or
-        $name -match '(?i)(store-password\.txt|signing\.local\.ps1|local\.properties|private-vn-prefs-backup\.xml)$' -or
-        $name -match '(?i)\.(keystore|jks|p12|pfx|pem|key|pkcs12|onnx|bin|safetensors|pt|pth|gguf|tflite|part|apk|aab|wav|mp3|avd|pyc|log)$' -or
-        $name -match '(^|/)\.\.(/|$)') { throw "Excluded/private artifact encountered: $name" }
+    $name = $Destination.Replace([char]92,[char]47)
+    if ($name -match '(?i)(^|/)(\.git|\.codex|\.agents|\.aws|\.gradle|build|build-cache|signing|downloads|models|deps|native-deps|venv|\.venv|site-packages|android-home|\.android|__pycache__)(/|$)' -or
+        $name -match '(?i)(^|/)(store-password\.txt|signing\.local\.ps1|local\.properties|private-vn-prefs-backup\.xml|keystore\.properties|signing\.properties|secrets\.properties|\.env(?:\..*)?|REVIEW(?:-1\.1)?\.md)$' -or
+        $name -match '(?i)(\.local\.ps1|\.(keystore|jks|p12|pfx|pem|key|pkcs12|onnx|bin|model|safetensors|pt|pth|ckpt|pkl|pickle|npy|npz|gguf|tflite|part|apk|aab|wav|mp3|avd|qcow2|img|pyc|log))$' -or
+        $name -match '(^|/)\.\.?(/|$)' -or $name.StartsWith('/') -or $name.Contains(':') -or $name.Contains('//')) { throw "Excluded/private artifact encountered: $name" }
     if (!$sourceFile.FullName.StartsWith($workspace + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Source file escaped workspace' }
+    # A regular leaf below a junction can still refer outside the workspace.
+    # Inspect ancestor metadata before opening or hashing any file content.
+    $sourceDirectory = $sourceFile.Directory
+    while ($sourceDirectory -and !$sourceDirectory.FullName.Equals($workspace, [StringComparison]::OrdinalIgnoreCase)) {
+        if ($sourceDirectory.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse-point source ancestor: $name" }
+        $sourceDirectory = $sourceDirectory.Parent
+    }
+    if ($name -match '(?i)\.(zip|tar(?:\.gz|\.bz2|\.xz|\.zst)?|gz|bz2|xz|zst|tgz|tbz2|7z|rar)$') {
+        $allowed = @($manifest.sourceArchives | Where-Object path -EQ $name)
+        if ($allowed.Count -ne 1 -or $allowed[0].sha256 -notmatch '^[a-f0-9]{64}$' -or
+            $sourceFile.Length -ne $allowed[0].bytes -or
+            (Get-FileHash -LiteralPath $sourceFile.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne $allowed[0].sha256) {
+            throw "Unlisted or changed source archive (model packs are excluded): $name"
+        }
+    }
     $members.Add([pscustomobject]@{ Source=$sourceFile.FullName; Name=$name })
 }
 foreach ($relative in $manifest.projectFiles) { Add-MemberFile (Join-Path $PSScriptRoot $relative) ('LocalVoice/' + $relative) }
@@ -29,6 +44,21 @@ foreach ($tree in $manifest.projectTrees) {
 foreach ($relative in $manifest.workspaceFiles) { Add-MemberFile (Join-Path $workspace $relative) $relative }
 $ordered = @($members | Sort-Object Name)
 if (@($ordered.Name | Select-Object -Unique).Count -ne $ordered.Count) { throw 'Duplicate source package member' }
+foreach ($archive in $manifest.sourceArchives) {
+    if ($ordered.Name -notcontains $archive.path) { throw "Pinned source archive is missing from the allowlist: $($archive.path)" }
+}
+if ($Audit) {
+    $entries = @(foreach ($member in $ordered) {
+        [pscustomobject]@{ path=$member.Name; bytes=(Get-Item -LiteralPath $member.Source).Length; sha256=(Get-FileHash -LiteralPath $member.Source -Algorithm SHA256).Hash.ToLowerInvariant() }
+    })
+    [pscustomobject]@{
+        schemaVersion=1; archiveCreated=$false; fileCount=$entries.Count; totalBytes=[long](($entries | Measure-Object bytes -Sum).Sum)
+        entryHashManifest='SOURCE-FILES.sha256'; pinnedSourceArchiveCount=@($manifest.sourceArchives).Count
+        nativeSourceSnapshotCount=@($entries | Where-Object path -Match '^research/native-source/.*\.zip$').Count
+        entries=$entries
+    } | ConvertTo-Json -Depth 5
+    return
+}
 foreach ($member in $ordered) { Write-Output $member.Name }
 Write-Output 'SOURCE-FILES.sha256'
 if ($ListOnly) { return }

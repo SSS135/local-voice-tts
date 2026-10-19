@@ -1,0 +1,23 @@
+{
+  "runtime": "1.13.8",
+  "loadSeconds": 1.9690000000409782,
+  "runs": [
+    {
+      "speedArgument": 1.0,
+      "seconds": 1.890999999945052,
+      "samples": 30720,
+      "sampleRate": 24000,
+      "rms": 0.07134227852605836,
+      "pcmSha256": "a01d3f0c1630fbbe93fe5f296197788143d30d278f7db070fd16789464b55d8d"
+    },
+    {
+      "speedArgument": 1.5,
+      "seconds": 0.7810000000754371,
+      "samples": 30720,
+      "sampleRate": 24000,
+      "rms": 0.07134227852605836,
+      "pcmSha256": "a01d3f0c1630fbbe93fe5f296197788143d30d278f7db070fd16789464b55d8d"
+    }
+  ],
+  "speedIgnored": true
+}

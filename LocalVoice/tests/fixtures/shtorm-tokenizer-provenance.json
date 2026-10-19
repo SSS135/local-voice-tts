@@ -1,0 +1,11 @@
+{
+  "fixtureGenerator": "research/shtorm/tokenizer_fixtures.py (uses genuine sentencepiece.SentencePieceProcessor)",
+  "fixtureSha256": "4f9e93fc51d65db969a495f41f9dca336a395b10c0f31a96d7e7d7bbbed62270",
+  "sentencePieceVersion": "0.2.2",
+  "sentencePieceSourceCommit": "e0cce7d37b065b5140349dbe12c6bcf6192fdd78",
+  "modelRevision": "33f6c328d62c4da5c1227bbe081e89b574a6183a",
+  "tokenizerModelSha256": "95d0b8e61951408c7744e09fb5b87ff8e318612b0c8168cc593ea0a812f34f81",
+  "normalizerSha256": "5febaab28312e9dbddb42be695c9e4380367f7ebe65121cdf894fb5d59d37eed",
+  "fixtures": 160,
+  "modelCheckpointBundledWithTests": false
+}

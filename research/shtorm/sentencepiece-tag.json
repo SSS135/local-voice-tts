@@ -1,0 +1,10 @@
+{
+  "ref": "refs/tags/v0.2.2",
+  "node_id": "MDM6UmVmODQxODM4ODI6cmVmcy90YWdzL3YwLjIuMg==",
+  "url": "https://api.github.com/repos/google/sentencepiece/git/refs/tags/v0.2.2",
+  "object": {
+    "sha": "e0cce7d37b065b5140349dbe12c6bcf6192fdd78",
+    "type": "commit",
+    "url": "https://api.github.com/repos/google/sentencepiece/git/commits/e0cce7d37b065b5140349dbe12c6bcf6192fdd78"
+  }
+}

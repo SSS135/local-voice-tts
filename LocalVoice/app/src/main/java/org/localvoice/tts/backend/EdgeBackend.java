@@ -33,6 +33,7 @@ public final class EdgeBackend implements SpeechBackend {
     private volatile WebSocket activeSocket;
     private volatile boolean cancelled;
     private String voice;
+    private String voiceName,voiceLocale;
     private Host host;
     private final String endpoint;
     private final long attemptTimeoutMillis;
@@ -48,8 +49,13 @@ public final class EdgeBackend implements SpeechBackend {
 
     @Override public void load(File directory, Map<String,String> config) throws IOException {
         voice = config.get("voice");
-        if (voice == null || !voice.matches("[a-z]{2,3}-[A-Z]{2}-[A-Za-z0-9-]+"))
+        voiceName=config.get("voiceName");voiceLocale=config.get("locale");
+        if (voice == null || !voice.matches("[a-z]{2,3}(?:-[A-Za-z0-9]+){2,6}") || voice.length()>128)
             throw new EdgeRetry.FatalException("An explicit Edge voice is required");
+        if((voiceName==null)!=(voiceLocale==null)) throw new EdgeRetry.FatalException("Incomplete Edge voice metadata");
+        if(voiceLocale!=null && (!voiceLocale.matches("[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){1,3}") || !voice.startsWith(voiceLocale+"-")
+                || !voiceName.equals("Microsoft Server Speech Text to Speech Voice ("+voiceLocale+", "+voice.substring(voiceLocale.length()+1)+")")))
+            throw new EdgeRetry.FatalException("Invalid Edge voice metadata");
     }
     @Override public int sampleRate() { return 24000; }
     @Override public void cancel() {
@@ -111,7 +117,8 @@ public final class EdgeBackend implements SpeechBackend {
     }
 
     private byte[] request(String text, float speed, Cancellation cancellation) throws Exception {
-        String ssml = EdgeProtocol.ssml(text, voice, speed, id());
+        String ssml = voiceName==null ? EdgeProtocol.ssml(text, voice, speed, id())
+                : EdgeProtocol.ssml(text,voice,voiceName,voiceLocale,speed,id());
         Request request = headers(endpoint == null ? url("/edge/v1").addQueryParameter("ConnectionId", id()).build().toString() : endpoint)
                 .header("Pragma", "no-cache").header("Cache-Control", "no-cache").header("Origin", EdgeProtocol.ORIGIN).build();
         CountDownLatch done = new CountDownLatch(1);

@@ -1,0 +1,14 @@
+{
+  "modelPin": "33f6c328d62c4da5c1227bbe081e89b574a6183a",
+  "torch": "2.6.0+cpu",
+  "loadSeconds": 1.359000000054948,
+  "sampleRate": 24000,
+  "parameters": 109501826,
+  "flowLayers": 6,
+  "promptSeconds": 2.093999999924563,
+  "generationSeconds": 1.7030000000959262,
+  "samples": 32640,
+  "audioSeconds": 1.36,
+  "rms": 0.05028285190747558,
+  "pcmSha256": "5b1e1e7ef73788f958878369937a99a519e35d735ecd71bb36226c810dc187e1"
+}

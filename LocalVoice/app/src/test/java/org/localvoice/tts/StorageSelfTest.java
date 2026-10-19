@@ -54,9 +54,15 @@ public final class StorageSelfTest {
             rejects(()->DownloadFile.requireSpace(131,100,32));
             rejects(()->DownloadFile.requireSpace(100,101,0));
             Set<String> voiceIds=new HashSet<>();
+            int licenseAssets=0;
             for(Catalog.Model model:Catalog.MODELS) {
                 check(!model.network || model.files.isEmpty(),"online model contains no weights");
                 check(model.available || model.voices.isEmpty(),"unsupported model advertises no voices");
+                if(args.length>0&&!model.licenseAsset.isEmpty()){
+                    File notice=ModelFiles.child(new File(args[0],"licenses"),model.licenseAsset);
+                    check(notice.isFile()&&notice.length()>0,"catalog license asset exists at AboutActivity path: "+model.id);
+                    licenseAssets++;
+                }
                 Set<String> paths=new HashSet<>();
                 for(Catalog.ModelFile file:model.files) {
                     ModelFiles.child(root,file.path);
@@ -71,6 +77,7 @@ public final class StorageSelfTest {
             }
             check(Catalog.findModel("kokoro-en").bytes()==172731932L,"truthful Kokoro total");
             check(Catalog.findModel("supertonic-3").bytes()==145310775L,"truthful Supertonic total includes upstream license");
+            if(args.length>0)System.out.println("PASS "+licenseAssets+" catalog model license assets at licenses/ paths used by AboutActivity");
             System.out.println("PASS: path boundaries, interrupted stream/retry, cancel, length bounds, cache reuse, same-size corruption, revision receipts, atomic activation, storage limits, pinned catalog/voice consistency");
         } finally { ModelFiles.remove(root); }
     }

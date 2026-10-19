@@ -1,0 +1,10 @@
+{
+  "runtime": "sherpa-onnx1.13.8",
+  "diagnosticOnly": true,
+  "sequences": 32,
+  "exact": 32,
+  "failures": [],
+  "normalization": "Genuine SentencePiece identity normalization, whitespace markers changed back to ASCII spaces before native encoding",
+  "traceSha256": "93765f0df5b4ca7f6491855430392806b9e8409b22bdb4a58df9ba6a89857ef4",
+  "traceHashEncoding": "raw-file-bytes"
+}

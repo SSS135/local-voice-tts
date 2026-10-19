@@ -3,7 +3,8 @@
  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
  <queries><intent><action android:name="android.intent.action.TTS_SERVICE"/></intent></queries>
  <application android:label="Local Voice" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:allowBackup="false" android:supportsRtl="true" android:usesCleartextTraffic="false" android:largeHeap="true">
-  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+  <activity android:name=".AboutActivity" android:exported="false"/>
+  <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
   <service android:name=".LocalVoiceService" android:exported="true" android:label="Local Voice">
    <intent-filter><action android:name="android.intent.action.TTS_SERVICE"/><category android:name="android.intent.category.DEFAULT"/></intent-filter>
    <meta-data android:name="android.speech.tts" android:resource="@xml/tts_engine"/>

@@ -1,0 +1,1436 @@
+{
+  "flow_lm_flow.onnx": {
+    "inputs": [
+      {
+        "name": "c",
+        "elementType": 1,
+        "shape": [
+          1024
+        ]
+      },
+      {
+        "name": "s",
+        "elementType": 1,
+        "shape": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "t",
+        "elementType": 1,
+        "shape": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "x",
+        "elementType": 1,
+        "shape": [
+          1,
+          32
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "flow_dir",
+        "elementType": 1,
+        "shape": [
+          1,
+          32
+        ]
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "",
+        "version": 17
+      }
+    ]
+  },
+  "flow_lm_main.onnx": {
+    "inputs": [
+      {
+        "name": "sequence",
+        "elementType": 1,
+        "shape": [
+          1,
+          "seq_len",
+          32
+        ]
+      },
+      {
+        "name": "text_embeddings",
+        "elementType": 1,
+        "shape": [
+          1,
+          "text_len",
+          1024
+        ]
+      },
+      {
+        "name": "state_0",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_1",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_2",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_3",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_4",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_5",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_6",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_7",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_8",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_9",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_10",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_11",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_12",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_13",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_14",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_15",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_16",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "state_17",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "conditioning",
+        "elementType": 1,
+        "shape": [
+          1024
+        ]
+      },
+      {
+        "name": "eos_logit",
+        "elementType": 1,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_0",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_1",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_2",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_3",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_4",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_5",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_6",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_7",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_8",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_9",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_10",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_11",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_12",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_13",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_14",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_15",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_16",
+        "elementType": 1,
+        "shape": [
+          1,
+          1000,
+          16,
+          64
+        ]
+      },
+      {
+        "name": "out_state_17",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "",
+        "version": 17
+      }
+    ]
+  },
+  "mimi_encoder.onnx": {
+    "inputs": [
+      {
+        "name": "audio",
+        "elementType": 1,
+        "shape": [
+          1,
+          1,
+          "audio_len"
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "latents",
+        "elementType": 1,
+        "shape": [
+          "Concatlatents_dim_0",
+          "Concatlatents_dim_1",
+          1024
+        ]
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "",
+        "version": 17
+      }
+    ]
+  },
+  "mimi_decoder.onnx": {
+    "inputs": [
+      {
+        "name": "latent",
+        "elementType": 1,
+        "shape": [
+          1,
+          "seq_len",
+          32
+        ]
+      },
+      {
+        "name": "state_0",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_1",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          6
+        ]
+      },
+      {
+        "name": "state_2",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_3",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          2
+        ]
+      },
+      {
+        "name": "state_4",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          6
+        ]
+      },
+      {
+        "name": "state_5",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_6",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          2
+        ]
+      },
+      {
+        "name": "state_7",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_8",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          0
+        ]
+      },
+      {
+        "name": "state_9",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          5
+        ]
+      },
+      {
+        "name": "state_10",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_11",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          2
+        ]
+      },
+      {
+        "name": "state_12",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_13",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          0
+        ]
+      },
+      {
+        "name": "state_14",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          4
+        ]
+      },
+      {
+        "name": "state_15",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_16",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          2
+        ]
+      },
+      {
+        "name": "state_17",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_18",
+        "elementType": 1,
+        "shape": [
+          1,
+          32,
+          0
+        ]
+      },
+      {
+        "name": "state_19",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_20",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_21",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_22",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_23",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_24",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_25",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_26",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          16
+        ]
+      },
+      {
+        "name": "state_27",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_28",
+        "elementType": 1,
+        "shape": [
+          1,
+          1,
+          6
+        ]
+      },
+      {
+        "name": "state_29",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_30",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          2
+        ]
+      },
+      {
+        "name": "state_31",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_32",
+        "elementType": 1,
+        "shape": [
+          1,
+          32,
+          0
+        ]
+      },
+      {
+        "name": "state_33",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_34",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          2
+        ]
+      },
+      {
+        "name": "state_35",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_36",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          4
+        ]
+      },
+      {
+        "name": "state_37",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_38",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          2
+        ]
+      },
+      {
+        "name": "state_39",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_40",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          0
+        ]
+      },
+      {
+        "name": "state_41",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_42",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          5
+        ]
+      },
+      {
+        "name": "state_43",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_44",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          2
+        ]
+      },
+      {
+        "name": "state_45",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_46",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          0
+        ]
+      },
+      {
+        "name": "state_47",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_48",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          6
+        ]
+      },
+      {
+        "name": "state_49",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_50",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_51",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_52",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_53",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "state_54",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "state_55",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          16
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "audio_frame",
+        "elementType": 1,
+        "shape": [
+          "num_samples"
+        ]
+      },
+      {
+        "name": "out_state_0",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_1",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          "Sliceout_state_1_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_2",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_3",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          "Sliceout_state_3_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_4",
+        "elementType": 1,
+        "shape": [
+          "Subout_state_4_dim_0",
+          "Subout_state_4_dim_1",
+          "Subout_state_4_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_5",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_6",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          "Sliceout_state_6_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_7",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_8",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          0
+        ]
+      },
+      {
+        "name": "out_state_9",
+        "elementType": 1,
+        "shape": [
+          "Subout_state_9_dim_0",
+          "Subout_state_9_dim_1",
+          "Subout_state_9_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_10",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_11",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          "Sliceout_state_11_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_12",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_13",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          0
+        ]
+      },
+      {
+        "name": "out_state_14",
+        "elementType": 1,
+        "shape": [
+          "Subout_state_14_dim_0",
+          "Subout_state_14_dim_1",
+          "Subout_state_14_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_15",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_16",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          "Sliceout_state_16_dim_2"
+        ]
+      },
+      {
+        "name": "out_state_17",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_18",
+        "elementType": 1,
+        "shape": [
+          1,
+          32,
+          0
+        ]
+      },
+      {
+        "name": "out_state_19",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_20",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_21",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_22",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_23",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_24",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_25",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_26",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          16
+        ]
+      },
+      {
+        "name": "out_state_27",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_28",
+        "elementType": 1,
+        "shape": [
+          1,
+          1,
+          6
+        ]
+      },
+      {
+        "name": "out_state_29",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_30",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          2
+        ]
+      },
+      {
+        "name": "out_state_31",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_32",
+        "elementType": 1,
+        "shape": [
+          1,
+          32,
+          0
+        ]
+      },
+      {
+        "name": "out_state_33",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_34",
+        "elementType": 1,
+        "shape": [
+          1,
+          512,
+          2
+        ]
+      },
+      {
+        "name": "out_state_35",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_36",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          4
+        ]
+      },
+      {
+        "name": "out_state_37",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_38",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          2
+        ]
+      },
+      {
+        "name": "out_state_39",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_40",
+        "elementType": 1,
+        "shape": [
+          1,
+          64,
+          0
+        ]
+      },
+      {
+        "name": "out_state_41",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_42",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          5
+        ]
+      },
+      {
+        "name": "out_state_43",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_44",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          2
+        ]
+      },
+      {
+        "name": "out_state_45",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_46",
+        "elementType": 1,
+        "shape": [
+          1,
+          128,
+          0
+        ]
+      },
+      {
+        "name": "out_state_47",
+        "elementType": 9,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_48",
+        "elementType": 1,
+        "shape": [
+          1,
+          256,
+          6
+        ]
+      },
+      {
+        "name": "out_state_49",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_50",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_51",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_52",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_53",
+        "elementType": 1,
+        "shape": [
+          1,
+          250,
+          8,
+          64
+        ]
+      },
+      {
+        "name": "out_state_54",
+        "elementType": 7,
+        "shape": [
+          1
+        ]
+      },
+      {
+        "name": "out_state_55",
+        "elementType": 1,
+        "shape": [
+          "Sliceout_state_55_dim_0",
+          "Sliceout_state_55_dim_1",
+          "Sliceout_state_55_dim_2"
+        ]
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "",
+        "version": 17
+      }
+    ]
+  },
+  "text_conditioner.onnx": {
+    "inputs": [
+      {
+        "name": "token_ids",
+        "elementType": 7,
+        "shape": [
+          1,
+          "seq_len"
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "embeddings",
+        "elementType": 1,
+        "shape": [
+          1,
+          "seq_len",
+          1024
+        ]
+      }
+    ],
+    "opsets": [
+      {
+        "domain": "",
+        "version": 17
+      }
+    ]
+  }
+}

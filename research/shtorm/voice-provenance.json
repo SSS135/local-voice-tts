@@ -1,0 +1,12 @@
+{
+  "source": "kyutai/tts-voices/vctk/p228_023_enhanced.wav",
+  "sourceRevision": "323332d33f997de8394f24a193e1a76df720e01a",
+  "sourceSha256": "0a6de25cf12bf1540beb85979f306a92be81fecc051c547c5395e7e5237a3856",
+  "license": "CC-BY-4.0",
+  "output": "voice-vctk-p228-24k.wav",
+  "sampleRate": 24000,
+  "samples": 241920,
+  "bytes": 483884,
+  "sha256": "4ba4bbc81fc4319c7f65a41ac0984143f611cee8964899fdd14f936bd7ea4f90",
+  "changes": "Resampled mono24k; cropped to10s maximum; trimmed35dB trailing silence;20ms fade;80ms zero tail; PCM16 quantization."
+}

@@ -1,0 +1,21 @@
+Shtorm PocketTTS Russian v2 fast — local ONNX conversion
+
+Russian fine-tuned model: ArtShtorm, Shtorm-PocketTTS-RU v2 (2026-10-01).
+https://huggingface.co/ArtShtorm/Shtorm-PocketTTS-RU/tree/33f6c328d62c4da5c1227bbe081e89b574a6183a
+Original model_fast.safetensors:438033312bytes, SHA256de8ad576d3d549372a34b40df03d6e6b8f668e857dac32f61934e9c5c1da8d52.
+Base architecture and model: Kyutai Labs Pocket TTS.
+Model, tokenizer vocabulary/scores and extracted normalization trie: CC BY4.0.
+Full license: LICENSE-CC-BY-4.0.txt; https://creativecommons.org/licenses/by/4.0/
+
+Changes: converted the authentic Russian checkpoint to five ONNX opset17 graphs using lookbe/pocket-tts-onnx-export@2b25e5a09d7b243edc4bbff7589363dc57a0204e and its pinned Kyutai source@41cbc84af539ea78a804ffca5f9c6edc1a22ce44. Export uses full1000-token float32 KV/state tensors for Sherpa1.13.8 compatibility. Learned Shtorm BOS-before-voice embedding is prepended once inside the Mimi encoder graph. Weights were not trained or replaced with an English checkpoint. The bridge JSON files encode token IDs into a private-use alphabet; they are not a replacement Russian tokenizer. App-side genuine SentencePiece BPE normalization/tokenization is required before encoding into that alphabet.
+
+One public voice prompt: VCTK speaker p228 (upstream Pocket TTS alias Anna).
+Source dataset: CSTR VCTK Corpus, University of Edinburgh, https://datashare.ed.ac.uk/handle/10283/3443 , CC BY4.0.
+Source recording as enhanced/distributed by Kyutai: https://huggingface.co/kyutai/tts-voices/resolve/323332d33f997de8394f24a193e1a76df720e01a/vctk/p228_023_enhanced.wav
+Kyutai's pinned README identifies VCTK's license and states enhanced recordings were cleaned using ai-coustics: https://huggingface.co/kyutai/tts-voices/blob/323332d33f997de8394f24a193e1a76df720e01a/README.md
+Original voice SHA2560a6de25cf12bf1540beb85979f306a92be81fecc051c547c5395e7e5237a3856.
+Additional changes: mono24k resampling; at most first10seconds; trailing35dB silence trim;20ms fade;80ms zero tail; PCM16 quantization. See voice-provenance.json for exact output hash and measured size. This is a voice reference conditioned through the Russian model, not a claim that Shtorm ships a native Anna speaker or that the original recording is Russian.
+
+Conversion implementation: PocketTTS code and exporter code are MIT; retain their source license notices in any source distribution. SentencePiece reference implementation is Apache2.0; retain its notices for any implementation derived from it. The existing Sherpa/eSpeak runtime and application licensing are separate from the CC BY4 model and prompt.
+
+This local pack is imported explicitly and contains weights separately from the APK. No public hosting URL is claimed. No text is uploaded during conversion or inference. Russian only; unsupported text must be normalized or rejected before native inference. Generated audio quality and full Android behavior require device testing. Speed is not implemented by Sherpa Pocket1.13.8; the app must implement rate processing separately.

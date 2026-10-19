@@ -1,0 +1,324 @@
+[
+  {
+    "text": "Hello world.",
+    "prepared": "Hello world.",
+    "ids": [
+      2994,
+      578,
+      263
+    ]
+  },
+  {
+    "text": "HELLO WORLD.",
+    "prepared": "HELLO WORLD.",
+    "ids": [
+      993,
+      1019,
+      1171,
+      1171,
+      989,
+      940,
+      989,
+      941,
+      1171,
+      797,
+      263
+    ]
+  },
+  {
+    "text": "Hello",
+    "prepared": "Hello",
+    "ids": [
+      2994
+    ]
+  },
+  {
+    "text": "hello",
+    "prepared": "hello",
+    "ids": [
+      1876,
+      393
+    ]
+  },
+  {
+    "text": "world",
+    "prepared": "world",
+    "ids": [
+      578
+    ]
+  },
+  {
+    "text": "A",
+    "prepared": "A",
+    "ids": [
+      383
+    ]
+  },
+  {
+    "text": "a",
+    "prepared": "a",
+    "ids": [
+      267
+    ]
+  },
+  {
+    "text": "I",
+    "prepared": "I",
+    "ids": [
+      268
+    ]
+  },
+  {
+    "text": "can't",
+    "prepared": "can't",
+    "ids": [
+      303,
+      264,
+      274
+    ]
+  },
+  {
+    "text": "don't",
+    "prepared": "don't",
+    "ids": [
+      332,
+      264,
+      274
+    ]
+  },
+  {
+    "text": "we're",
+    "prepared": "we're",
+    "ids": [
+      281,
+      264,
+      280
+    ]
+  },
+  {
+    "text": "it's",
+    "prepared": "it's",
+    "ids": [
+      275,
+      264,
+      261
+    ]
+  },
+  {
+    "text": "one two three",
+    "prepared": "one two three",
+    "ids": [
+      322,
+      434,
+      540
+    ]
+  },
+  {
+    "text": "12345",
+    "prepared": "12345",
+    "ids": [
+      260,
+      341,
+      365,
+      450,
+      487,
+      437
+    ]
+  },
+  {
+    "text": "English pronunciation",
+    "prepared": "English pronunciation",
+    "ids": [
+      1852,
+      851,
+      675,
+      306,
+      813,
+      852,
+      431
+    ]
+  },
+  {
+    "text": "Alba MacKenna",
+    "prepared": "Alba MacKenna",
+    "ids": [
+      1271,
+      1078,
+      3589,
+      2194,
+      439,
+      559
+    ]
+  },
+  {
+    "text": "a  b",
+    "prepared": "a  b",
+    "ids": [
+      267,
+      260,
+      557
+    ]
+  },
+  {
+    "text": "  a b  ",
+    "prepared": "a b",
+    "ids": [
+      267,
+      557
+    ]
+  },
+  {
+    "text": "a\tb\nc",
+    "prepared": "a\tb\nc",
+    "ids": [
+      267,
+      13,
+      512,
+      14,
+      440
+    ]
+  },
+  {
+    "text": "café",
+    "prepared": "café",
+    "ids": [
+      331,
+      2250,
+      745
+    ]
+  },
+  {
+    "text": "naïve",
+    "prepared": "naïve",
+    "ids": [
+      913,
+      199,
+      179,
+      314
+    ]
+  },
+  {
+    "text": "Straße",
+    "prepared": "Straße",
+    "ids": [
+      1010,
+      471,
+      199,
+      163,
+      336
+    ]
+  },
+  {
+    "text": "é",
+    "prepared": "é",
+    "ids": [
+      402,
+      208,
+      133
+    ]
+  },
+  {
+    "text": "😀",
+    "prepared": "😀",
+    "ids": [
+      260,
+      244,
+      163,
+      156,
+      132
+    ]
+  },
+  {
+    "text": "中文",
+    "prepared": "中文",
+    "ids": [
+      260,
+      232,
+      188,
+      177,
+      234,
+      154,
+      139
+    ]
+  },
+  {
+    "text": "Привет",
+    "prepared": "Привет",
+    "ids": [
+      260,
+      212,
+      163,
+      2244,
+      1398,
+      1607,
+      1068,
+      1730
+    ]
+  },
+  {
+    "text": "a b",
+    "prepared": "a b",
+    "ids": [
+      267,
+      198,
+      164,
+      512
+    ]
+  },
+  {
+    "text": "a b",
+    "prepared": "a b",
+    "ids": [
+      267,
+      230,
+      132,
+      141,
+      512
+    ]
+  },
+  {
+    "text": "a-b",
+    "prepared": "a-b",
+    "ids": [
+      267,
+      337,
+      512
+    ]
+  },
+  {
+    "text": "state-of-the-art",
+    "prepared": "state-of-the-art",
+    "ids": [
+      932,
+      337,
+      2735,
+      337,
+      1855,
+      337,
+      486,
+      274
+    ]
+  },
+  {
+    "text": "test@example",
+    "prepared": "test@example",
+    "ids": [
+      1115,
+      68,
+      336,
+      911
+    ]
+  },
+  {
+    "text": "(hello)",
+    "prepared": "(hello)",
+    "ids": [
+      260,
+      44,
+      889,
+      335,
+      393,
+      45
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "source": "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list",
+  "observedHttpStatus": 200,
+  "fetchedAtUtc": "2026-10-18T18:46:14.277Z",
+  "voiceCount": 322,
+  "localeCount": 142,
+  "snapshotSha256": "b7d8d80b282de606968de105529db36b8e4aa4b70ff10d39358eb6e92961fc10",
+  "notes": "Complete returned metadata, with actual FriendlyName and Locale. Availability may change. This snapshot contains no model weights or utterance text."
+}
