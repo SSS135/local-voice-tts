@@ -77,7 +77,7 @@ Pending retry depends on the requesting app remaining alive and keeping the requ
 
 Clients that do not pick a voice by name get the voice selected in the manager whenever its language matches the requested locale; the region only ranks other voices. Clients that pick a voice by name get exactly that voice.
 
-Modern clients discover enabled online voices through `getVoices()` / `isLanguageAvailable()`; those voices are marked network-required. The legacy `ACTION_CHECK_TTS_DATA` intent checks **installed local resources only**. With Edge enabled and zero local models, it returns `CHECK_VOICE_DATA_FAIL`, so a legacy client that gates solely on that result may request a local-model installation even though modern online voice discovery works.
+Modern clients discover enabled online voices through `getVoices()` (marked network-required); `isLanguageAvailable()` counts an online voice's language only when that voice is selected in Local Voice. The legacy `ACTION_CHECK_TTS_DATA` intent checks **installed local resources only**. With Edge enabled and zero local models, it returns `CHECK_VOICE_DATA_FAIL`, so a legacy client that gates solely on that result may request a local-model installation even though modern online voice discovery works.
 
 ## Verification
 

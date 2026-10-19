@@ -59,11 +59,17 @@ public final class LocalVoiceService extends TextToSpeechService {
             && (country == null || country.isEmpty() || country.equals(tag[2]) || country.equals(tag[3]));
     }
     @Override protected int onIsLanguageAvailable(String lang,String country,String variant) {
-        // Availability reports what is installed, independent of which voice choose() prefers for the locale.
-        List<Catalog.VoiceSpec> installed = store.installedVoices();
+        return availability(store.installedVoices(),store.selectedVoice(),lang,country);
+    }
+    /**
+     * Counts only voices a locale-only request will speak (SEC-004): local voices plus the selected online voice.
+     * Unselected online voices stay discoverable by name via getVoices(); counting them here made browsers list
+     * languages whose setLanguage() then finds no default voice.
+     */
+    static int availability(List<Catalog.VoiceSpec> installed,String selected,String lang,String country) {
         boolean withCountry = country != null && !country.isEmpty();
-        for (Catalog.VoiceSpec voice : installed) if (matches(voice,lang,country)) return withCountry ? TextToSpeech.LANG_COUNTRY_AVAILABLE : TextToSpeech.LANG_AVAILABLE;
-        for (Catalog.VoiceSpec voice : installed) if (matches(voice,lang,"")) return TextToSpeech.LANG_AVAILABLE;
+        for (Catalog.VoiceSpec voice : installed) if ((!isOnline(voice) || voice.id.equals(selected)) && matches(voice,lang,country)) return withCountry ? TextToSpeech.LANG_COUNTRY_AVAILABLE : TextToSpeech.LANG_AVAILABLE;
+        for (Catalog.VoiceSpec voice : installed) if ((!isOnline(voice) || voice.id.equals(selected)) && matches(voice,lang,"")) return TextToSpeech.LANG_AVAILABLE;
         // Catalog support is distinct from installed availability.
         for (Catalog.Model model : Catalog.MODELS) for (Catalog.VoiceSpec candidate : model.voices)
             if (matches(candidate,lang,"")) return TextToSpeech.LANG_MISSING_DATA;
