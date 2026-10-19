@@ -1,5 +1,0 @@
-`shtorm-tokenizer-parity.json` contains 160 expected results generated with the genuine SentencePiece 0.2.2 processor and the pinned Shtorm tokenizer, independently of the Java implementation.
-
-The accompanying provenance JSON pins the SentencePiece source version, model revision, original tokenizer SHA-256, extracted character-map SHA-256, and fixture SHA-256. `ShtormBpeCheck` verifies the fixture and normalizer hashes, and also verifies the original tokenizer hash whenever that research input is present. No acoustic checkpoint is bundled with these tests.
-
-For regeneration, use `SentencePieceProcessor(model_file=...)` from the exact package version. For each fixture's `text`, capture `sp.normalize(text)`, `sp.encode(text, out_type=int)`, `sp.encode(text, out_type=str)`, and whether the returned IDs contain `sp.unk_id()`. Read the normalization flags and model type from the tokenizer's ModelProto rather than substituting a host normalization library. The original research generator is `research/shtorm/tokenizer_fixtures.py`; the Java helper must never generate its own expected token IDs.

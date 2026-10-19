@@ -23,7 +23,7 @@ private-vn-prefs-backup.xml
 SOURCE-FILES.sha256
 *.apk
 *.aab
-models/
+/models/
 downloads/
 *.onnx
 *.bin
@@ -51,5 +51,5 @@ reports/private/
 REVIEW.md
 
 # Large pinned dependencies are fetched and verified before use.
-LocalVoice/app/libs/*.aar
-research/native-source/*.zip
+app/libs/*.aar
+third_party/native-source/*.zip
