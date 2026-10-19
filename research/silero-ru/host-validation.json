@@ -1,0 +1,786 @@
+{
+ "host": {
+  "cpu": "AMD Ryzen 9 7945HX with Radeon Graphics",
+  "platform": "Windows-11-10.0.26100-SP0",
+  "logical_cpus": 32,
+  "threads": {
+   "torch": 2,
+   "ort": [
+    1,
+    2,
+    4
+   ],
+   "sherpa": 2,
+   "whisper": 8
+  }
+ },
+ "versions": {
+  "torch": "2.14.1+cpu",
+  "onnxruntime": "1.28.0",
+  "sherpa-onnx": "1.13.8",
+  "faster-whisper": "1.2.1",
+  "numpy": "2.4.6"
+ },
+ "whisper_model": "small (int8, cpu, language=ru, beam 5)",
+ "load_times_s": {
+  "torch_package_s": 7.434385500033386,
+  "ort_session_s": 1.9861670000245795,
+  "sherpa_init_s": 1.501376700005494,
+  "whisper_s": 94.41782019997481
+ },
+ "rtf": {
+  "total_audio_s": 38.0375,
+  "ort_1t": {
+   "rtf": 0.08727042260633323,
+   "total_compute_s": 3.3195486998884007,
+   "per_sentence_s": [
+    0.3050511999754235,
+    0.1473280000500381,
+    0.16666429990436882,
+    0.158737099962309,
+    0.2654844999779016,
+    0.13339639990590513,
+    0.19587769999634475,
+    0.21830740000586957,
+    0.4078286000294611,
+    0.2809941000305116,
+    1.0398794000502676
+   ]
+  },
+  "ort_2t": {
+   "rtf": 0.048226331909393114,
+   "total_compute_s": 1.8344091000035405,
+   "per_sentence_s": [
+    0.1951933999080211,
+    0.11286059999838471,
+    0.14718730002641678,
+    0.07428360008634627,
+    0.10446800000499934,
+    0.07690019998699427,
+    0.08847160008735955,
+    0.09288819995708764,
+    0.24630919995252043,
+    0.20771809993311763,
+    0.4881289000622928
+   ]
+  },
+  "ort_4t": {
+   "rtf": 0.03135745513987138,
+   "total_compute_s": 1.1927591998828575,
+   "per_sentence_s": [
+    0.15556709992233664,
+    0.04807830008212477,
+    0.09671179996803403,
+    0.08189059991855174,
+    0.10557439993135631,
+    0.05225299997255206,
+    0.05370190006215125,
+    0.052250999957323074,
+    0.09765580005478114,
+    0.08845849998760968,
+    0.3606168000260368
+   ]
+  },
+  "sherpa_2t": {
+   "rtf": 0.0668589102861484,
+   "total_compute_s": 2.54314580000937,
+   "per_sentence_s": [
+    0.2234975000610575,
+    0.07993270002771169,
+    0.1116086000110954,
+    0.09286710002925247,
+    0.12996370007749647,
+    0.19766959990374744,
+    0.19487000000663102,
+    0.45104880002327263,
+    0.2979575999779627,
+    0.20617509994190186,
+    0.5575550999492407
+   ]
+  },
+  "torch_apply_tts_2t": {
+   "rtf": 0.10829766414082641,
+   "total_compute_s": 4.119372399756685,
+   "per_sentence_s": [
+    0.39395820000208914,
+    0.3247698999475688,
+    0.34951729991007596,
+    0.15888430003542453,
+    0.21141079999506474,
+    0.14802289998624474,
+    0.2689723001094535,
+    0.3348210999974981,
+    0.4098306999076158,
+    0.38965469994582236,
+    1.1295301999198273
+   ]
+  },
+  "sherpa_ttfa_first_sentence_warm_s": 0.16628220002166927,
+  "sherpa_ttfa_audio_s": 4.4
+ },
+ "asr_mean": {
+  "orig": {
+   "wer": 0.06978879706152433,
+   "cer": 0.05948934786144089
+  },
+  "onnx": {
+   "wer": 0.04958677685950413,
+   "cer": 0.05314685314685315
+  },
+  "sherpa": {
+   "wer": 0.04958677685950413,
+   "cer": 0.05314685314685315
+  }
+ },
+ "sentences": [
+  {
+   "idx": 0,
+   "text": "В две тысячи двадцать четвёртом году мы посадили сорок три дерева.",
+   "speaker": "aidar",
+   "sid": 0,
+   "prepared_text": "в две тысячи двадцать четвёртом году мы посадили сорок три дерева.",
+   "model_text": "в дв+е т+ысячи дв+адцать четв+ёртом год+у м+ы посад+или с+орок тр+и д+ерева.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 78,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 211200,
+    "onnx": 211200,
+    "sherpa": 211200
+   },
+   "duration_s": 4.4,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 3.375113010406494e-05,
+    "snr_db": 101.81426239013672,
+    "logmel_mae": 1.1752830142374611e-05,
+    "mel_cosine": 0.9999999999988352
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 3.375113010406494e-05,
+    "snr_db": 101.81426239013672,
+    "logmel_mae": 1.1752830142374611e-05,
+    "mel_cosine": 0.9999999999988352
+   },
+   "asr": {
+    "orig": {
+     "transcript": "В 2024 году мы посадили 43 дерева.",
+     "wer": 0.5454545454545454,
+     "cer": 0.5846153846153846
+    },
+    "onnx": {
+     "transcript": "В 2024 году мы посадили 43 дерева.",
+     "wer": 0.5454545454545454,
+     "cer": 0.5846153846153846
+    },
+    "sherpa": {
+     "transcript": "В 2024 году мы посадили 43 дерева.",
+     "wer": 0.5454545454545454,
+     "cer": 0.5846153846153846
+    }
+   }
+  },
+  {
+   "idx": 1,
+   "text": "В 2024 году мы посадили 43 дерева.",
+   "speaker": "baya",
+   "sid": 1,
+   "prepared_text": "в году мы посадили дерева.",
+   "model_text": "в год+у м+ы посад+или дерев+а.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 32,
+   "sherpa_single_sentence": true,
+   "digits_dropped": true,
+   "samples": {
+    "orig": 83400,
+    "onnx": 83400,
+    "sherpa": 83400
+   },
+   "duration_s": 1.7375,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 9.350478649139404e-06,
+    "snr_db": 105.83876037597656,
+    "logmel_mae": 8.486441540150684e-06,
+    "mel_cosine": 0.9999999999993253
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 9.350478649139404e-06,
+    "snr_db": 105.83876037597656,
+    "logmel_mae": 8.486441540150684e-06,
+    "mel_cosine": 0.9999999999993253
+   },
+   "asr": {
+    "orig": {
+     "transcript": "в году мы посадили дерева.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "в году мы посадили дерева.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "в году мы посадили дерева.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 2,
+   "text": "Где ты оставил ключи от старого замка?",
+   "speaker": "kseniya",
+   "sid": 2,
+   "prepared_text": "где ты оставил ключи от старого замка?",
+   "model_text": "гд+е т+ы ост+авил ключ+и +от ст+арого замк+а?",
+   "type": "wh_q",
+   "type_id": 1,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 47,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 118200,
+    "onnx": 118200,
+    "sherpa": 118200
+   },
+   "duration_s": 2.4625,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 2.060830593109131e-05,
+    "snr_db": 98.92361450195312,
+    "logmel_mae": 9.563229209372805e-06,
+    "mel_cosine": 0.9999999999963605
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0000000000000002
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 2.060830593109131e-05,
+    "snr_db": 98.92361450195312,
+    "logmel_mae": 9.563229209372805e-06,
+    "mel_cosine": 0.9999999999963605
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Где ты оставил ключи от старого замка?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Где ты оставил ключи от старого замка?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Где ты оставил ключи от старого замка?",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 3,
+   "text": "Ты уже закрыл дверь на замок?",
+   "speaker": "eugene",
+   "sid": 3,
+   "prepared_text": "ты уже закрыл дверь на замок?",
+   "model_text": "т+ы уж+е закр+ыл дв+ерь н+а зам+ок?",
+   "type": "general_q",
+   "type_id": 2,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 37,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 90000,
+    "onnx": 90000,
+    "sherpa": 90000
+   },
+   "duration_s": 1.875,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00017663836479187012,
+    "snr_db": 87.72721862792969,
+    "logmel_mae": 1.0446585210956523e-05,
+    "mel_cosine": 0.9999999999975707
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00017663836479187012,
+    "snr_db": 87.72721862792969,
+    "logmel_mae": 1.0446585210956523e-05,
+    "mel_cosine": 0.9999999999975707
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Ты уже закрыл дверь на замок.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Ты уже закрыл дверь на замок.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Ты уже закрыл дверь на замок.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 4,
+   "text": "Тебе больше нравится чай или кофе?",
+   "speaker": "xenia",
+   "sid": 4,
+   "prepared_text": "тебе больше нравится чай или кофе?",
+   "model_text": "теб+е б+ольше нр+авится ч+ай +или к+офе?",
+   "type": "alternative_q",
+   "type_id": 3,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 42,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 119400,
+    "onnx": 119400,
+    "sherpa": 119400
+   },
+   "duration_s": 2.4875,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 4.453212022781372e-05,
+    "snr_db": 92.92536926269531,
+    "logmel_mae": 9.039317903523648e-06,
+    "mel_cosine": 0.9999999999970911
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 4.453212022781372e-05,
+    "snr_db": 92.92536926269531,
+    "logmel_mae": 9.039317903523648e-06,
+    "mel_cosine": 0.9999999999970911
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Тебе больше нравится чай или кофе?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Тебе больше нравится чай или кофе?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Тебе больше нравится чай или кофе?",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 5,
+   "text": "Ты ведь придёшь завтра, правда?",
+   "speaker": "aidar",
+   "sid": 0,
+   "prepared_text": "ты ведь придёшь завтра, правда?",
+   "model_text": "т+ы в+едь прид+ёшь з+автра, пр+авда?",
+   "type": "tag_q",
+   "type_id": 4,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 38,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 86400,
+    "onnx": 86400,
+    "sherpa": 86400
+   },
+   "duration_s": 1.8,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 4.6282075345516205e-05,
+    "snr_db": 93.47200012207031,
+    "logmel_mae": 1.7731020613429604e-05,
+    "mel_cosine": 0.999999999896634
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 0.9999999999999998
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 4.6282075345516205e-05,
+    "snr_db": 93.47200012207031,
+    "logmel_mae": 1.7731020613429604e-05,
+    "mel_cosine": 0.999999999896634
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Ты ведь придешь завтра, правда?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Ты ведь придешь завтра, правда?",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Ты ведь придешь завтра, правда?",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 6,
+   "text": "Какой чудесный сегодня день!",
+   "speaker": "baya",
+   "sid": 1,
+   "prepared_text": "какой чудесный сегодня день!",
+   "model_text": "как+ой чуд+есный сег+одня д+ень!",
+   "type": "exclam",
+   "type_id": 5,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 34,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 97200,
+    "onnx": 97200,
+    "sherpa": 97200
+   },
+   "duration_s": 2.025,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00040417537093162537,
+    "snr_db": 80.781982421875,
+    "logmel_mae": 1.3168039833543287e-05,
+    "mel_cosine": 0.9999999999978324
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 0.9999999999999999
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00040417537093162537,
+    "snr_db": 80.781982421875,
+    "logmel_mae": 1.3168039833543287e-05,
+    "mel_cosine": 0.9999999999978324
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Какой чудесный сегодня день!",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Какой чудесный сегодня день!",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Какой чудесный сегодня день!",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 7,
+   "text": "Все знают, что всё будет хорошо.",
+   "speaker": "kseniya",
+   "sid": 2,
+   "prepared_text": "все знают, что всё будет хорошо.",
+   "model_text": "вс+е зн+ают, чт+о вс+ё б+удет хорош+о.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 40,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 96000,
+    "onnx": 96000,
+    "sherpa": 96000
+   },
+   "duration_s": 2.0,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 3.230944275856018e-05,
+    "snr_db": 99.58358001708984,
+    "logmel_mae": 8.502470636830358e-06,
+    "mel_cosine": 0.9999999999978755
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0000000000000002
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 3.230944275856018e-05,
+    "snr_db": 99.58358001708984,
+    "logmel_mae": 8.502470636830358e-06,
+    "mel_cosine": 0.9999999999978755
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Все знают, что всё будет хорошо.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Все знают, что всё будет хорошо.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Все знают, что всё будет хорошо.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 8,
+   "text": "Без муки не испечь хлеба, а долгое ожидание для него настоящая мука.",
+   "speaker": "eugene",
+   "sid": 3,
+   "prepared_text": "без муки не испечь хлеба, а долгое ожидание для него настоящая мука.",
+   "model_text": "б+ез мук+и н+е исп+ечь хл+еба, +а д+олгое ожид+ание дл+я нег+о насто+ящая м+ука.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 82,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 192000,
+    "onnx": 192000,
+    "sherpa": 192000
+   },
+   "duration_s": 4.0,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00029258057475090027,
+    "snr_db": 81.81656646728516,
+    "logmel_mae": 1.7829295069084727e-05,
+    "mel_cosine": 0.9999999999809202
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0000000000000002
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.00029258057475090027,
+    "snr_db": 81.81656646728516,
+    "logmel_mae": 1.7829295069084727e-05,
+    "mel_cosine": 0.9999999999809202
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Без муки не испечь хлеба, а долгое ожидание для него настоящая мука.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Без муки не испечь хлеба, а долгое ожидание для него настоящая мука.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Без муки не испечь хлеба, а долгое ожидание для него настоящая мука.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 9,
+   "text": "Белка прыгнула на ёлку, а в яйце много белка.",
+   "speaker": "xenia",
+   "sid": 4,
+   "prepared_text": "белка прыгнула на ёлку, а в яйце много белка.",
+   "model_text": "б+елка пр+ыгнула н+а +ёлку, +а в яйц+е мн+ого белк+а.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 55,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 166800,
+    "onnx": 166800,
+    "sherpa": 166800
+   },
+   "duration_s": 3.475,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.0008234716951847076,
+    "snr_db": 72.71804809570312,
+    "logmel_mae": 2.4223411316057807e-05,
+    "mel_cosine": 0.9999999982357691
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.0008234716951847076,
+    "snr_db": 72.71804809570312,
+    "logmel_mae": 2.4223411316057807e-05,
+    "mel_cosine": 0.9999999982357691
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Белка прыгнула на елку, а вице много белка.",
+     "wer": 0.2222222222222222,
+     "cer": 0.06976744186046512
+    },
+    "onnx": {
+     "transcript": "Белка прыгнула на елку, а в яйце много белка.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Белка прыгнула на елку, а в яйце много белка.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  },
+  {
+   "idx": 10,
+   "text": "Вчера вечером, когда над рекой уже сгущались сумерки, мы с друзьями долго сидели у костра, пили горячий чай и рассказывали друг другу удивительные истории о далёких путешествиях.",
+   "speaker": "aidar",
+   "sid": 0,
+   "prepared_text": "вчера вечером, когда над рекой уже сгущались сумерки, мы с друзьями долго сидели у костра, пили горячий чай и рассказывали друг другу удивительные истории о далёких путешествиях.",
+   "model_text": "вчер+а в+ечером, когд+а н+ад рек+ой уж+е сгущ+ались с+умерки, м+ы с друзь+ями д+олго сид+ели +у костр+а, п+или гор+ячий ч+ай +и расск+азывали др+уг др+угу удив+ительные ист+ории +о дал+ёких путеш+ествиях.",
+   "type": "st",
+   "type_id": 0,
+   "type_ids_constant": true,
+   "plain_model_kwargs": true,
+   "tokens": 206,
+   "sherpa_single_sentence": true,
+   "digits_dropped": false,
+   "samples": {
+    "orig": 565200,
+    "onnx": 565200,
+    "sherpa": 565200
+   },
+   "duration_s": 11.775,
+   "onnx_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.0001983642578125,
+    "snr_db": 89.74620056152344,
+    "logmel_mae": 1.5153747069414396e-05,
+    "mel_cosine": 0.999999999930152
+   },
+   "sherpa_vs_onnx": {
+    "same_length": true,
+    "max_abs_diff": 0.0,
+    "snr_db": Infinity,
+    "logmel_mae": 0.0,
+    "mel_cosine": 1.0
+   },
+   "sherpa_vs_orig": {
+    "same_length": true,
+    "max_abs_diff": 0.0001983642578125,
+    "snr_db": 89.74620056152344,
+    "logmel_mae": 1.5153747069414396e-05,
+    "mel_cosine": 0.999999999930152
+   },
+   "asr": {
+    "orig": {
+     "transcript": "Вчера вечером, когда над рекой уже сгущались сумерки, мы с друзьями долго сидели у костра, пили горячий чай и рассказывали друг другу удивительные истории о далеких путешествиях.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "onnx": {
+     "transcript": "Вчера вечером, когда над рекой уже сгущались сумерки, мы с друзьями долго сидели у костра, пили горячий чай и рассказывали друг другу удивительные истории о далеких путешествиях.",
+     "wer": 0.0,
+     "cer": 0.0
+    },
+    "sherpa": {
+     "transcript": "Вчера вечером, когда над рекой уже сгущались сумерки, мы с друзьями долго сидели у костра, пили горячий чай и рассказывали друг другу удивительные истории о далеких путешествиях.",
+     "wer": 0.0,
+     "cer": 0.0
+    }
+   }
+  }
+ ]
+}

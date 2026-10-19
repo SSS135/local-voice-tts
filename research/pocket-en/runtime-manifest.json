@@ -1,25 +1,30 @@
 {
   "schemaVersion": 1,
-  "id": "pocket-en-alba",
-  "name": "PocketTTS English — Alba (July 2026 export)",
+  "id": "pocket-en-v2",
+  "name": "PocketTTS English — Alba (Kyutai english_2026-09_2)",
   "backend": "sherpa-pocket",
-  "version": "soniqo-2026-07-14-ad5d3fa",
+  "version": "kyutai-english-2026-09-2-onnx-int8-v1",
   "languages": [
     "en-US",
     "en-GB"
   ],
   "license": "CC-BY-4.0",
   "delivery": "direct_files",
-  "repository": "soniqo/Pocket-TTS-100M-ONNX-INT8",
-  "revision": "ad5d3fae3fb2f10024583708597afca8337c094c",
+  "release": "https://github.com/SSS135/local-voice-tts/releases/tag/pocket-en-model-v2",
   "source": {
     "repository": "kyutai/pocket-tts-without-voice-cloning",
-    "revision": "d4fdd22ae8c8e1cb3634e150ebeff1dab2d16df3",
-    "checkpoint": "tts_b6369a24.safetensors",
+    "revision": "ab248779e0718743c013e20b2d812ace7c8f4bf7",
+    "configRevision": "575d14372df89a4534bcb989870a34e77544b09f",
+    "checkpoint": "languages/english_2026-09_2/model.safetensors",
+    "checkpointSize": 219029196,
+    "checkpointSha256": "e106c451108e066119f070eb7cf6c9ff4a2ad93f3bf04c9914cc94c66b7a4eeb",
+    "voiceState": "languages/english_2026-09_2/embeddings/alba.safetensors",
+    "voiceStateSize": 6244152,
+    "voiceStateSha256": "4206b7194018c7e345e5cfd99f147caad36285df858ea153d0188c40d9f261e5",
+    "config": "kyutai-labs/pocket-tts@1df6b3da17cb43eff8c4c4e077f785520492adff pocket_tts/config/english_2026-09_2.yaml",
     "license": "cc-by-4.0",
     "voice_cloning": false,
     "voice_preset": "alba",
-    "voice_embedding": "embeddings/alba.safetensors",
     "voice_attribution": "Alba MacKenna",
     "voice_license": "cc-by-4.0",
     "voice_source": "https://huggingface.co/kyutai/tts-voices#alba-mackenna",
@@ -27,9 +32,34 @@
     "frame_rate_hz": 12.5
   },
   "exporter": {
-    "repository": "https://github.com/csukuangfj/pocket-tts-onnx-export.git",
-    "revision": "f075c00bf4bbfbb081a11fd99abbf39df3849e0c"
+    "repository": "https://github.com/lookbe/pocket-tts-onnx-export",
+    "revision": "2b25e5a09d7b243edc4bbff7589363dc57a0204e",
+    "kyutaiSource": "41cbc84af539ea78a804ffca5f9c6edc1a22ce44",
+    "script": "export_v2.py",
+    "kvCapacity": 1000,
+    "stateDtype": "float32",
+    "quantization": "onnxruntime quantize_dynamic QInt8 per-channel via lookbe scripts/quantize.py (lm_main, lm_flow, decoder)"
   },
+  "albaRecovery": {
+    "positions": 127,
+    "kvMaxAbsErrorPerLayer": [
+      1.2814998626708984e-05,
+      1.1265277862548828e-05,
+      1.3053417205810547e-05,
+      1.3232231140136719e-05,
+      9.953975677490234e-06,
+      9.238719940185547e-06
+    ],
+    "kvPeakAbs": 8.89840316772461
+  },
+  "onnxMainKvMaxAbsError": [
+    3.337860107421875e-06,
+    5.245208740234375e-06,
+    4.172325134277344e-06,
+    5.602836608886719e-06,
+    5.7220458984375e-06,
+    5.7220458984375e-06
+  ],
   "frontend": "native-unigram",
   "config": {
     "lmFlow": "lm_flow.int8.onnx",
@@ -40,6 +70,8 @@
     "vocabJson": "vocab.json",
     "tokenScoresJson": "token_scores.json",
     "fixedVoice": "true",
+    "numSteps": "1",
+    "temperature": "0.3",
     "referenceSampleRate": "24000",
     "numThreads": "2"
   },
@@ -59,70 +91,70 @@
       "license": "CC-BY-4.0"
     }
   ],
-  "attribution": "PocketTTS by Kyutai; fixed Alba MacKenna voice (CC-BY-4.0); ONNX INT8 conversion by soniqo. Converted/quantized from historical checkpoint tts_b6369a24, not the September 2026 checkpoint. https://huggingface.co/kyutai/tts-voices#alba-mackenna",
+  "attribution": "PocketTTS by Kyutai Labs, checkpoint english_2026-09_2; fixed Alba MacKenna voice (CC-BY-4.0); ONNX export, INT8 quantization and Alba prompt recovery by the LocalVoice project.",
   "files": [
     {
       "path": "decoder.int8.onnx",
-      "size": 22695710,
-      "sha256": "ed8d050fc5da275cfca88224b7d2cc29fde7c23e133618f346e98ac505b3d862",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/decoder.int8.onnx"
+      "size": 22725583,
+      "sha256": "4be022e1d6df8d479e2779ecfbab5c659cd4eec43383cd1a38e150238549451d",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/decoder.int8.onnx"
     },
     {
       "path": "encoder.onnx",
-      "size": 512407,
-      "sha256": "2194513df47271ece9f8d2d571facd57b24d96a1d912fdc13bf0e10c69318e85",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/encoder.onnx"
+      "size": 520501,
+      "sha256": "7aa22f41604311c240183e6dc4ec990787e4259b85b0d9945d3269c476ba3111",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/encoder.onnx"
     },
     {
       "path": "lm_flow.int8.onnx",
-      "size": 9962530,
-      "sha256": "8d627d235c44a597da908e1085ebe241cbbe358964c502c5a5063d18851a5529",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/lm_flow.int8.onnx"
+      "size": 10059521,
+      "sha256": "c23d593b5a7aa7b2b4a2675fb7b2243116a4d3f72ffb360749839800263930d5",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/lm_flow.int8.onnx"
     },
     {
       "path": "lm_main.int8.onnx",
-      "size": 76341079,
-      "sha256": "bfc0c7e7e3d72864fa3bb2ee499f62f21ddc1474b885f5f3ca570f8be73e787e",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/lm_main.int8.onnx"
+      "size": 76575633,
+      "sha256": "0025bb9fd62345d88f96fce44b7a7fed4a1b947f0e70ac23b341b6319e362f69",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/lm_main.int8.onnx"
     },
     {
       "path": "text_conditioner.onnx",
-      "size": 16388498,
-      "sha256": "5217b8474621af91127cfef891714337ae8cba106710ce04a426ec4bd56bbd1e",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/text_conditioner.onnx"
+      "size": 16388343,
+      "sha256": "761660bb1eb91dcb72cfa744fba7a5b312779891b8b30fc17920ebb23514b0c3",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/text_conditioner.onnx"
     },
     {
       "path": "token_scores.json",
       "size": 123617,
       "sha256": "3baa6ef7d57bac245271e33f96161f3ac60038d753f13f3fdbe24a7d2422ad6b",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/token_scores.json"
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/token_scores.json"
     },
     {
       "path": "tokenizer.model",
       "size": 59339,
       "sha256": "d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/tokenizer.model"
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/tokenizer.model"
     },
     {
       "path": "vocab.json",
       "size": 69479,
       "sha256": "a2673c232cf49dd6eb1ad850e7c7682f6443c2ab64040d1150e9d8f2a7e3587b",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/vocab.json"
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/vocab.json"
     },
     {
       "path": "LICENSE",
       "size": 18657,
       "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/LICENSE"
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/LICENSE"
     },
     {
       "path": "README.md",
-      "size": 5251,
-      "sha256": "8f5b926dcf7bf1940796af9ac9be0239fea65ee22bf1a0e0a3ddae542990cacb",
-      "url": "https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/README.md"
+      "size": 2579,
+      "sha256": "3faa2291437c6f02ae781508feb9ebf5e95582610da38013dd2649d4dab795ca",
+      "url": "https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/README.md"
     }
   ],
   "runtimeFileCount": 8,
-  "runtimeBytes": 126152659,
-  "totalBytes": 126176567
+  "runtimeBytes": 126522016,
+  "totalBytes": 126543252
 }

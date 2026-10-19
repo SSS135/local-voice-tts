@@ -1,0 +1,14 @@
+{
+  "catalogId": "silero-ru",
+  "revision": "v5-6-ru-2026-10-15-onnx-v1",
+  "release": "https://github.com/SSS135/local-voice-tts/releases/tag/silero-ru-model-v1",
+  "source": {"file": "v5_6_ru.pt", "sha256": "04cc9b1d08ce38bcaa9d02c488d80d3e6806d17f7eaa7c95982f36a3cbf50b2e", "bytes": 147664410},
+  "files": [
+    {"path": "model.onnx", "bytes": 107829187, "sha256": "09d29b3bb54898e340397ee8683b64925789b5e3ff3114b19951fb7407624c26", "producer": "export_onnx.py"},
+    {"path": "tokens.txt", "bytes": 285, "sha256": "5d7e2478c65798e60527409eed55b0b65e4c59ca8940c749053bb3f8741aae1b", "producer": "export_onnx.py"},
+    {"path": "frontend.bin", "bytes": 46811459, "sha256": "3bfc804070b3959fcc6830431456349b35bb32c1d1f163c9cee646b074db8165", "producer": "export_frontend.py"},
+    {"path": "frontend.json", "bytes": 5673015, "sha256": "522535f6a0d086ddd141cda158bad38daff15c4797dd8b717f62d97954fac805", "producer": "export_frontend.py"},
+    {"path": "ATTRIBUTION.txt", "bytes": 1425, "sha256": "72c1cbfbf99ca3503c7b41e1e48484feed6672c3d3cadd2b36c3e80adec9d829", "producer": "this directory"},
+    {"path": "LICENSE-CC-BY-NC-SA-4.0.txt", "bytes": 20849, "sha256": "1349a4b6148492b44f629e64eed676612e234fe9a839e4f3b277c1482c8849f1", "producer": "upstream LICENSE @ e382298"}
+  ]
+}

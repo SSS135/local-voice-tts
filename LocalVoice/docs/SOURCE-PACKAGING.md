@@ -51,7 +51,7 @@ a byte-identical native rebuild.
 Only individually named research files are included. The Shtorm kit contains
 its portable environment/configuration/download/export/tokenizer/voice/native
 proof/packaging recipes, source manifests, licenses and small parity results.
-The English Pocket kit contains its download/manifest/inspection/native/frontend
+The English Pocket kit contains its download/manifest/export/host-eval/frontend
 recipes, licenses and small proof results. See `research/shtorm/REPRODUCE.md` and
 `research/pocket-en/REPRODUCE.md` in the delivery. Their explicit reproduction
 commands can download upstream model inputs; those inputs are not bundled in

@@ -41,6 +41,7 @@ public final class ModelStore {
     /** Installed-directory path -> last inspected state; served to bursty TTS metadata calls. */
     static final Map<String,Boolean> INSTALLED = new ConcurrentHashMap<>();
     private static final java.util.concurrent.atomic.AtomicBoolean CHANGE_PENDING=new java.util.concurrent.atomic.AtomicBoolean();
+    private static final java.util.concurrent.atomic.AtomicBoolean ORPHANS_CHECKED=new java.util.concurrent.atomic.AtomicBoolean();
     private static final Set<Listener> LISTENERS = new CopyOnWriteArraySet<>();
     private static final Set<String> REMOVING = new HashSet<>();
     private static final Object OPERATIONS = new Object();
@@ -62,6 +63,7 @@ public final class ModelStore {
         this.context = context.getApplicationContext();
         prefs = new VoicePreferences(this.context);
         installer = new ModelInstaller(this, storageRoot(this.context));
+        if (ORPHANS_CHECKED.compareAndSet(false, true)) WORK.execute(installer::removeOrphans);
         EdgeCatalogRepository.initialize(this.context).thenRun(ModelStore::changed);
         refreshInstalled();
     }

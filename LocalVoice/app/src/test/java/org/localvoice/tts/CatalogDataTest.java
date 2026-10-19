@@ -31,10 +31,10 @@ public final class CatalogDataTest {
 
     @Test public void bundledCatalogMatchesPinnedData() {
         List<Catalog.Model> models = Catalog.MODELS;
-        assertEquals(5, models.size());
+        assertEquals(6, models.size());
         int files = 0;
         for (Catalog.Model model : models) files += model.files.size();
-        assertEquals(393, files);
+        assertEquals(399, files);
         Catalog.Model kokoro = Catalog.findModel("kokoro-en");
         assertEquals(28, kokoro.voices.size());
         assertEquals("kokoro-en:af_heart", kokoro.voices.get(0).id);
@@ -47,6 +47,8 @@ public final class CatalogDataTest {
         assertTrue(edge.network);
         assertTrue(edge.files.isEmpty());
         assertFalse(Catalog.findModel("shtorm-pocket-ru-fast").config.containsKey("importArchiveBytes"));
+        assertEquals("sherpa-silero", Catalog.findModel("silero-ru").backend);
+        assertEquals(4, Catalog.findVoice("silero-ru:xenia").speakerId);
     }
 
     @Test public void malformedRowsAreRejected() {

@@ -34,7 +34,7 @@ try:
         ('1.1-final-kokoro-en','kokoro-en:af_heart','A quiet evening falls beside the river.'),
         ('1.1-final-super-en','supertonic-3:en-US-0','A quiet evening falls beside the river.'),
         ('1.1-final-super-ru','supertonic-3:ru-RU-0','Тихий вечер наступает у реки.'),
-        ('1.1-final-pocket-en','pocket-en-alba:alba','A quiet morning begins beside the river.'),
+        ('1.1-final-pocket-en','pocket-en-v2:alba','A quiet morning begins beside the river.'),
         ('1.1-final-shtorm-ru','shtorm-pocket-ru-fast:vctk-p228','Приве́т! Число 21. Всё хорошо.'),
     ]:
         events=run_case(name,voice,text,timeout=180);completed(events);summary['audio'][name]=audio(name)
@@ -42,12 +42,12 @@ try:
         print('PASS offline',name,summary['audio'][name],flush=True)
     for suffix,rate in (('slow',.75),('fast',1.25)):
         name='1.1-final-pocket-rate-'+suffix
-        events=run_case(name,'pocket-en-alba:alba','A quiet morning begins beside the river.',timeout=180,rate=rate)
+        events=run_case(name,'pocket-en-v2:alba','A quiet morning begins beside the river.',timeout=180,rate=rate)
         completed(events);summary['audio'][name]=audio(name)
     slow=summary['audio']['1.1-final-pocket-rate-slow']['seconds'];fast=summary['audio']['1.1-final-pocket-rate-fast']['seconds']
     assert slow>fast*1.2,(slow,fast) # Stochastic native generation; exact Sonic scaling is covered by signal tests.
     for suffix,voice,text in (
-        ('pocket','pocket-en-alba:alba','The lantern shines beside the quiet river. '*24),
+        ('pocket','pocket-en-v2:alba','The lantern shines beside the quiet river. '*24),
         ('shtorm','shtorm-pocket-ru-fast:vctk-p228','Тихий вечер наступает у реки. '*24)):
         events=run_case('1.1-final-stop-'+suffix,voice,text,timeout=180,speak=True,stopOnFirstPcm=True)
         assert any(e['event']=='firstPcm' for e in events)
@@ -56,7 +56,7 @@ try:
         assert not any(e['event'] in ('done','error','latePcm') for e in events),events
         print('PASS active PCM stop',suffix,stop,flush=True)
     events=run_case('1.1-final-switch','shtorm-pocket-ru-fast:vctk-p228','Тихий вечер наступает у реки. '*18,timeout=180,
-                    replacement='A new English voice continues after cancellation.',replacementVoice='pocket-en-alba:alba',replaceMs=250)
+                    replacement='A new English voice continues after cancellation.',replacementVoice='pocket-en-v2:alba',replaceMs=250)
     assert any(e['event']=='stop' for e in events)
     assert any(e['event']=='done' and e['detail'].startswith('replacement') for e in events)
     assert not any(e['event'] in ('error','exception','latePcm') for e in events),events

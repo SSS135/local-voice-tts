@@ -1,0 +1,20 @@
+Silero TTS v5_6_ru (Russian; speakers aidar, baya, kseniya, eugene, xenia)
+Copyright (c) Silero Team, https://github.com/snakers4/silero-models (hello@silero.ai)
+Licence: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0),
+https://creativecommons.org/licenses/by-nc-sa/4.0/ ; full text in LICENSE-CC-BY-NC-SA-4.0.txt.
+Non-commercial use only.
+
+Source: https://models.silero.ai/models/tts/ru/v5_6_ru.pt
+  SHA-256 04cc9b1d08ce38bcaa9d02c488d80d3e6806d17f7eaa7c95982f36a3cbf50b2e, 147664410 bytes,
+  listed in snakers4/silero-models models.yml at commit e382298387332f2bf461fe6eadfde99104611b0c.
+
+Changes by Local Voice (https://github.com/SSS135/local-voice-tts, research/silero-ru):
+  - model.onnx: the package's duration/pitch predictors, acoustic model and vocoder re-expressed as one
+    ONNX graph (weights unchanged; inverse STFT as matrix products) with a sherpa-onnx VITS-compatible
+    interface; tokens.txt maps the package's symbols (plus private-use punctuation aliases).
+  - frontend.bin / frontend.json: the package's stress accentor and homograph solver weights and
+    dictionaries, re-serialised for an on-device Java port.
+These adapted files are distributed under the same CC BY-NC-SA 4.0 licence.
+
+Citation: Silero Team, "Silero Models: pre-trained text-to-speech models made embarrassingly simple",
+GitHub repository, https://github.com/snakers4/silero-models, 2025.

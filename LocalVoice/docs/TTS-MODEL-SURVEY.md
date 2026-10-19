@@ -5,7 +5,7 @@
 **Shipped set** (per `app/src/main/resources/org/localvoice/tts/models.json`):
 - Kokoro v1.0 int8
 - Supertonic 3 int8
-- Pocket TTS English `soniqo` int8, from historical checkpoint `tts_b6369a24`
+- Pocket TTS English `english_2026-09_2` int8 (project export; replaced the `soniqo` export of `tts_b6369a24` on 2026-10-19)
 - Shtorm Pocket RU v2-fast
 
 **Targets:** Pixel 7 Pro (Tensor G2) and Huawei Pura 70.
@@ -31,7 +31,7 @@ The gains available:
    - Fixes `english_2026-09`'s sentence-end repeats and flat questions.
    - About 100M parameters, streams.
    - Integration:
-     - Uses the same LSD recipe as `english_2026-09`, so the existing `sherpa-pocket` adapter should fit (unverified).
+     - Uses the same LSD recipe as `english_2026-09`, and the existing `sherpa-pocket` adapter runs it unchanged (verified 2026-10-19, `research/pocket-en/REPRODUCE.md`).
      - Needs a project-made ONNX export: sherpa-onnx ships only the `pocket-tts-2026-01-26` export ([tts-models](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models)).
      - Avoid `english_drifting_26-09`: its new `flow.type: drifting` head changes the graph ([PR #329](https://github.com/kyutai-labs/pocket-tts/pull/329)).
 2. **Evaluate: Kitten TTS mini v0.8.**
@@ -236,7 +236,7 @@ The gains available:
   - Inflect Micro
   - NeuTTS Nano Q4 (LM tok/s plus NeuCodec ONNX decode)
   - Shtorm slow
-- **Pocket `english_2026-09_2` export:** does it fit the sherpa `pocket` / soniqo int8 graph layout? It uses the same LSD recipe, but nobody has exported it. Its voice embeddings were recomputed and must be re-exported too.
+- **Pocket `english_2026-09_2` export:** done; same graph layout, Alba prompt recovered from Kyutai's recomputed state (`research/pocket-en/REPRODUCE.md`). Phone RTF still unmeasured.
 - **Silero `v5_6_ru` on Android:**
   - Can the `torch.package` be split into TorchScript networks (then ExecuTorch, LibTorch-lite or ONNX) with the Python frontend reimplemented in Java, including stress and homographs?
   - Its quality against Shtorm v2 is unmeasured; no first-party numbers exist for v5_ru.

@@ -73,6 +73,24 @@ final class ModelInstaller {
         ModelStore.INSTALLED.put(installed.getAbsolutePath(), false);
     }
 
+    /** Deletes directories of model ids/revisions no longer in the catalog; the UI cannot reach them, so they would leak disk. */
+    void removeOrphans() {
+        Set<String> current = new HashSet<>();
+        for (Catalog.Model model : Catalog.MODELS) {
+            current.add(directory(model, false).getName());
+            current.add(directory(model, true).getName());
+        }
+        File[] children = root.listFiles();
+        if (children != null) for (File child : children) {
+            if (current.contains(child.getName())) continue;
+            try {
+                ModelFiles.remove(child);
+            } catch (IOException error) {
+                android.util.Log.w("LocalVoiceDownload", "Cannot remove stale model " + child.getName(), error);
+            }
+        }
+    }
+
     /** Verified staging files are reused after a retry or process restart. Reports its own terminal progress. */
     void install(Catalog.Model model, ModelStore.Job job) {
         long before = StorageMetrics.now();

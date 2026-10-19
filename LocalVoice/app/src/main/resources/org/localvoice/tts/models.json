@@ -537,18 +537,55 @@
       ]
     },
     {
-      "id": "pocket-en-alba",
+      "id": "silero-ru",
+      "label": "Silero v5.6 · Russian",
+      "backend": "sherpa-silero",
+      "revision": "v5-6-ru-2026-10-15-onnx-v1",
+      "network": false,
+      "available": true,
+      "languages": ["ru-RU"],
+      "license": "CC BY-NC-SA 4.0 (non-commercial)",
+      "licenseUrl": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+      "licenseText": "Silero TTS v5_6_ru (c) Silero Team, https://github.com/snakers4/silero-models, CC BY-NC-SA 4.0: non-commercial use only. App-converted ONNX graph and re-serialised stress/homograph frontend; weights unchanged. Files and full attribution: https://github.com/SSS135/local-voice-tts/releases/tag/silero-ru-model-v1",
+      "licenseAsset": "SILERO-LICENSE.txt",
+      "description": "Five Russian voices, 48 kHz, with Silero's automatic stress, ё and homograph handling. Verified files from the LocalVoice GitHub release; processed on this device.",
+      "config": {
+        "model": "model.onnx",
+        "tokens": "tokens.txt",
+        "frontendWeights": "frontend.bin",
+        "frontendData": "frontend.json",
+        "numThreads": "2",
+        "chunking": "backend"
+      },
+      "voices": [
+        {"name":"xenia","label":"Silero Xenia","language":"ru-RU","speaker":4},
+        {"name":"aidar","label":"Silero Aidar","language":"ru-RU","speaker":0},
+        {"name":"baya","label":"Silero Baya","language":"ru-RU","speaker":1},
+        {"name":"kseniya","label":"Silero Kseniya","language":"ru-RU","speaker":2},
+        {"name":"eugene","label":"Silero Eugene","language":"ru-RU","speaker":3}
+      ],
+      "files": [
+        {"path":"model.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/model.onnx","bytes":107829187,"sha256":"09d29b3bb54898e340397ee8683b64925789b5e3ff3114b19951fb7407624c26"},
+        {"path":"tokens.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/tokens.txt","bytes":285,"sha256":"5d7e2478c65798e60527409eed55b0b65e4c59ca8940c749053bb3f8741aae1b"},
+        {"path":"frontend.bin","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/frontend.bin","bytes":46811459,"sha256":"3bfc804070b3959fcc6830431456349b35bb32c1d1f163c9cee646b074db8165"},
+        {"path":"frontend.json","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/frontend.json","bytes":5673015,"sha256":"522535f6a0d086ddd141cda158bad38daff15c4797dd8b717f62d97954fac805"},
+        {"path":"ATTRIBUTION.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/ATTRIBUTION.txt","bytes":1425,"sha256":"72c1cbfbf99ca3503c7b41e1e48484feed6672c3d3cadd2b36c3e80adec9d829"},
+        {"path":"LICENSE-CC-BY-NC-SA-4.0.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/silero-ru-model-v1/LICENSE-CC-BY-NC-SA-4.0.txt","bytes":20849,"sha256":"1349a4b6148492b44f629e64eed676612e234fe9a839e4f3b277c1482c8849f1"}
+      ]
+    },
+    {
+      "id": "pocket-en-v2",
       "label": "PocketTTS English (Alba)",
       "backend": "sherpa-pocket",
-      "revision": "soniqo-2026-07-14-ad5d3fa",
+      "revision": "kyutai-english-2026-09-2-onnx-int8-v1",
       "network": false,
       "available": true,
       "languages": ["en-GB"],
       "license": "CC-BY-4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-      "licenseText": "PocketTTS by Kyutai; fixed Alba MacKenna voice (CC-BY-4.0); ONNX INT8 conversion by soniqo. Converted/quantized from historical checkpoint tts_b6369a24, not the September 2026 checkpoint. https://huggingface.co/kyutai/tts-voices#alba-mackenna",
+      "licenseText": "PocketTTS by Kyutai Labs, checkpoint english_2026-09_2 (CC-BY-4.0); fixed Alba MacKenna voice (CC-BY-4.0, https://huggingface.co/kyutai/tts-voices#alba-mackenna). Modified by the LocalVoice project: ONNX export, INT8 quantization, Alba voice prompt recovered from Kyutai's precomputed voice state. Files and full attribution: https://github.com/SSS135/local-voice-tts/releases/tag/pocket-en-model-v2",
       "licenseAsset": "POCKET-EN-LICENSE.txt",
-      "description": "Fixed Alba voice, July 2026 INT8 export of the historical PocketTTS checkpoint. Processed on this device.",
+      "description": "Fixed Alba voice, Kyutai english_2026-09_2 checkpoint (October 2026), INT8 ONNX from the LocalVoice GitHub release. Processed on this device.",
       "config": {
         "lmFlow": "lm_flow.int8.onnx",
         "lmMain": "lm_main.int8.onnx",
@@ -558,8 +595,8 @@
         "vocabJson": "vocab.json",
         "tokenScoresJson": "token_scores.json",
         "fixedVoice": "true",
-        "numSteps": "4",
-        "temperature": "0.7",
+        "numSteps": "1",
+        "temperature": "0.3",
         "referenceSampleRate": "24000",
         "numThreads": "2"
       },
@@ -567,16 +604,16 @@
         {"name":"alba","label":"Alba MacKenna","language":"en-GB","speaker":0}
       ],
       "files": [
-        {"path":"decoder.int8.onnx","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/decoder.int8.onnx","bytes":22695710,"sha256":"ed8d050fc5da275cfca88224b7d2cc29fde7c23e133618f346e98ac505b3d862"},
-        {"path":"encoder.onnx","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/encoder.onnx","bytes":512407,"sha256":"2194513df47271ece9f8d2d571facd57b24d96a1d912fdc13bf0e10c69318e85"},
-        {"path":"lm_flow.int8.onnx","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/lm_flow.int8.onnx","bytes":9962530,"sha256":"8d627d235c44a597da908e1085ebe241cbbe358964c502c5a5063d18851a5529"},
-        {"path":"lm_main.int8.onnx","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/lm_main.int8.onnx","bytes":76341079,"sha256":"bfc0c7e7e3d72864fa3bb2ee499f62f21ddc1474b885f5f3ca570f8be73e787e"},
-        {"path":"text_conditioner.onnx","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/text_conditioner.onnx","bytes":16388498,"sha256":"5217b8474621af91127cfef891714337ae8cba106710ce04a426ec4bd56bbd1e"},
-        {"path":"token_scores.json","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/token_scores.json","bytes":123617,"sha256":"3baa6ef7d57bac245271e33f96161f3ac60038d753f13f3fdbe24a7d2422ad6b"},
-        {"path":"tokenizer.model","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/tokenizer.model","bytes":59339,"sha256":"d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"},
-        {"path":"vocab.json","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/vocab.json","bytes":69479,"sha256":"a2673c232cf49dd6eb1ad850e7c7682f6443c2ab64040d1150e9d8f2a7e3587b"},
-        {"path":"LICENSE","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/LICENSE","bytes":18657,"sha256":"9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"},
-        {"path":"README.md","url":"https://huggingface.co/soniqo/Pocket-TTS-100M-ONNX-INT8/resolve/ad5d3fae3fb2f10024583708597afca8337c094c/README.md","bytes":5251,"sha256":"8f5b926dcf7bf1940796af9ac9be0239fea65ee22bf1a0e0a3ddae542990cacb"}
+        {"path":"decoder.int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/decoder.int8.onnx","bytes":22725583,"sha256":"4be022e1d6df8d479e2779ecfbab5c659cd4eec43383cd1a38e150238549451d"},
+        {"path":"encoder.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/encoder.onnx","bytes":520501,"sha256":"7aa22f41604311c240183e6dc4ec990787e4259b85b0d9945d3269c476ba3111"},
+        {"path":"lm_flow.int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/lm_flow.int8.onnx","bytes":10059521,"sha256":"c23d593b5a7aa7b2b4a2675fb7b2243116a4d3f72ffb360749839800263930d5"},
+        {"path":"lm_main.int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/lm_main.int8.onnx","bytes":76575633,"sha256":"0025bb9fd62345d88f96fce44b7a7fed4a1b947f0e70ac23b341b6319e362f69"},
+        {"path":"text_conditioner.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/text_conditioner.onnx","bytes":16388343,"sha256":"761660bb1eb91dcb72cfa744fba7a5b312779891b8b30fc17920ebb23514b0c3"},
+        {"path":"token_scores.json","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/token_scores.json","bytes":123617,"sha256":"3baa6ef7d57bac245271e33f96161f3ac60038d753f13f3fdbe24a7d2422ad6b"},
+        {"path":"tokenizer.model","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/tokenizer.model","bytes":59339,"sha256":"d461765ae179566678c93091c5fa6f2984c31bbe990bf1aa62d92c64d91bc3f6"},
+        {"path":"vocab.json","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/vocab.json","bytes":69479,"sha256":"a2673c232cf49dd6eb1ad850e7c7682f6443c2ab64040d1150e9d8f2a7e3587b"},
+        {"path":"LICENSE","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/LICENSE","bytes":18657,"sha256":"9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"},
+        {"path":"README.md","url":"https://github.com/SSS135/local-voice-tts/releases/download/pocket-en-model-v2/README.md","bytes":2579,"sha256":"3faa2291437c6f02ae781508feb9ebf5e95582610da38013dd2649d4dab795ca"}
       ]
     }
   ]

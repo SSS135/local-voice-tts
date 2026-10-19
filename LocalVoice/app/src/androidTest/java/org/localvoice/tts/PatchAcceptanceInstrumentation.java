@@ -73,7 +73,7 @@ public final class PatchAcceptanceInstrumentation extends Instrumentation {
         if(restore){StringBuilder json=new StringBuilder();try(BufferedReader in=new BufferedReader(new FileReader(journal))){for(String line;(line=in.readLine())!=null;)json.append(line);}files=new org.json.JSONArray(json.toString());}
         else {
             require(!journal.exists(),"Native mode fixture already active");files=new org.json.JSONArray();
-            for(String id:new String[]{"kokoro-en","supertonic-3","pocket-en-alba"}){
+            for(String id:new String[]{"kokoro-en","supertonic-3","pocket-en-v2"}){
                 Catalog.Model model=Catalog.findModel(id);require(model!=null,"Native model catalog missing");File directory=store.modelDirectory(id);
                 for(Catalog.ModelFile entry:model.files)if(entry.bytes>=1024L*1024L){File file=ModelFiles.child(directory,entry.path);require(file.length()==entry.bytes&&sha(file).equals(entry.sha256),"Native mode fixture pin mismatch");files.put(new JSONObject().put("model",id).put("file",entry.path).put("originalMode",android.system.Os.lstat(file.getAbsolutePath()).st_mode&0777));}
             }
@@ -81,7 +81,7 @@ public final class PatchAcceptanceInstrumentation extends Instrumentation {
         }
         for(int i=0;i<files.length();i++){
             JSONObject entry=files.getJSONObject(i);String id=entry.getString("model"),relative=entry.getString("file");
-            require(Arrays.asList("kokoro-en","supertonic-3","pocket-en-alba").contains(id),"Unexpected native fixture model");Catalog.Model model=Catalog.findModel(id);boolean pinned=false;
+            require(Arrays.asList("kokoro-en","supertonic-3","pocket-en-v2").contains(id),"Unexpected native fixture model");Catalog.Model model=Catalog.findModel(id);boolean pinned=false;
             for(Catalog.ModelFile file:model.files)if(file.path.equals(relative)&&file.bytes>=1024L*1024L)pinned=true;require(pinned,"Unexpected native fixture file");
             File file=ModelFiles.child(store.modelDirectory(id),relative);int mode=restore?entry.getInt("originalMode"):0400;android.system.Os.chmod(file.getAbsolutePath(),mode);require((android.system.Os.lstat(file.getAbsolutePath()).st_mode&0777)==mode,"Native file mode mismatch");
         }
@@ -94,7 +94,7 @@ public final class PatchAcceptanceInstrumentation extends Instrumentation {
         org.json.JSONArray files=new org.json.JSONArray(json.toString());ModelStore store=new ModelStore(target);
         for(int i=0;i<files.length();i++){
             JSONObject entry=files.getJSONObject(i);String id=entry.getString("model"),relative=entry.getString("file");
-            require(Arrays.asList("kokoro-en","supertonic-3","pocket-en-alba").contains(id),"Unexpected native mode model");
+            require(Arrays.asList("kokoro-en","supertonic-3","pocket-en-v2").contains(id),"Unexpected native mode model");
             Catalog.Model model=Catalog.findModel(id);Catalog.ModelFile pin=null;for(Catalog.ModelFile file:model.files)if(file.path.equals(relative))pin=file;require(pin!=null,"Unknown native mode file");
             File file=ModelFiles.child(store.modelDirectory(id),relative);int observed=android.system.Os.lstat(file.getAbsolutePath()).st_mode&0777;
             require(observed==0400&&file.length()==pin.bytes&&sha(file).equals(pin.sha256),"Native0400 post-smoke mode/pin changed");entry.put("observedModeOctal",Integer.toOctalString(observed)).put("sha256",pin.sha256).put("pinnedBytes",pin.bytes);
@@ -108,20 +108,20 @@ public final class PatchAcceptanceInstrumentation extends Instrumentation {
         result.put("voiceBefore",preferences.getString("voice","")).put("speedBefore",(double)preferences.getFloat("speed_multiplier",1f)).put("onlineBefore",preferences.getBoolean("online.edge",false));
         if(mode.equals("prepare-upgrade")) {
             require(info.versionCode==2&&info.versionName.equals("1.1.0"),"Upgrade must start from delivered1.1.0");
-            require(preferences.edit().putString("voice","pocket-en-alba:alba").putFloat("speed_multiplier",1.3f).commit(),"Could not save upgrade fixture preferences");
+            require(preferences.edit().putString("voice","pocket-en-v2:alba").putFloat("speed_multiplier",1.3f).commit(),"Could not save upgrade fixture preferences");
             result.put("fixtureVoice",preferences.getString("voice","")).put("fixtureSpeed",(double)preferences.getFloat("speed_multiplier",1));
-            result.put("publicEnglishDefault",englishDefault());require(result.getString("publicEnglishDefault").equals("pocket-en-alba:alba"),"Seeded public default mismatch");return;
+            result.put("publicEnglishDefault",englishDefault());require(result.getString("publicEnglishDefault").equals("pocket-en-v2:alba"),"Seeded public default mismatch");return;
         }
         if(mode.equals("upgrade-check")) {
             require(info.versionCode==3&&info.versionName.equals("1.1.1"),"Not patch release");
-            require(preferences.getString("voice","").equals("pocket-en-alba:alba")&&Math.abs(preferences.getFloat("speed_multiplier",0)-1.3f)<.001,"Upgrade lost nondefault preferences");
+            require(preferences.getString("voice","").equals("pocket-en-v2:alba")&&Math.abs(preferences.getFloat("speed_multiplier",0)-1.3f)<.001,"Upgrade lost nondefault preferences");
             openActivity();SeekBar speed=activity.findViewById(0x10f005);require(speed.getProgress()==8,"Upgrade UI speed mismatch");
             @SuppressWarnings("unchecked") List<Catalog.VoiceSpec> voices=(List<Catalog.VoiceSpec>)field(activity,"filteredVoices");int wanted=-1;
-            for(int i=0;i<voices.size();i++)if(voices.get(i).id.equals("pocket-en-alba:alba"))wanted=i;require(wanted>=0,"Alba missing after upgrade");
+            for(int i=0;i<voices.size();i++)if(voices.get(i).id.equals("pocket-en-v2:alba"))wanted=i;require(wanted>=0,"Alba missing after upgrade");
             ListView list=activity.findViewById(0x10f004);final int position=wanted;runOnMainSync(()->list.setSelectionFromTop(position+1,0));Thread.sleep(100);waitForIdleSync();
             View row=list.getChildAt(position+1-list.getFirstVisiblePosition());require(row!=null,"Selected row not bound");
             View check=(View)field(row.getTag(),"check");require(check.getVisibility()==View.VISIBLE&&row.getContentDescription().toString().endsWith(", selected"),"Upgrade UI checkmark mismatch");
-            result.put("uiSelectedCheckmark",true).put("sliderProgress",speed.getProgress()).put("publicEnglishDefault",englishDefault());require(result.getString("publicEnglishDefault").equals("pocket-en-alba:alba"),"Upgrade public default mismatch");
+            result.put("uiSelectedCheckmark",true).put("sliderProgress",speed.getProgress()).put("publicEnglishDefault",englishDefault());require(result.getString("publicEnglishDefault").equals("pocket-en-v2:alba"),"Upgrade public default mismatch");
         } else if(mode.equals("cadence")) {
             openActivity();runOnMainSync(()->{Button downloads=button(activity.getWindow().getDecorView(),"Downloads");require(downloads!=null,"Downloads destination missing");downloads.performClick();});waitForIdleSync();
             result.put("actualActivityProbe",UiCadenceProbe.run(this,activity));

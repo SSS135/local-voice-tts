@@ -1,0 +1,10 @@
+# Python 3.14.6 (uv), CPU wheels from https://download.pytorch.org/whl/cpu for torch.
+torch==2.14.1+cpu
+numpy==2.4.6
+onnx==1.23.2
+onnxruntime==1.28.0
+sherpa-onnx==1.13.8
+# host validation only
+faster-whisper==1.2.1
+soundfile==0.14.0
+scipy==1.18.1

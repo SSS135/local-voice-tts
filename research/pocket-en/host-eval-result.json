@@ -1,0 +1,64 @@
+{
+  "host": "Windows 11 desktop CPU, sherpa-onnx 1.13.8, num_threads=2; other jobs were loading the CPU (load 100%), so timings are indicative only",
+  "asr": "faster-whisper 1.1.1 small.en int8, beam 5; 11 sentences x seeds 1,2",
+  "results": {
+    "new-s1-t0.3": {
+      "numSteps": 1,
+      "temperature": 0.3,
+      "syntheses": 22,
+      "wer": 0.0,
+      "exact": 22,
+      "medianFirstAudioSeconds": 1.702999999979511,
+      "medianRtf": 0.6629464285651919,
+      "loadSeconds": 2.51500000001397,
+      "misses": [],
+      "audioSeconds": 62.0
+    },
+    "new-s4-t0.7": {
+      "numSteps": 4,
+      "temperature": 0.7,
+      "syntheses": 22,
+      "wer": 0.004201680672268907,
+      "exact": 21,
+      "medianFirstAudioSeconds": 1.765999999945052,
+      "medianRtf": 0.7142857142857143,
+      "loadSeconds": 5.407000000006519,
+      "misses": [
+        {
+          "wav": "s1-08.wav",
+          "transcript": "for making $20 to making $1,000 an hour."
+        }
+      ],
+      "audioSeconds": 62.879999999999995
+    },
+    "old-s4-t0.7": {
+      "numSteps": 4,
+      "temperature": 0.7,
+      "syntheses": 22,
+      "wer": 0.004201680672268907,
+      "exact": 21,
+      "medianFirstAudioSeconds": 4.297000000020489,
+      "medianRtf": 1.2581395348777649,
+      "loadSeconds": 5.702999999979511,
+      "misses": [
+        {
+          "wav": "s1-10.wav",
+          "transcript": "quiet morning begins beside the river."
+        }
+      ],
+      "audioSeconds": 70.32
+    }
+  },
+  "timingRerun": {
+    "new-s1-t0.3": {
+      "medianFirstAudioSeconds": 1.2115000000339933,
+      "medianRtf": 0.4771147629267505,
+      "audioSeconds": 62.0
+    },
+    "old-s4-t0.7": {
+      "medianFirstAudioSeconds": 1.7579999999143183,
+      "medianRtf": 0.7299593495820484,
+      "audioSeconds": 70.32
+    }
+  }
+}
