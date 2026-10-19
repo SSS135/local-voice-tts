@@ -1,0 +1,37 @@
+[
+  {
+    "file": "neutts-nano-Q4_0.gguf",
+    "url": "https://huggingface.co/neuphonic/neutts-nano-q4-gguf/resolve/d775fb6ff95c60a076c68994d9f084473ad9fb86/neutts-nano-Q4_0.gguf",
+    "size": 194600640,
+    "sha256": "85466ca06aeb487e5e8d0263367166e125969e3f4b07245db009aee223702c86",
+    "gated": true
+  },
+  {
+    "file": "neutts-nano-q4-gguf-LICENCE",
+    "url": "https://huggingface.co/neuphonic/neutts-nano-q4-gguf/resolve/d775fb6ff95c60a076c68994d9f084473ad9fb86/LICENCE",
+    "size": 11084,
+    "sha256": "2d398562eabe1e74541435859baaca9c9747bd040b5a14df85c6172e5671f14a",
+    "gated": true
+  },
+  {
+    "file": "neucodec-decoder-int8.onnx",
+    "url": "https://huggingface.co/neuphonic/neucodec-onnx-decoder-int8/resolve/d4b449d34211ffe3b5efc57fa464b37393f8ce7f/model.onnx",
+    "size": 312292102,
+    "sha256": "3ddd9e56396e6029e0e948ac0255c89c803f981f23dcf4c154f50820bd74a6b3",
+    "gated": true
+  },
+  {
+    "file": "neutts-ac69851f28fc63a487917e7c2e27f0d75c759cba.zip",
+    "url": "https://codeload.github.com/neuphonic/neutts/zip/ac69851f28fc63a487917e7c2e27f0d75c759cba",
+    "size": 3044365,
+    "sha256": "64819ea17f1cf45c358d0257aca99c52dc670b254039d5f4d1506680563cb8ce",
+    "note": "samples/*.pt reference codes and transcripts; neutts.py/phonemizers.py are the ported prompt and phonemizer configuration"
+  },
+  {
+    "file": "neutts-1.4.1-cp312-cp312-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/9c/f2/7a03c78bc000c5a42d88c05ab9f4c9014ce7b0929f979ade3ef61695faa0/neutts-1.4.1-cp312-cp312-win_amd64.whl",
+    "size": 9596854,
+    "sha256": "44d0f4d9b5357396bcfc2b4911b2a1460367cfad3ac3d05d8780649c6b139b4b",
+    "note": "espeak-ng-data compiled from eSpeak NG 69bfd1ef (neutts CMakeLists.txt) and espeak-ng.dll for host phoneme parity"
+  }
+]

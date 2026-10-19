@@ -1,0 +1,183 @@
+{
+ "espeak": "neutts-1.4.1 wheel, eSpeak NG 1.52.0.1 (69bfd1ef), voice gmw/en-us",
+ "phonemizer": "3.4.0",
+ "raw": {
+  "Hello": "h_ə_l_ˈoʊ",
+  "world": "w_ˈɜː_l_d",
+  "So I'm live on radio": "s_ˌoʊ aɪ_m l_ˈaɪ_v ˌɔ_n ɹ_ˈeɪ_d_ɪʲ_ˌoʊ",
+  "And I say": "æ_n_d aɪ s_ˈeɪ",
+  "well": "w_ˈɛ_l",
+  "my dear friend James here clearly": "m_aɪ d_ˈɪɹ f_ɹ_ˈɛ_n_d dʒ_ˈeɪ_m_z h_ˈɪɹ k_l_ˈɪɹ_l_i",
+  "and the whole room just froze": "æ_n_d ð_ə h_ˈoʊ_l ɹ_ˈuː_m dʒ_ˈʌ_s_t f_ɹ_ˈoʊ_z",
+  "Turns out I'd completely misspoken and mentioned our other friend": "t_ˈɜː_n_z ˈaʊ_t aɪ_d k_ə_m_p_l_ˈiː_t_l_i m_ɪ_s_s_p_ˈoʊ_k_ə_n__ æ_n_d m_ˈɛ_n_ʃ_ə_n_d ˌaʊ_ɚ_ɹ ˈʌ_ð_ɚ f_ɹ_ˈɛ_n_d",
+  "It costs $19.99": "ɪ_t k_ˈɔ_s_t_s d_ˈɑː_l_ɚ n_ˈaɪ_n_t_iː_n p_ɔɪ_n_t n_ˈaɪ_n n_ˈaɪ_n",
+  "or 1,5 euros": "ɔːɹ w_ˈʌ_n f_ˈaɪ_v j_ˈʊɹ_ɹ_oʊ_z",
+  "approximately": "ɐ_p_ɹ_ˈɑː_k_s_ɪ_m_ə_t_l_i",
+  "said Dr": "s_ˈɛ_d d_ˈɑː_k_t_ɚ",
+  "Smith": "s_m_ˈɪ_θ",
+  "really": "ɹ_ˈiə_l_i",
+  "she asked": "ʃ_iːʲ ˈæ_s_k_t",
+  "The quick brown fox jumps over the lazy dog": "ð_ə k_w_ˈɪ_k b_ɹ_ˈaʊ_n f_ˈɑː_k_s dʒ_ˈʌ_m_p_s ˌoʊ_v_ɚ ð_ə l_ˈeɪ_z_i d_ˈɑː_ɡ",
+  "What's the time": "w_ˌʌ_t_s ð_ə t_ˈaɪ_m",
+  "It's 10": "ɪ_t_s t_ˈɛ_n",
+  "30 a": "θ_ˈɜː_ɾ_iʲ ˈeɪ",
+  "m": "ˈɛ_m",
+  "on the 3rd of May": "ɔ_n_ð_ə θ_ˈɜː_d ʌ_v m_ˈeɪ",
+  "2026": "t_ˈuː θ_ˈaʊ_z_ə_n_d t_w_ˈɛ_n_t_i s_ˈɪ_k_s",
+  "Wait": "w_ˈeɪ_t",
+  "what": "w_ˌʌ_t",
+  "No": "n_ˈoʊ",
+  "never": "n_ˈɛ_v_ɚ",
+  "Quoted": "k_w_ˈoʊ_ɾ_ᵻ_d",
+  "he said": "h_iː s_ˈɛ_d",
+  "bracketed": "b_ɹ_ˈæ_k_ɪ_ɾ_ᵻ_d",
+  "braced": "b_ɹ_ˈeɪ_s_t",
+  "guillemets": "ɡ_ˈɪ_l_ɛ_m_ɪ_t_s",
+  "Qué": "k_w_ˈeɪ",
+  "Sí": "ʃ_ˈiː",
+  "Numbers": "n_ˈʌ_m_b_ɚ_z",
+  "1": "w_ˈʌ_n",
+  "2": "t_ˈuː",
+  "3": "θ_ɹ_ˈiː",
+  "and 4": "æ_n_d f_ˈɔːɹ",
+  "5 and 6,000 people.": "f_ˈaɪ_v æ_n_d s_ˈɪ_k_s θ_ˈaʊ_z_ə_n_d p_ˈiː_p_əl",
+  "and 4.5 and 6,000 people": "æ_n_d f_ˈɔːɹ p_ɔɪ_n_t f_ˈaɪ_v__ æ_n_d s_ˈɪ_k_s θ_ˈaʊ_z_ə_n_d p_ˈiː_p_əl",
+  "I read the book yesterday": "aɪ ɹ_ˈiː_d ð_ə b_ˈʊ_k j_ˈɛ_s_t_ɚ_d_ˌeɪ",
+  "and I will read it again tomorrow": "æ_n_d aɪ w_ɪ_l ɹ_ˈiː_d ɪ_ɾ ɐ_ɡ_ˈɛ_n t_ə_m_ˈɑː_ɹ_oʊ",
+  "Mr": "m_ˈɪ_s_t_ɚ",
+  "O'Neil's car": "oʊ_n_ˈiː_l_z k_ˈɑːɹ",
+  "a 1967 Mustang": "ɐ n_ˈaɪ_n_t_iː_n_h_ˈʌ_n_d_ɹ_ɪ_d s_ˈɪ_k_s_t_i s_ˈɛ_v_ə_n m_ˈʌ_s_t_æ_ŋ",
+  "isn't for sale": "ˌɪ_z_ə_n_t f_ɔːɹ s_ˈeɪ_l",
+  "leading comma and trailing dash -": "l_ˈiː_d_ɪ_ŋ k_ˈɑː_m_ə__ æ_n_d t_ɹ_ˈeɪ_l_ɪ_ŋ d_ˈæ_ʃ",
+  "So I just tried Neuphonic and I’m genuinely impressed": "s_ˌoʊ aɪ dʒ_ˈʌ_s_t t_ɹ_ˈaɪ_d n_uː_f_ˈɑː_n_ɪ_k__ æ_n_d aɪ_m dʒ_ˈɛ_n_j_uː_ɪ_n_l_iʲ ɪ_m_p_ɹ_ˈɛ_s_t",
+  "It's super responsive": "ɪ_t_s s_ˈuː_p_ɚ ɹ_ᵻ_s_p_ˈɑː_n_s_ɪ_v",
+  "it sounds clean": "ɪ_t s_ˈaʊ_n_d_z k_l_ˈiː_n",
+  "supports voice cloning": "s_ə_p_ˈɔːɹ_t_s v_ˈɔɪ_s k_l_ˈoʊ_n_ɪ_ŋ",
+  "and the agent feature is fun to play with too": "æ_n_d ð_ɪʲ ˈeɪ_dʒ_ə_n_t f_ˈiː_tʃ_ɚ_ɹ ɪ_z f_ˈʌ_n t_ə p_l_ˈeɪ w_ɪ_ð t_ˈuː",
+  "Highly recommend it for podcasts": "h_ˈaɪ_l_i ɹ_ˌɛ_k_ə_m_ˈɛ_n_d ɪ_t f_ɔːɹ p_ˈɑː_d_k_æ_s_t_s",
+  "conversations": "k_ɑː_n_v_ɚ_s_ˈeɪ_ʃ_ə_n_z",
+  "or even just messing around with voiceovers": "ɔː_ɹ ˈiː_v_ə_n dʒ_ˈʌ_s_t m_ˈɛ_s_ɪ_ŋ ɚ_ɹ_ˈaʊ_n_d w_ɪ_ð v_ˈɔɪ_s_oʊ_v_ɚ_z",
+  "What we need": "w_ˌʌ_t w_iː n_ˈiː_d",
+  "helping us to develop the scope of work for a future procurement": "h_ˈɛ_l_p_ɪ_ŋ ˌʌ_s t_ə d_ɪ_v_ˈɛ_l_ə_p ð_ə s_k_ˈoʊ_p ʌ_v w_ˈɜː_k f_ɚ_ɹ_ə f_j_ˈuː_tʃ_ɚ p_ɹ_ə_k_j_ˈʊɹ_m_ə_n_t",
+  "Most important to this process is that you look at process changes": "m_ˈoʊ_s_t ɪ_m_p_ˈɔːɹ_t_ə_n_t t_ə ð_ɪ_s p_ɹ_ˈɑː_s_ɛ_s ɪ_z ð_æ_t j_uː l_ˈʊ_k æ_t p_ɹ_ˈɑː_s_ɛ_s tʃ_ˈeɪ_n_dʒ_ᵻ_z",
+  "Halloween came from the ancient Celtic festival Soin": "h_ˌæ_l_oʊ_ˈiː_n k_ˈeɪ_m f_ɹ_ʌ_m_ð_ɪʲ ˈeɪ_n_tʃ_ə_n_t k_ˈɛ_l_t_ɪ_k f_ˈɛ_s_t_ɪ_v_əl s_ˈɔɪ_n",
+  "Soin comes from Old Irish and means end of summer": "s_ˈɔɪ_n k_ˈʌ_m_z f_ɹ_ʌ_m ˈoʊ_l_d ˈaɪ_ɹ_ɪ_ʃ__ æ_n_d m_ˈiː_n_z ˈɛ_n_d ʌ_v s_ˈʌ_m_ɚ",
+  "Last": "l_ˈæ_s_t",
+  "So we just need to make the rest of the connection": "s_ˌoʊ w_iː dʒ_ˈʌ_s_t n_ˈiː_d t_ə m_ˌeɪ_k ð_ə ɹ_ˈɛ_s_t ʌ_v_ð_ə k_ə_n_ˈɛ_k_ʃ_ə_n",
+  "Meaning that my relationship with the other factions has been getting better": "m_ˈiː_n_ɪ_ŋ ð_æ_t m_aɪ ɹ_ᵻ_l_ˈeɪ_ʃ_ə_n_ʃ_ˌɪ_p w_ɪ_ð_ð_ɪʲ ˈʌ_ð_ɚ f_ˈæ_k_ʃ_ə_n_z h_ɐ_z_b_ɪ_n ɡ_ˌɛ_ɾ_ɪ_ŋ b_ˈɛ_ɾ_ɚ",
+  "but there is still a long way to go": "b_ˌʌ_t ð_ɛ_ɹ ɪ_z s_t_ˈɪ_l ɐ l_ˈɔ_ŋ w_ˈeɪ t_ə ɡ_ˈoʊ",
+  "Hi": "h_ˈaɪ",
+  "Version 2.0 of the app": "v_ˈɜː_ʒ_ə_n t_ˈuː p_ɔɪ_n_t z_ˈiə_ɹ_oʊ ʌ_v_ð_ɪʲ ˈæ_p",
+  "released on 5.10.2026": "ɹ_ᵻ_l_ˈiː_s_t ˌɔ_n f_ˈaɪ_v p_ɔɪ_n_t w_ˈʌ_n z_ˈiə_ɹ_oʊ_p_ɔɪ_n_t t_ˈuː z_ˈiə_ɹ_oʊ t_ˈuː s_ˈɪ_k_s",
+  "costs 3,50 dollars": "k_ˈɔ_s_t_s θ_ɹ_ˈiː f_ˈɪ_f_t_i d_ˈɑː_l_ɚ_z",
+  "The café’s naïve owner said": "ð_ə k_æ_f_ˈeɪ_z n_aɪ_ˈiː_v ˈoʊ_n_ɚ s_ˈɛ_d",
+  "déjà vu": "d_ˌeɪ_ʒ_ɑː v_ˈuː"
+ },
+ "cases": [
+  {
+   "text": "Hello, world!",
+   "phones": "həlˈoʊ, wˈɜːld!",
+   "upstreamPhones": "həlˈoʊ, wˈɜːld!"
+  },
+  {
+   "text": "So I'm live on radio. And I say, well, my dear friend James here clearly, and the whole room just froze. Turns out I'd completely misspoken and mentioned our other friend.",
+   "phones": "sˌoʊ aɪm lˈaɪv ˌɔn ɹˈeɪdɪʲˌoʊ. ænd aɪ sˈeɪ, wˈɛl, maɪ dˈɪɹ fɹˈɛnd dʒˈeɪmz hˈɪɹ klˈɪɹli, ænd ðə hˈoʊl ɹˈuːm dʒˈʌst fɹˈoʊz. tˈɜːnz ˈaʊt aɪd kəmplˈiːtli mɪsspˈoʊkən ænd mˈɛnʃənd ˌaʊɚɹ ˈʌðɚ fɹˈɛnd.",
+   "upstreamPhones": "sˌoʊ aɪm lˈaɪv ˌɔn ɹˈeɪdɪʲˌoʊ. ænd aɪ sˈeɪ, wˈɛl, maɪ dˈɪɹ fɹˈɛnd dʒˈeɪmz hˈɪɹ klˈɪɹli, ænd ðə hˈoʊl ɹˈuːm dʒˈʌst fɹˈoʊz. tˈɜːnz ˈaʊt aɪd kəmplˈiːtli mɪsspˈoʊkən ænd mˈɛnʃənd ˌaʊɚɹ ˈʌðɚ fɹˈɛnd."
+  },
+  {
+   "text": "It costs $19.99, or 1,5 euros (approximately) — said Dr. Smith; \"really?\" she asked…",
+   "phones": "ɪt kˈɔsts dˈɑːlɚ nˈaɪntiːn pɔɪnt nˈaɪn nˈaɪn, ɔːɹ wˈʌn fˈaɪv jˈʊɹɹoʊz (ɐpɹˈɑːksɪmətli) — sˈɛd dˈɑːktɚ. smˈɪθ; \"ɹˈiəli?\" ʃiːʲ ˈæskt…",
+   "upstreamPhones": "ɪt kˈɔsts dˈɑːlɚ nˈaɪntiːn pɔɪnt nˈaɪn nˈaɪn, ɔːɹ wˈʌn fˈaɪv jˈʊɹɹoʊz (ɐpɹˈɑːksɪmətli) — sˈɛd dˈɑːktɚ. smˈɪθ; \"ɹˈiəli?\" ʃiːʲ ˈæskt…"
+  },
+  {
+   "text": "The quick brown fox jumps over the lazy dog.",
+   "phones": "ðə kwˈɪk bɹˈaʊn fˈɑːks dʒˈʌmps ˌoʊvɚ ðə lˈeɪzi dˈɑːɡ.",
+   "upstreamPhones": "ðə kwˈɪk bɹˈaʊn fˈɑːks dʒˈʌmps ˌoʊvɚ ðə lˈeɪzi dˈɑːɡ."
+  },
+  {
+   "text": "What's the time? It's 10:30 a.m. on the 3rd of May, 2026.",
+   "phones": "wˌʌts ðə tˈaɪm? ɪts tˈɛn:θˈɜːɾiʲ ˈeɪ.ˈɛm. ɔnðə θˈɜːd ʌv mˈeɪ, tˈuː θˈaʊzənd twˈɛnti sˈɪks.",
+   "upstreamPhones": "wˌʌts ðə tˈaɪm? ɪts tˈɛn:θˈɜːɾiʲ ˈeɪ.ˈɛm. ɔnðə θˈɜːd ʌv mˈeɪ, tˈuː θˈaʊzənd twˈɛnti sˈɪks."
+  },
+  {
+   "text": "Wait... what?! No — never.",
+   "phones": "wˈeɪt... wˌʌt?! nˈoʊ — nˈɛvɚ.",
+   "upstreamPhones": "wˈeɪt... wˌʌt?! nˈoʊ — nˈɛvɚ."
+  },
+  {
+   "text": "\"Quoted,\" he said, [bracketed] {braced} «guillemets» ¿Qué? ¡Sí!",
+   "phones": "\"kwˈoʊɾᵻd,\" hiː sˈɛd, [bɹˈækɪɾᵻd] {bɹˈeɪst} «ɡˈɪlɛmɪts» ¿kwˈeɪ? ¡ʃˈiː!",
+   "upstreamPhones": "\"kwˈoʊɾᵻd,\" hiː sˈɛd, [bɹˈækɪɾᵻd] {bɹˈeɪst} «ɡˈɪlɛmɪts» ¿kwˈeɪ? ¡ʃˈiː!"
+  },
+  {
+   "text": "Numbers: 1, 2, 3; and 4.5 and 6,000 people.",
+   "phones": "nˈʌmbɚz: wˈʌn, tˈuː, θɹˈiː; ænd fˈɔːɹ pɔɪnt fˈaɪv ænd sˈɪks θˈaʊzənd pˈiːpəl.",
+   "upstreamPhones": "nˈʌmbɚz: wˈʌn, tˈuː, θɹˈiː; ænd fˈɔːɹ."
+  },
+  {
+   "text": "I read the book yesterday, and I will read it again tomorrow.",
+   "phones": "aɪ ɹˈiːd ðə bˈʊk jˈɛstɚdˌeɪ, ænd aɪ wɪl ɹˈiːd ɪɾ ɐɡˈɛn təmˈɑːɹoʊ.",
+   "upstreamPhones": "aɪ ɹˈiːd ðə bˈʊk jˈɛstɚdˌeɪ, ænd aɪ wɪl ɹˈiːd ɪɾ ɐɡˈɛn təmˈɑːɹoʊ."
+  },
+  {
+   "text": "Mr. O'Neil's car — a 1967 Mustang — isn't for sale.",
+   "phones": "mˈɪstɚ. oʊnˈiːlz kˈɑːɹ — ɐ nˈaɪntiːnhˈʌndɹɪd sˈɪksti sˈɛvən mˈʌstæŋ — ˌɪzənt fɔːɹ sˈeɪl.",
+   "upstreamPhones": "mˈɪstɚ. oʊnˈiːlz kˈɑːɹ — ɐ nˈaɪntiːnhˈʌndɹɪd sˈɪksti sˈɛvən mˈʌstæŋ — ˌɪzənt fɔːɹ sˈeɪl."
+  },
+  {
+   "text": ", leading comma and trailing dash -",
+   "phones": ", lˈiːdɪŋ kˈɑːmə ænd tɹˈeɪlɪŋ dˈæʃ",
+   "upstreamPhones": ", lˈiːdɪŋ kˈɑːmə ænd tɹˈeɪlɪŋ dˈæʃ"
+  },
+  {
+   "text": "So I'm live on radio. And I say, well, my dear friend James here clearly, and the whole room just froze. Turns out I'd completely misspoken and mentioned our other friend.",
+   "phones": "sˌoʊ aɪm lˈaɪv ˌɔn ɹˈeɪdɪʲˌoʊ. ænd aɪ sˈeɪ, wˈɛl, maɪ dˈɪɹ fɹˈɛnd dʒˈeɪmz hˈɪɹ klˈɪɹli, ænd ðə hˈoʊl ɹˈuːm dʒˈʌst fɹˈoʊz. tˈɜːnz ˈaʊt aɪd kəmplˈiːtli mɪsspˈoʊkən ænd mˈɛnʃənd ˌaʊɚɹ ˈʌðɚ fɹˈɛnd.",
+   "upstreamPhones": "sˌoʊ aɪm lˈaɪv ˌɔn ɹˈeɪdɪʲˌoʊ. ænd aɪ sˈeɪ, wˈɛl, maɪ dˈɪɹ fɹˈɛnd dʒˈeɪmz hˈɪɹ klˈɪɹli, ænd ðə hˈoʊl ɹˈuːm dʒˈʌst fɹˈoʊz. tˈɜːnz ˈaʊt aɪd kəmplˈiːtli mɪsspˈoʊkən ænd mˈɛnʃənd ˌaʊɚɹ ˈʌðɚ fɹˈɛnd."
+  },
+  {
+   "text": "So I just tried Neuphonic and I’m genuinely impressed. It's super responsive, it sounds clean, supports voice cloning, and the agent feature is fun to play with too. Highly recommend it for podcasts, conversations, or even just messing around with voiceovers.",
+   "phones": "sˌoʊ aɪ dʒˈʌst tɹˈaɪd nuːfˈɑːnɪk ænd aɪm dʒˈɛnjuːɪnliʲ ɪmpɹˈɛst. ɪts sˈuːpɚ ɹᵻspˈɑːnsɪv, ɪt sˈaʊndz klˈiːn, səpˈɔːɹts vˈɔɪs klˈoʊnɪŋ, ænd ðɪʲ ˈeɪdʒənt fˈiːtʃɚɹ ɪz fˈʌn tə plˈeɪ wɪð tˈuː. hˈaɪli ɹˌɛkəmˈɛnd ɪt fɔːɹ pˈɑːdkæsts, kɑːnvɚsˈeɪʃənz, ɔːɹ ˈiːvən dʒˈʌst mˈɛsɪŋ ɚɹˈaʊnd wɪð vˈɔɪsoʊvɚz.",
+   "upstreamPhones": "sˌoʊ aɪ dʒˈʌst tɹˈaɪd nuːfˈɑːnɪk ænd aɪm dʒˈɛnjuːɪnliʲ ɪmpɹˈɛst. ɪts sˈuːpɚ ɹᵻspˈɑːnsɪv, ɪt sˈaʊndz klˈiːn, səpˈɔːɹts vˈɔɪs klˈoʊnɪŋ, ænd ðɪʲ ˈeɪdʒənt fˈiːtʃɚɹ ɪz fˈʌn tə plˈeɪ wɪð tˈuː. hˈaɪli ɹˌɛkəmˈɛnd ɪt fɔːɹ pˈɑːdkæsts, kɑːnvɚsˈeɪʃənz, ɔːɹ ˈiːvən dʒˈʌst mˈɛsɪŋ ɚɹˈaʊnd wɪð vˈɔɪsoʊvɚz."
+  },
+  {
+   "text": "What we need, helping us to develop the scope of work for a future procurement. Most important to this process is that you look at process changes.",
+   "phones": "wˌʌt wiː nˈiːd, hˈɛlpɪŋ ˌʌs tə dɪvˈɛləp ðə skˈoʊp ʌv wˈɜːk fɚɹə fjˈuːtʃɚ pɹəkjˈʊɹmənt. mˈoʊst ɪmpˈɔːɹtənt tə ðɪs pɹˈɑːsɛs ɪz ðæt juː lˈʊk æt pɹˈɑːsɛs tʃˈeɪndʒᵻz.",
+   "upstreamPhones": "wˌʌt wiː nˈiːd, hˈɛlpɪŋ ˌʌs tə dɪvˈɛləp ðə skˈoʊp ʌv wˈɜːk fɚɹə fjˈuːtʃɚ pɹəkjˈʊɹmənt. mˈoʊst ɪmpˈɔːɹtənt tə ðɪs pɹˈɑːsɛs ɪz ðæt juː lˈʊk æt pɹˈɑːsɛs tʃˈeɪndʒᵻz."
+  },
+  {
+   "text": "Halloween came from the ancient Celtic festival Soin. Soin comes from Old Irish and means end of summer.",
+   "phones": "hˌæloʊˈiːn kˈeɪm fɹʌmðɪʲ ˈeɪntʃənt kˈɛltɪk fˈɛstɪvəl sˈɔɪn. sˈɔɪn kˈʌmz fɹʌm ˈoʊld ˈaɪɹɪʃ ænd mˈiːnz ˈɛnd ʌv sˈʌmɚ.",
+   "upstreamPhones": "hˌæloʊˈiːn kˈeɪm fɹʌmðɪʲ ˈeɪntʃənt kˈɛltɪk fˈɛstɪvəl sˈɔɪn. sˈɔɪn kˈʌmz fɹʌm ˈoʊld ˈaɪɹɪʃ ænd mˈiːnz ˈɛnd ʌv sˈʌmɚ."
+  },
+  {
+   "text": "Last. So we just need to make the rest of the connection.",
+   "phones": "lˈæst. sˌoʊ wiː dʒˈʌst nˈiːd tə mˌeɪk ðə ɹˈɛst ʌvðə kənˈɛkʃən.",
+   "upstreamPhones": "lˈæst. sˌoʊ wiː dʒˈʌst nˈiːd tə mˌeɪk ðə ɹˈɛst ʌvðə kənˈɛkʃən."
+  },
+  {
+   "text": "Meaning that my relationship with the other factions has been getting better, but there is still a long way to go.",
+   "phones": "mˈiːnɪŋ ðæt maɪ ɹᵻlˈeɪʃənʃˌɪp wɪððɪʲ ˈʌðɚ fˈækʃənz hɐzbɪn ɡˌɛɾɪŋ bˈɛɾɚ, bˌʌt ðɛɹ ɪz stˈɪl ɐ lˈɔŋ wˈeɪ tə ɡˈoʊ.",
+   "upstreamPhones": "mˈiːnɪŋ ðæt maɪ ɹᵻlˈeɪʃənʃˌɪp wɪððɪʲ ˈʌðɚ fˈækʃənz hɐzbɪn ɡˌɛɾɪŋ bˈɛɾɚ, bˌʌt ðɛɹ ɪz stˈɪl ɐ lˈɔŋ wˈeɪ tə ɡˈoʊ."
+  },
+  {
+   "text": "...",
+   "phones": "...",
+   "upstreamPhones": "..."
+  },
+  {
+   "text": "\"Hi!\"",
+   "phones": "\"hˈaɪ!\"",
+   "upstreamPhones": "\"hˈaɪ!\""
+  },
+  {
+   "text": "Version 2.0 of the app, released on 5.10.2026, costs 3,50 dollars.",
+   "phones": "vˈɜːʒən tˈuː pɔɪnt zˈiəɹoʊ ʌvðɪʲ ˈæp, ɹᵻlˈiːst ˌɔn fˈaɪv pɔɪnt wˈʌn zˈiəɹoʊpɔɪnt tˈuː zˈiəɹoʊ tˈuː sˈɪks, kˈɔsts θɹˈiː fˈɪfti dˈɑːlɚz.",
+   "upstreamPhones": "vˈɜːʒən tˈuː pɔɪnt zˈiəɹoʊ ʌvðɪʲ ˈæp, ɹᵻlˈiːst ˌɔn fˈaɪv pɔɪnt wˈʌn zˈiəɹoʊpɔɪnt tˈuː zˈiəɹoʊ tˈuː sˈɪks, kˈɔsts θɹˈiː fˈɪfti dˈɑːlɚz."
+  },
+  {
+   "text": "The café’s naïve owner said: “déjà vu”.",
+   "phones": "ðə kæfˈeɪz naɪˈiːv ˈoʊnɚ sˈɛd: “dˌeɪʒɑː vˈuː”.",
+   "upstreamPhones": "ðə kæfˈeɪz naɪˈiːv ˈoʊnɚ sˈɛd: “dˌeɪʒɑː vˈuː”."
+  }
+ ]
+}

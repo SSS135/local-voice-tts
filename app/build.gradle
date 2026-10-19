@@ -22,6 +22,10 @@ android {
         // Only release gets the private key; debuggable debug builds keep the Android debug key (SEC-002).
         release { if (useLocalSigning) signingConfig signingConfigs.local; minifyEnabled false }
     }
+    // libneutts_jni.so (NeuTTS backend) from pinned llama.cpp/eSpeak NG sources; see app/src/main/cpp/CMakeLists.txt.
+    ndkVersion '29.0.14206865'
+    externalNativeBuild { cmake { path 'src/main/cpp/CMakeLists.txt'; version '3.22.1' } }
+    defaultConfig { externalNativeBuild { cmake { arguments '-DANDROID_STL=c++_static', '-DCMAKE_BUILD_TYPE=Release' } } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     packaging { jniLibs { useLegacyPackaging false } }
     // One JVM per check class: checks mutate statics such as Catalog.MODELS.

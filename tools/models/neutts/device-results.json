@@ -1,0 +1,64 @@
+{
+ "note": "NeuTtsCli (tools/models/neutts/cli) over the app's own Java + libneutts_jni.so via app_process; passage.txt (777 chars), voice dave, service segmentation (SpeechPlan.segments). stall_ms = audio arriving after the previous audio would have finished playing in real time.",
+ "pixel7pro": {
+  "device": "Pixel 7 Pro (Tensor G2), Android 17 CP3A.261005.002.A1, USB powered, arm64-v8a",
+  "threads": "generation 2 / prompt 4 / NeuCodec 3, decode overlapped with generation",
+  "load_ms": 1627,
+  "segments": 9,
+  "first_audio_ms": 1711,
+  "audio_ms": 37820,
+  "wall_ms": 44677,
+  "rtf": 1.181,
+  "stall_ms": 5858,
+  "per_segment": "prefill 0.70-1.05 s (560-690 prompt tokens, 164 reused), first audio 1.49-1.99 s after the call, generation ~55-60 codes/s",
+  "thermal_before": "status 1, BIG 46 C, skin 38 C",
+  "thermal_after": "status 1, BIG 70 C, skin 42 C",
+  "asr_wer_faster_whisper_small_en": 0.007,
+  "tuning_p1_330_chars_from_BIG_48C": {
+   "2/4/3 overlapped": 1.052,
+   "1/4/3 overlapped": 1.176,
+   "4/4/4 sequential": 1.247
+  },
+  "backbone_only_tokens_per_s": {
+   "before thread pools, 4 threads": 40.4,
+   "attached ggml thread pools, 4 threads": 82.2,
+   "official llama-bench b11729 tg64 @ d768": 87.0
+  }
+ },
+ "emulator_x86_64": {
+  "device": "emulator-5554, Android 16 (API 36) x86_64, 6 vCPU, host Ryzen 9 7945HX",
+  "note": "before thread pools and decode overlap; functional only",
+  "load_ms": 3341,
+  "first_audio_ms": 8128,
+  "audio_ms": 37440,
+  "rtf": 4.93,
+  "asr_wer_faster_whisper_small_en": 0.021
+ },
+ "espeak_parity": "native eSpeak NG raw phonemes identical to the neutts 1.4.1 wheel (phonemizer 3.4.0) on all 21 lines of sentences.txt on emulator x86_64 (arm64 output not compared)",
+ "emulator_x86_64_app": {
+  "device": "own AVD LV_NeuTTS (android-36.1 google_apis_playstore x86_64, 4 GB RAM, 10 GB data), emulator-5560, second emulator running on the host",
+  "path": "debug APK, catalog download from release neutts-nano-model-v1 (484.2 MiB, verified, installed), probe synthesizeToFile",
+  "passage_dave": {
+   "segments": 9,
+   "request_to_first_pcm_ms": 10192,
+   "model_load_ms": 3625,
+   "audio_ms": 39400,
+   "request_to_done_ms": 119300,
+   "prefill_ms_per_segment": "4300-5300",
+   "asr_wer_faster_whisper_small_en": 0.014,
+   "pcm_format": "24000 Hz mono 16-bit"
+  },
+  "jo_rate_1_5": {
+   "prompt_tokens": 947,
+   "audio_ms_before_stretch": 2680,
+   "audio_ms_after": 1786,
+   "done": true
+  },
+  "stop_on_first_pcm_steven": {
+   "stop_returned_ms": 18,
+   "late_pcm": 0,
+   "note": "llama_decode aborted via abort callback (ret 2)"
+  },
+  "memory_loaded": "TOTAL PSS 720 MB, RSS 849 MB, native heap 476 MB"
+ }
+}
