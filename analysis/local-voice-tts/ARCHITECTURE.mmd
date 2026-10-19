@@ -1,0 +1,56 @@
+graph TD
+  subgraph App["LocalVoice/app (org.localvoice.tts)"]
+    D1[D1 Service / TTS API]
+    D2[D2 Coordinator + Registry]
+    D3[D3 Local backends<br/>Kokoro/Supertonic/Pocket/Shtorm]
+    D4[D4 Edge backend + catalog]
+    D5[D5 Audio: PcmTimeStretch/Sonic]
+    D6[D6 Catalog + ModelStore]
+    D7[D7 UI]
+  end
+  subgraph Ext["Untracked / external inputs"]
+    AAR[(sherpa-onnx 1.13.8 AAR)]
+    MODELS[(HF model files / GitHub release assets)]
+    MS[(Microsoft Read Aloud)]
+  end
+  subgraph Ver["Verification"]
+    D9[D9 Tests: PS1 runners, storage-host stubs,<br/>androidTest, probe APK, e2e py, fault fixture]
+  end
+  subgraph Ship["Build / provenance"]
+    D8[D8 Gradle + build/fetch/package scripts]
+    D10[D10 research/]
+    D11[D11 Docs + licenses]
+    TP[third_party/androidx-media3-sonic]
+  end
+  D1 -->|execute/cancel/begin| D2
+  D1 -->|installedVoices, verifyInstalled| D6
+  D1 -->|prefs 'voices'| D6
+  D2 -->|BackendRegistry.create| D3
+  D2 -->|BackendRegistry.create| D4
+  D3 -->|Pocket/Shtorm speed| D5
+  D3 -->|JNI| AAR
+  D3 -->|reads verified files| MODELS
+  D6 -->|download HTTPS| MODELS
+  D6 -->|EdgeCatalogRepository.initialize| D4
+  D4 -->|Catalog.replaceEdgeVoices| D6
+  D4 -->|OkHttp WSS| MS
+  D7 -->|download/select/enableOnline| D6
+  D7 -->|preview via TextToSpeech| D1
+  D7 -->|OnlineCatalogUi refresh| D4
+  D8 -->|compiles| App
+  D8 -->|fetch-runtime.ps1| AAR
+  D8 -->|package-source allowlist| D10
+  D8 -->|package-source allowlist| D11
+  D8 -->|package-source projectTrees| TP
+  TP -->|update-source.py regenerates| D5
+  D10 -.->|pinned SHA/size for Catalog rows| D6
+  D10 -.->|Shtorm pack via package_model.py| MODELS
+  D10 -.->|tokenizer-parity fixture copy| D9
+  D9 -->|javac production sources| D2
+  D9 -->|javac| D4
+  D9 -->|javac| D5
+  D9 -->|javac + Android stubs| D6
+  D9 -->|VoiceFilterCheck| D7
+  D9 -->|probe + adb| D1
+  D9 -->|reflection on FACTORIES| D2
+  D9 -->|requires untracked research/shtorm/onnx| D10
