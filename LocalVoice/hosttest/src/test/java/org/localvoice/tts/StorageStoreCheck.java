@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.*;
 
 /** Actual ModelStore control flow with deterministic Android boundaries; not an Android runtime test. */
 public final class StorageStoreCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     static void check(boolean v,String why){if(!v)throw new AssertionError(why);}
     static void idle(ExecutorService executor)throws Exception{executor.submit(()->{}).get(10,TimeUnit.SECONDS);}
     static String hash(byte[] bytes)throws Exception{StringBuilder hex=new StringBuilder();for(byte b:java.security.MessageDigest.getInstance("SHA-256").digest(bytes))hex.append(String.format(Locale.ROOT,"%02x",b&255));return hex.toString();}
@@ -66,31 +67,6 @@ public final class StorageStoreCheck {
                 for(Catalog.VoiceSpec voice:store.installedVoices())check(!voice.modelId.equals(online.id),"disabled online voices immediately absent");
                 System.out.println("PASS online consent/discovery revocation bypasses occupied storage worker");
             }finally{unblock.countDown();idle(executor);Handler.drain();}
-            byte[] manifest="pinned manifest fixture".getBytes(java.nio.charset.StandardCharsets.UTF_8);File pack=new File(root,"fixture.zip");
-            try(java.util.zip.ZipOutputStream zip=new java.util.zip.ZipOutputStream(new FileOutputStream(pack))){zip.putNextEntry(new java.util.zip.ZipEntry("manifest.json"));zip.write(manifest);zip.closeEntry();zip.putNextEntry(new java.util.zip.ZipEntry("weight.bin"));zip.write(bytes);zip.closeEntry();}
-            Catalog.Model imported=new Catalog.Model("import-fixture",false,Collections.singletonList(new Catalog.ModelFile("weight.bin",bytes.length,hash(bytes))));
-            imported.config.put("installMode","import");imported.config.put("importArchiveBytes",Long.toString(pack.length()));imported.config.put("importArchiveSha256",ModelFiles.sha256(pack));imported.config.put("importManifestBytes",Integer.toString(manifest.length));imported.config.put("importManifestSha256",hash(manifest));Catalog.MODELS=Arrays.asList(model,online,imported);
-            android.net.Uri uri=android.net.Uri.fromFile(pack);android.content.ContentResolver resolver=context.getContentResolver();
-            CountDownLatch importing=new CountDownLatch(1),allowImport=new CountDownLatch(1);executor.execute(()->{importing.countDown();try{allowImport.await();}catch(InterruptedException ignored){}});check(importing.await(5,TimeUnit.SECONDS),"import worker gated");
-            try{store.importModel(imported.id,uri);check(resolver.takes==0&&resolver.getPersistedUriPermissions().isEmpty(),"grant/journal work stays off caller thread while queued");store.cancel(imported.id);}finally{allowImport.countDown();idle(executor);Handler.drain();}
-            check(resolver.takes==0&&resolver.releases==0&&resolver.getPersistedUriPermissions().isEmpty(),"queued cancellation avoids acquiring URI");check(!store.modelDirectory(imported.id).exists(),"queued import never activates");
-            store.importModel(imported.id,uri);idle(executor);Handler.drain();check(store.progress(imported.id).state.equals("Installed"),"valid import installed");
-            check(ModelFiles.sha256(new File(store.modelDirectory(imported.id),"weight.bin")).equals(hash(bytes)),"imported runtime exact");check(ModelFiles.receiptMatches(store.modelDirectory(imported.id),imported.revision),"import receipt published");check(!new File(store.modelDirectory(imported.id),".import-archive.zip").exists(),"compressed spool never activated");
-            check(resolver.takes==1&&resolver.releases==1&&resolver.getPersistedUriPermissions().isEmpty(),"successful import releases its grant");
-            resolver.takePersistableUriPermission(uri,1);int existingTakes=resolver.takes,existingReleases=resolver.releases;
-            store.importModel(imported.id,uri);idle(executor);Handler.drain();check(resolver.takes==existingTakes&&resolver.releases==existingReleases&&resolver.getPersistedUriPermissions().size()==1,"preexisting external grant preserved");resolver.releasePersistableUriPermission(uri,1);
-            System.out.println("PASS actual import atomic activation, queued cancellation, owned URI release and preexisting grant preservation");
-            store.remove(imported.id,false);idle(executor);Handler.drain();int opens=resolver.opens;android.os.StatFs.available=0;
-            try{store.importModel(imported.id,uri);idle(executor);Handler.drain();check(store.progress(imported.id).state.equals("Import failed"),"full storage rejected");check(resolver.opens==opens,"storage checked before reading selected archive");check(!store.modelDirectory(imported.id).exists(),"full storage cannot activate");check(resolver.getPersistedUriPermissions().isEmpty(),"full storage releases grant");}finally{android.os.StatFs.available=Long.MAX_VALUE;}
-            try(RandomAccessFile corrupt=new RandomAccessFile(pack,"rw")){corrupt.seek(0);corrupt.write(0);}
-            store.importModel(imported.id,uri);idle(executor);Handler.drain();check(store.progress(imported.id).state.equals("Import failed"),"bad pinned archive fails");check(!store.modelDirectory(imported.id).exists(),"bad archive never published");check(resolver.getPersistedUriPermissions().isEmpty(),"failure releases grant");
-            System.out.println("PASS actual import full-storage and corrupt-package failure preserve atomic publication and grant cleanup");
-            check(android.content.SharedPreferences.mainCommits==0,"production URI journal never commits on main thread");
-            android.net.Uri stale=android.net.Uri.fromFile(new File(root,"old-picker.zip")),external=android.net.Uri.fromFile(new File(root,"external-picker.zip"));resolver.takePersistableUriPermission(stale,1);resolver.takePersistableUriPermission(external,1);
-            context.getSharedPreferences("model-import-grants",0).edit().putStringSet("owned",Collections.singleton(stale.toString())).apply();
-            new ModelStore(context);idle(executor);Handler.drain();boolean keptExternal=false,keptStale=false;for(android.content.UriPermission grant:resolver.getPersistedUriPermissions()){keptExternal|=grant.getUri().equals(external);keptStale|=grant.getUri().equals(stale);}
-            check(keptExternal&&!keptStale,"startup removes only journal-owned stale grant");check(android.content.SharedPreferences.mainCommits==0,"startup cleanup stays off main");resolver.releasePersistableUriPermission(external,1);
-            System.out.println("PASS startup reconciles app-owned stale URI grants off main while preserving external grants");
             ModelRepairCheck.run(store,executor,bytes);
             FreshStageCheck.run(store,executor,bytes);
             DownloadProgressCheck.run(store,executor);

@@ -47,6 +47,11 @@ public final class ProbeActivity extends Activity {
                 });
                 String text=getIntent().getStringExtra("text");if(text==null)text="A quiet evening falls beside the river.";
                 String name=getIntent().getStringExtra("name");if(name==null)name="sample";
+                // The name becomes an output file name: no path separators or dot segments.
+                if(!name.matches("[A-Za-z0-9_-]{1,64}")){
+                    event("exception","invalid name extra");
+                    return;
+                }
                 final String utteranceName=name;
                 String queue=getIntent().getStringExtra("queue");
                 if(queue!=null){JSONArray texts=new JSONArray(queue);for(int i=0;i<texts.length();i++){String id=name+"-"+i;event("request",id+":"+tts.synthesizeToFile(texts.getString(i),new Bundle(),new File(getExternalFilesDir(null),id+".wav"),id));}return;}

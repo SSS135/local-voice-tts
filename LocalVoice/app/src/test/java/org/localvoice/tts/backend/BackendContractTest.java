@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /** Standalone JVM checks: no Android runtime, network, model files or native inference. */
 public final class BackendContractTest {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     private static final File DIRECTORY = new File("fake-model");
     private static final Map<String,String> CONFIG = Map.of("model", "fake.onnx");
     private static int passed;

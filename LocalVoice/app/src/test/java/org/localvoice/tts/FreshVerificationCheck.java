@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Actual production helper with explicit fake FD identities; not an Android fstat test. */
 public final class FreshVerificationCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Action {void run()throws Exception;}
     static int passed,skipped;
     static final byte[] PAYLOAD=new byte[1024*1024+31];

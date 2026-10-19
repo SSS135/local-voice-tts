@@ -6,6 +6,7 @@ import java.util.*;
 
 /** Production download-only resolver, real host paths. No Android no-follow claim. */
 public final class DownloadPathsCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Action {void run()throws Exception;}
     static int passed,skipped;
     static final class Skip extends Exception {Skip(String why){super(why);}}

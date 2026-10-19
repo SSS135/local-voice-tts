@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /** Fault injection against production helpers; virtual waits except one bounded real cancellation check. */
 public final class EdgeRetryContractTest {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Checked { void run() throws Exception; }
     interface Wait { void apply(int count) throws InterruptedException; }
     private static int passed;

@@ -1,6 +1,7 @@
 package org.localvoice.tts;
 import java.util.Locale;
 public final class SettingsPolicyTest {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     private static int checks;
     private static void rate(int caller,float global,float expected){float actual=SpeechRatePolicy.effective(caller,global);if(Math.abs(actual-expected)>.00001f)throw new AssertionError(actual+" != "+expected);checks++;}
     public static void main(String[] args){

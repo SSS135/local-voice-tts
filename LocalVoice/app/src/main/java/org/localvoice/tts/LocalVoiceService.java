@@ -75,20 +75,24 @@ public final class LocalVoiceService extends TextToSpeechService {
         for (Catalog.VoiceSpec voice : store.installedVoices()) {
             boolean network = Catalog.findModel(voice.modelId).network;
             voices.add(new Voice(voice.id,Locale.forLanguageTag(voice.languageTag),network ? Voice.QUALITY_NORMAL : Voice.QUALITY_HIGH,
-                network ? Voice.LATENCY_NORMAL : Voice.LATENCY_LOW,network,Collections.emptySet()));
+                network ? Voice.LATENCY_NORMAL : Voice.LATENCY_LOW,network,
+                Collections.singleton(network ? TextToSpeech.Engine.KEY_FEATURE_NETWORK_SYNTHESIS : TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS)));
         }
         return voices;
     }
     @Override public int onIsValidVoiceName(String name) { return name != null && !name.isEmpty() && choose(name,"","") != null ? TextToSpeech.SUCCESS : TextToSpeech.ERROR; }
     @Override public int onLoadVoice(String name) { return onIsValidVoiceName(name); }
     @Override public String onGetDefaultVoiceNameFor(String lang,String country,String variant) {
-        Catalog.VoiceSpec voice = choose(null,lang,country); return voice == null ? null : voice.id;
+        Catalog.VoiceSpec voice = choose(null,lang,country);
+        // TextToSpeech.setLanguage() turns this answer into a named voice, so it must apply the SEC-004 rule too.
+        if (voice == null || (isOnline(voice) && !voice.id.equals(store.selectedVoice()))) return null;
+        return voice.id;
     }
     @Override protected void onStop() { synchronized(requests){backend.cancel();} if(host!=null)host.reportStatus("stopped",0); }
     @Override protected void onSynthesizeText(SynthesisRequest request,SynthesisCallback callback) {
         long token; synchronized(requests){token=backend.begin();activeToken=token;}
         long started = SystemClock.elapsedRealtime();
-        Catalog.VoiceSpec voice = choose(request.getVoiceName(),request.getLanguage(),request.getCountry());
+        Catalog.VoiceSpec voice = chooseForSynthesis(request);
         if (voice == null) { callback.error(TextToSpeech.ERROR_NOT_INSTALLED_YET); callback.done(); synchronized(requests){if(activeToken==token)activeToken=-1;} return; }
         Catalog.Model model = Catalog.findModel(voice.modelId);
         synchronized(requests) {
@@ -151,6 +155,34 @@ public final class LocalVoiceService extends TextToSpeechService {
             if(cancelledByUiToken==token&&!callback.hasFinished()){callback.error(TextToSpeech.ERROR_SYNTHESIS);callback.done();}
             synchronized(requests){if(activeToken==token){activeToken=-1;activeModel=null;}}
         }
+    }
+    /**
+     * SEC-004: text goes online only for an online voice the client named or the user selected in Local Voice,
+     * and never when the client requested embedded synthesis.
+     */
+    private Catalog.VoiceSpec chooseForSynthesis(SynthesisRequest request) {
+        String name = request.getVoiceName();
+        Catalog.VoiceSpec voice = choose(name,request.getLanguage(),request.getCountry());
+        if (voice == null || !isOnline(voice)) return voice;
+        android.os.Bundle params = request.getParams();
+        boolean embeddedOnly = params != null && Boolean.parseBoolean(params.getString(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS));
+        if (embeddedOnly) return localVoice(request.getLanguage(),request.getCountry());
+        boolean named = name != null && !name.isEmpty();
+        if (named || voice.id.equals(store.selectedVoice())) return voice;
+        return null;
+    }
+    /** Best installed on-device voice for the language, preferring the requested country. */
+    private Catalog.VoiceSpec localVoice(String language,String country) {
+        Catalog.VoiceSpec languageOnly = null;
+        for (Catalog.VoiceSpec voice : store.installedVoices()) {
+            if (isOnline(voice) || !matches(voice,language,"")) continue;
+            if (matches(voice,language,country)) return voice;
+            if (languageOnly == null) languageOnly = voice;
+        }
+        return languageOnly;
+    }
+    private static boolean isOnline(Catalog.VoiceSpec voice) {
+        return Catalog.findModel(voice.modelId).network;
     }
     static List<String> chunks(String text,int limit) {
         ArrayList<String> result = new ArrayList<>(); int offset = 0;

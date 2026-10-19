@@ -1,0 +1,18 @@
+// Host JVM checks for the real ModelStore. src/test/java stubs android.* and Catalog, so these
+// sources cannot share a classpath with android.jar or the app's own Catalog.
+plugins { id 'java' }
+
+// Production files compiled against the stubs. Add any class ModelStore starts to depend on.
+def productionSources = tasks.register('productionSources', Sync) {
+    from('../app/src/main/java') {
+        include(['StorageMetrics', 'ModelFiles', 'DownloadFile', 'ModelDownloader', 'ModelInstaller', 'ModelStore']
+            .collect { "org/localvoice/tts/${it}.java" })
+    }
+    into layout.buildDirectory.dir('production-sources')
+}
+sourceSets.test.java.srcDir(productionSources)
+
+tasks.withType(JavaCompile).configureEach { options.release = 17; options.encoding = 'UTF-8' }
+dependencies { testImplementation 'junit:junit:4.13.2' }
+// One JVM per check class: ModelStore keeps its executor and Catalog.MODELS in statics.
+tasks.named('test') { forkEvery = 1 }

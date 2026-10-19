@@ -11,12 +11,13 @@ import java.util.concurrent.atomic.*;
 
 /** Actual private publication/cancel methods with bounded test I/O gates, no socket or APK. */
 public final class StoragePublicationCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     static int passed;
     static final byte[] DATA=new byte[128*1024];
     static final Class<?> JOB;
     static final Constructor<?> JOB_CTOR;
     static final Method PUBLISH;
-    static {try{JOB=Class.forName("org.localvoice.tts.ModelStore$Job");JOB_CTOR=JOB.getDeclaredConstructor();JOB_CTOR.setAccessible(true);PUBLISH=ModelStore.class.getDeclaredMethod("publishInstallation",Catalog.Model.class,JOB,File.class);PUBLISH.setAccessible(true);}catch(Exception error){throw new ExceptionInInitializerError(error);}}
+    static {try{JOB=Class.forName("org.localvoice.tts.ModelStore$Job");JOB_CTOR=JOB.getDeclaredConstructor();JOB_CTOR.setAccessible(true);PUBLISH=ModelInstaller.class.getDeclaredMethod("publishInstallation",Catalog.Model.class,JOB,File.class);PUBLISH.setAccessible(true);}catch(Exception error){throw new ExceptionInInitializerError(error);}}
     interface Action {void run()throws Exception;}
     static void require(boolean value,String why){if(!value)throw new AssertionError(why);}
     static void test(String name,Action action)throws Exception{action.run();passed++;System.out.println("PASS "+name);}
@@ -26,7 +27,7 @@ public final class StoragePublicationCheck {
     static boolean flag(Object job,String name)throws Exception{return (Boolean)value(JOB,job,name);}
     static Catalog.Model model(String id)throws Exception{Catalog.Model model=new Catalog.Model(id,false,Collections.singletonList(new Catalog.ModelFile("weight.bin",DATA.length,StorageStoreCheck.hash(DATA))));Catalog.MODELS=Collections.singletonList(model);return model;}
     static File seed(ModelStore store,Catalog.Model model)throws Exception{File stage=new File(store.modelDirectory(model.id).getPath()+".download");require(stage.mkdirs(),"fresh stage");Files.write(new File(stage,"weight.bin").toPath(),DATA);return stage;}
-    static boolean publish(ModelStore store,Catalog.Model model,Object job,File stage)throws Exception{try{return (Boolean)PUBLISH.invoke(store,model,job,stage);}catch(InvocationTargetException error){Throwable cause=error.getCause();if(cause instanceof Exception)throw (Exception)cause;throw new AssertionError(cause);}}
+    static boolean publish(ModelStore store,Catalog.Model model,Object job,File stage)throws Exception{try{return (Boolean)PUBLISH.invoke(value(ModelStore.class,store,"installer"),model,job,stage);}catch(InvocationTargetException error){Throwable cause=error.getCause();if(cause instanceof Exception)throw (Exception)cause;throw new AssertionError(cause);}}
     static final class GatedCanonicalFile extends File {
         final CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);final AtomicBoolean once=new AtomicBoolean();
         GatedCanonicalFile(File file){super(file.getPath());}
@@ -61,9 +62,9 @@ public final class StoragePublicationCheck {
                 require(ModelFiles.receiptMatches(store.modelDirectory(model.id),model.revision)&&store.isInstalled(model.id),"committed receipt remains valid/ready");
             });
             final ExecutorService io=cancelIo;
-            test("blocked input close is asynchronous and repeated cancel queues once",()->{
+            test("blocked connection disconnect is asynchronous and repeated cancel queues once",()->{
                 Catalog.Model model=model("close-block");Object job=job(model);CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);AtomicInteger closes=new AtomicInteger();
-                set(job,"input",new InputStream(){public int read(){return -1;}public void close()throws IOException{closes.incrementAndGet();entered.countDown();try{if(!release.await(5,TimeUnit.SECONDS))throw new IOException("Close gate timeout");}catch(InterruptedException error){Thread.currentThread().interrupt();throw new InterruptedIOException();}}});
+                set(job,"connection",new java.net.HttpURLConnection(new java.net.URL("https://example.invalid/close-block")){public void connect(){}public boolean usingProxy(){return false;}public void disconnect(){closes.incrementAndGet();entered.countDown();try{if(!release.await(5,TimeUnit.SECONDS))throw new IllegalStateException("Close gate timeout");}catch(InterruptedException error){Thread.currentThread().interrupt();}}});
                 try{helpers.submit(()->store.cancel(model.id)).get(1,TimeUnit.SECONDS);require(entered.await(2,TimeUnit.SECONDS),"asynchronous close entered");helpers.submit(()->store.cancel(model.id)).get(1,TimeUnit.SECONDS);require(flag(job,"cancelled")&&!flag(job,"activated"),"cancel state established promptly");}finally{release.countDown();}
                 io.submit(()->{}).get(3,TimeUnit.SECONDS);require(closes.get()==1,"repeated cancel does not queue duplicate closes");
             });

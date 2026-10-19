@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Run with java -ea. Real file fixtures and injected streams; no model download or device required. */
 public final class StorageSelfTest {
+    @org.junit.Test public void check() throws Exception { main(new String[]{"src/main/assets"}); }
     interface Action { void run() throws Exception; }
     static void rejects(Action action) throws Exception {
         try { action.run(); throw new AssertionError("Expected IOException"); } catch(IOException expected) {}

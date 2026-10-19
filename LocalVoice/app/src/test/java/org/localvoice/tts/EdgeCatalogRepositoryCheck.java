@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.*;
 
 /** Exercises the actual repository and actual OkHttp calls against a local HTTP fixture. */
 public final class EdgeCatalogRepositoryCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[]{"src/main/assets/edge-voices-snapshot.json",System.getProperty("java.io.tmpdir")}); }
     static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
     public static void main(String[] args)throws Exception {
         byte[] bundle=Files.readAllBytes(Path.of(args[0]));
@@ -64,10 +65,9 @@ public final class EdgeCatalogRepositoryCheck {
             passed++;System.out.println("PASS active HTTP cancellation closes socket, unblocks worker, preserves cache; ms="+(System.nanoTime()-started)/1000000);
             EdgeCatalogRepository offline=new EdgeCatalogRepository(cache,()->{throw new IOException("no bundle needed");},()->{throw new AssertionError("offline requested client");},()->{});
             check(offline.snapshot().source.equals("cache") && offline.snapshot().voices.size()==322 && offline.snapshot().updatedAtMillis==date,"offline restart lost cached voices");passed++;System.out.println("PASS offline restart loads complete refreshed cache with its original date");
-            Files.writeString(cache.toPath(),"corrupt");EdgeCatalogRepository recovered=new EdgeCatalogRepository(cache,()->new ByteArrayInputStream(bundle),()->{throw new AssertionError("corrupt cache triggered HTTP");},()->{});
+            Files.write(cache.toPath(),("corrupt").getBytes(java.nio.charset.StandardCharsets.UTF_8));EdgeCatalogRepository recovered=new EdgeCatalogRepository(cache,()->new ByteArrayInputStream(bundle),()->{throw new AssertionError("corrupt cache triggered HTTP");},()->{});
             check(recovered.snapshot().source.equals("bundled") && recovered.snapshot().voices.size()==322 && !recovered.cacheWarning().isEmpty(),"corrupt cache did not disclose bundled fallback");passed++;System.out.println("PASS corrupt cache uses dated bundled snapshot with warning and no HTTP");
             System.out.println("PASS: "+passed+" actual repository/HTTP checks");
         } finally {server.close();workers.shutdownNow();}
-        System.exit(0);
     }
 }

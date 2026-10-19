@@ -9,14 +9,16 @@ import java.security.MessageDigest;
 
 /** Expected tokens come from the pinned genuine SentencePiece processor, not this implementation. */
 public final class ShtormBpeCheck {
+    // Model files are untracked research inputs; see research/shtorm/REPRODUCE.md.
+    @org.junit.Test public void check() throws Exception { String onnx="../../research/shtorm/onnx";org.junit.Assume.assumeTrue("missing untracked input "+onnx,new java.io.File(onnx).isDirectory());main(new String[]{onnx,"../tests/fixtures/shtorm-tokenizer-parity.json"}); }
     interface Action{void run()throws Exception;}
     static int checks;
     static void check(boolean value,String detail){checks++;if(!value)throw new AssertionError(detail);}
     static void reject(Action action,String detail)throws Exception{try{action.run();throw new AssertionError(detail);}catch(IllegalArgumentException expected){checks++;}}
     static String sha256(Path file)throws Exception{byte[] hash=MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file));StringBuilder value=new StringBuilder();for(byte b:hash)value.append(String.format(Locale.ROOT,"%02x",b&255));return value.toString();}
     public static void main(String[] args)throws Exception{
-        Path folder=Paths.get(args[0]);JSONObject report=new JSONObject(Files.readString(Paths.get(args[1]),StandardCharsets.UTF_8));
-        JSONObject provenance=new JSONObject(Files.readString(Paths.get(args[1]).resolveSibling("shtorm-tokenizer-provenance.json"),StandardCharsets.UTF_8));
+        Path folder=Paths.get(args[0]);JSONObject report=new JSONObject(new String(Files.readAllBytes(Paths.get(args[1])),StandardCharsets.UTF_8));
+        JSONObject provenance=new JSONObject(new String(Files.readAllBytes(Paths.get(args[1]).resolveSibling("shtorm-tokenizer-provenance.json")),StandardCharsets.UTF_8));
         if(!sha256(Paths.get(args[1])).equals(provenance.getString("fixtureSha256"))||!sha256(folder.resolve("normalizer.bin")).equals(provenance.getString("normalizerSha256")))throw new AssertionError("Pinned fixture/normalizer provenance mismatch");
         Path original=folder.resolveSibling("tokenizer.model");if(Files.exists(original)&&!sha256(original).equals(provenance.getString("tokenizerModelSha256")))throw new AssertionError("Pinned original SentencePiece model hash mismatch");
         ShtormBpeFrontend frontend=new ShtormBpeFrontend(folder.resolve("vocab.json").toFile(),folder.resolve("token_scores.json").toFile(),folder.resolve("normalizer.bin").toFile());

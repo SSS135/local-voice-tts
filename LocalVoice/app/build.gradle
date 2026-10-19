@@ -19,11 +19,18 @@ android {
         }
     }
     buildTypes {
+        // Only release gets the private key; debuggable debug builds keep the Android debug key (SEC-002).
         release { if (useLocalSigning) signingConfig signingConfigs.local; minifyEnabled false }
-        debug { if (useLocalSigning) signingConfig signingConfigs.local }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     packaging { jniLibs { useLegacyPackaging false } }
+    // One JVM per check class: checks mutate statics such as Catalog.MODELS.
+    testOptions { unitTests.all { forkEvery = 1 } }
 }
-dependencies { implementation files('libs/sherpa-onnx-1.13.8.aar'); implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.3.21'; implementation 'com.squareup.okhttp3:okhttp:5.4.0'; constraints { implementation('androidx.tracing:tracing:1.2.0') } }
+dependencies {
+    implementation files('libs/sherpa-onnx-1.13.8.aar'); implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.3.21'; implementation 'com.squareup.okhttp3:okhttp:5.4.0'; constraints { implementation('androidx.tracing:tracing:1.2.0') }
+    testImplementation 'junit:junit:4.13.2'
+    // Android's own org.json implementation; the android.jar stub throws in local unit tests.
+    testImplementation 'com.vaadin.external.google:android-json:0.0.20131108.vaadin1'
+}
 

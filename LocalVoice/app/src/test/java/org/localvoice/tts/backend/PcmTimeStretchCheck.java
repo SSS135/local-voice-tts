@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.*;
 
 /** Actual tone/speed/pitch/chunk/lifecycle and memory checks, with no Android runtime. */
 public final class PcmTimeStretchCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Checked { void run() throws Exception; }
     static int passed;
     static void check(boolean condition,String message) {if(!condition)throw new AssertionError(message);}

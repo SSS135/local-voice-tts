@@ -1,5 +1,6 @@
 # Copy to signing.local.ps1 and edit the private path. Keep it outside shared source archives.
-# Dot-source this file in a private PowerShell session before invoking build.ps1.
+# Dot-source this file in a private PowerShell session, then run: .\build.ps1 -Tasks ':app:assembleRelease'
+# Only the release build type uses this key; debug builds always keep the Android debug key.
 $env:LOCAL_VOICE_KEYSTORE = 'C:\private\LocalVoice\local-voice.keystore'
 $env:LOCAL_VOICE_KEY_ALIAS = 'localvoice'
 $secret = Read-Host 'Keystore password' -AsSecureString

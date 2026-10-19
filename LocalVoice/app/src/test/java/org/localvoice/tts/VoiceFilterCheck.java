@@ -2,6 +2,7 @@ package org.localvoice.tts;
 import java.util.*;
 
 public final class VoiceFilterCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     private static int checks;
     private static void check(boolean value,String message){checks++;if(!value)throw new AssertionError(message);}
     public static void main(String[] args){

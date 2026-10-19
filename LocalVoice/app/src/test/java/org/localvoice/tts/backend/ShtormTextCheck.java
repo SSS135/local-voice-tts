@@ -4,6 +4,7 @@ import java.util.*;
 
 /** Expected Russian cardinal wording and final prompt/chunk boundaries, without JNI or model weights. */
 public final class ShtormTextCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Action{void run();}
     static int checks;
     static void check(boolean value,String why){checks++;if(!value)throw new AssertionError(why);}

@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 /** Run with javac/java -ea; no network or Android runtime required. */
 public final class EdgeProtocolCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     public static void main(String[] args) throws Exception {
         assert EdgeGec.value(0).equals("52BC7A17B50DFEC9-28C4394775C8751CD2F6859C030C06DB1489ACAB3B3A7651831FC26895177ED6");
         assert EdgeGec.value(1700000000).equals("2CD23A2CA0B2595A-F3C846C370E05F9CC83ACC5F995C5F5D87A4D0F14CE8936A0F902E64099E38A2");

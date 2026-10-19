@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.*;
 
 /** Real files/streams plus controlled filesystem identities; no Android/runtime or network. */
 public final class StorageIntegrityCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[0]); }
     interface Action {void run()throws Exception;}
     static int passed;
     static void check(boolean value,String why){if(!value)throw new AssertionError(why);}

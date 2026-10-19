@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Actual parser/cache/catalog/SSML checks against the dated complete Microsoft response. */
 public final class EdgeCatalogCheck {
+    @org.junit.Test public void check() throws Exception { main(new String[]{"src/main/assets/edge-voices-snapshot.json",System.getProperty("java.io.tmpdir")}); }
     interface Checked { void run() throws Exception; }
     static int passed;
     static final SpeechBackend.Cancellation LIVE=()->false;
@@ -17,7 +18,7 @@ public final class EdgeCatalogCheck {
     static void bad(Checked action) throws Exception { try { action.run();throw new AssertionError("invalid catalog accepted"); } catch(IOException expected) {} }
     static void test(String label,Checked action) throws Exception { action.run();passed++;System.out.println("PASS "+label); }
     public static void main(String[] args) throws Exception {
-        String bundle=Files.readString(Path.of(args[0]),StandardCharsets.UTF_8);
+        String bundle=new String(Files.readAllBytes(Path.of(args[0])),StandardCharsets.UTF_8);
         EdgeCatalogData.Snapshot snapshot=EdgeCatalogData.load(new ByteArrayInputStream(bundle.getBytes(StandardCharsets.UTF_8)),"bundled",LIVE);
         JSONObject envelope=new JSONObject(bundle);String raw=envelope.getJSONArray("voices").toString();
         JSONObject first=envelope.getJSONArray("voices").getJSONObject(0);
@@ -100,8 +101,8 @@ public final class EdgeCatalogCheck {
             check(directory.toFile().list().length==1,"temporary cache leaked");
         });
         test("corrupt cache/schema fails rather than silently returning partial rows",()->{
-            File corrupt=directory.resolve("corrupt.json").toFile();Files.writeString(corrupt.toPath(),"{\"schema\":2,\"voices\":[]}");
-            bad(()->EdgeCatalogData.load(corrupt,LIVE));Files.writeString(corrupt.toPath(),bundle.substring(0,bundle.length()/2));bad(()->EdgeCatalogData.load(corrupt,LIVE));
+            File corrupt=directory.resolve("corrupt.json").toFile();Files.write(corrupt.toPath(),("{\"schema\":2,\"voices\":[]}").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            bad(()->EdgeCatalogData.load(corrupt,LIVE));Files.write(corrupt.toPath(),(bundle.substring(0,bundle.length()/2)).getBytes(java.nio.charset.StandardCharsets.UTF_8));bad(()->EdgeCatalogData.load(corrupt,LIVE));
         });
         System.out.println("PASS: "+passed+" full Edge catalog checks");
     }
