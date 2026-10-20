@@ -3,6 +3,8 @@ import argparse
 import base64
 import hashlib
 import json
+import re
+import select
 import socket
 import struct
 import threading
@@ -61,6 +63,9 @@ class State:
         self.mp3, self.log = mp3, log
         self.lock = threading.Lock()
         self.counter = 0
+        self.connections = 0
+        # Upgraded connections still waiting for SSML (for example a client's pre-warmed spare).
+        self.idle = set()
         self.tries = {}
         self.configure(scenario)
 
@@ -69,20 +74,25 @@ class State:
             raise ValueError("invalid scenario")
         actions = scenario.get("actions", [{"type": "success"}])
         if not isinstance(actions, list) or not actions or len(actions) > 1024 or any(not isinstance(a, dict) or a.get("type") not in
-                              {"success", "close", "truncate", "stall", "http_fail", "no_audio"}
+                              {"success", "close", "truncate", "stall", "http_fail", "no_audio", "idle_close"}
                               for a in actions):
             raise ValueError("invalid actions")
         for action in actions:
             if not 0 <= float(action.get("seconds", 0)) <= 3600:
                 raise ValueError("invalid delay")
+            if not 0 <= float(action.get("fragment_delay", 0)) <= 10:
+                raise ValueError("invalid fragment delay")
             if not 400 <= int(action.get("status", 503)) <= 599:
                 raise ValueError("invalid status")
+            if not 1000 <= int(action.get("code", 1000)) <= 4999:
+                raise ValueError("invalid close code")
             for key in ("bytes", "drop_bytes", "fragment_bytes"):
-                if key in action and not 1 <= int(action[key]) <= 1048576:
+                if key in action and not (0 if key == "bytes" else 1) <= int(action[key]) <= 1048576:
                     raise ValueError("invalid byte count")
         self.actions = actions
         self.position = 0
         self.repeat_last = bool(scenario.get("repeat_last", True))
+        self.words = bool(scenario.get("words", False))
 
     def event(self, event, **values):
         row = {"event": event, "time_ns": time.monotonic_ns(), **values}
@@ -98,12 +108,14 @@ class State:
                 return self.actions[-1] if self.repeat_last else {"type": "success"}
             return self.actions[i]
 
-    def attempt(self, payload, action):
+    def attempt(self, payload, action, connection_id=None):
+        """Logs one SSML attempt; returns (attempt_id, spoken words) for optional WordBoundary metadata."""
         headers, body = payload.split(b"\r\n\r\n", 1)
         root = ET.fromstring(body)
         if root.tag.rsplit("}", 1)[-1] != "speak":
             raise ValueError("expected speak")
-        text_hash = digest("".join(root.itertext()).encode("utf-8"))
+        text = "".join(root.itertext())
+        text_hash = digest(text.encode("utf-8"))
         speak_hash = digest(body)
         request_id = next((line.split(b":", 1)[1].strip() for line in headers.split(b"\r\n")
                            if line.lower().startswith(b"x-requestid:")), b"")
@@ -114,8 +126,15 @@ class State:
             chunk_attempt = self.tries[speak_hash]
         self.event("attempt", attempt_id=attempt_id, chunk_attempt=chunk_attempt,
                    text_sha256=text_hash, speak_sha256=speak_hash,
-                   request_id_sha256=digest(request_id), action=action["type"])
-        return attempt_id
+                   request_id_sha256=digest(request_id), action=action["type"], connection_id=connection_id)
+        return attempt_id, re.findall(r"[\w']+", text) if self.words else []
+
+    def connection(self, action):
+        with self.lock:
+            self.connections += 1
+            connection_id = self.connections
+        self.event("upgrade", connection_id=connection_id, action=action["type"])
+        return connection_id
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -146,7 +165,16 @@ class Handler(BaseHTTPRequestHandler):
             scenario = json.loads(exact(self.rfile, size))
             with self.state.lock:
                 self.state.configure(scenario)
-            self.state.event("configured", actions=[a["type"] for a in self.state.actions])
+                idle, self.state.idle = self.state.idle, set()
+            # An idle connection captured its action under the old configuration: close it (1001) so the next
+            # request starts on a connection that follows the new one.
+            for sock in idle:
+                try:
+                    sock.sendall(frame(8, struct.pack("!H", 1001)))
+                    sock.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+            self.state.event("configured", actions=[a["type"] for a in self.state.actions], closed_idle=len(idle))
             self.reply(200, {"configured": True})
         except (ValueError, KeyError, TypeError):
             self.reply(400, {"error": "invalid scenario"})
@@ -172,23 +200,49 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.flush()
         self.close_connection = True
+        connection_id = self.state.connection(action)
+        idle = action["type"] == "idle_close"
+        # idle_close: the server ends an idle (for example pre-warmed spare) connection after `seconds`, before any SSML.
+        deadline = time.monotonic() + float(action.get("seconds", 0)) if idle else None
         self.connection.settimeout(15)
         attempt_id = None
+        with self.state.lock:
+            self.state.idle.add(self.connection)
         try:
             while True:
+                if idle:
+                    left = deadline - time.monotonic()
+                    if left <= 0 or not select.select([self.connection], [], [], left)[0]:
+                        self.connection.sendall(frame(8, struct.pack("!H", 1001)))
+                        self.state.event("idle_closed", connection_id=connection_id)
+                        self.connection.shutdown(socket.SHUT_RDWR)
+                        return
                 opcode, data = read_frame(self.rfile)
                 if opcode == 8:
+                    self.state.event("client_closed", connection_id=connection_id, attempt_id=attempt_id)
                     return
                 if opcode == 9:
                     self.connection.sendall(frame(10, data))
                 elif opcode == 1 and b"Path:ssml\r\n" in data:
-                    attempt_id = self.state.attempt(data, action)
-                    self.respond(action, attempt_id)
+                    with self.state.lock:
+                        self.state.idle.discard(self.connection)
+                    attempt_id, words = self.state.attempt(data, action, connection_id)
+                    if idle:
+                        deadline = 0
+                        continue
+                    self.respond(action, attempt_id, words)
                     return
         except (EOFError, OSError, ValueError, ET.ParseError):
-            self.state.event("disconnected", attempt_id=attempt_id)
+            self.state.event("disconnected", attempt_id=attempt_id, connection_id=connection_id)
+        finally:
+            with self.state.lock:
+                self.state.idle.discard(self.connection)
 
-    def respond(self, action, attempt_id):
+    def peer_gone(self, wait):
+        """Waits up to `wait` seconds; true when the client closed or cancelled meanwhile (it sends nothing else mid-turn)."""
+        return bool(select.select([self.connection], [], [], wait)[0])
+
+    def respond(self, action, attempt_id, words=()):
         kind = action["type"]
         if kind == "stall":
             self.state.event("stalled", attempt_id=attempt_id)
@@ -212,11 +266,39 @@ class Handler(BaseHTTPRequestHandler):
             audio = audio[:int(action.get("bytes", max(1, len(audio) // 2)))]
         header = b"Content-Type:audio/mpeg\r\nPath:audio\r\n"
         piece = int(action.get("fragment_bytes", 4096))
+        pace = float(action.get("fragment_delay", 0))
+        # Optional WordBoundary metadata: words spread evenly over the full tone (48 kbit/s CBR), each sent just
+        # before the audio fragment that reaches its offset, like the service's interleaved audio.metadata.
+        full, ticks = len(self.state.mp3), len(self.state.mp3) * 8 * 10_000_000 // 48000
+        sent_words = 0
         for start in range(0, len(audio), piece):
-            body = struct.pack("!H", len(header)) + header + audio[start:start + piece]
-            self.connection.sendall(frame(2, body))
+            end = start + piece
+            while sent_words < len(words) and sent_words * full // len(words) < end:
+                word = words[sent_words]
+                metadata = {"Metadata": [{"Type": "WordBoundary", "Data": {
+                    "Offset": sent_words * ticks // len(words), "Duration": ticks // len(words),
+                    "text": {"Text": word, "Length": len(word), "BoundaryType": "WordBoundary"}}}]}
+                self.connection.sendall(frame(1, b"Content-Type:application/json; charset=utf-8\r\nPath:audio.metadata\r\n\r\n"
+                                              + json.dumps(metadata).encode("utf-8")))
+                sent_words += 1
+            body = struct.pack("!H", len(header)) + header + audio[start:end]
+            try:
+                self.connection.sendall(frame(2, body))
+            except OSError:
+                self.state.event("peer_cancelled", attempt_id=attempt_id, bytes_sent=start)
+                return
+            if pace and self.peer_gone(pace):
+                self.state.event("peer_cancelled", attempt_id=attempt_id, bytes_sent=min(end, len(audio)))
+                return
         if kind == "close":
-            self.state.event("mid_response_close", attempt_id=attempt_id, bytes_sent=len(audio))
+            # Abort (no code) or close with `code` (1007/1008: the service declined) after `seconds`.
+            if self.peer_gone(float(action.get("seconds", 0))):
+                self.state.event("peer_cancelled", attempt_id=attempt_id, bytes_sent=len(audio))
+                return
+            if "code" in action:
+                self.connection.sendall(frame(8, struct.pack("!H", int(action["code"]))))
+            self.state.event("mid_response_close", attempt_id=attempt_id, bytes_sent=len(audio),
+                             words_sent=sent_words, code=action.get("code"))
             self.connection.shutdown(socket.SHUT_RDWR)
             return
         self.connection.sendall(frame(1, b"Path:turn.end\r\n\r\n"))

@@ -129,6 +129,44 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual(self.receive(stream), (self.audio, True))
         sock.close(); stream.close()
 
+    def test_streaming_actions(self):
+        address = f"http://127.0.0.1:{self.server.server_port}"
+        control = urllib.request.Request(address + "/control", method="POST", headers={"Content-Type": "application/json"},
+                  data=json.dumps({"words": True, "repeat_last": False, "actions": [
+                      {"type": "close", "bytes": 700, "fragment_bytes": 300, "code": 1007},
+                      {"type": "idle_close"}]}).encode())
+        urllib.request.urlopen(control).close()
+        sock, stream = self.connect("declined-after-audio")
+        texts, audio = [], bytearray()
+        try:
+            while True:
+                opcode, data = server.read_frame(stream)
+                if opcode == 1:
+                    texts.append(data)
+                elif opcode == 2:
+                    audio.extend(data[2 + struct.unpack("!H", data[:2])[0]:])
+                elif opcode == 8:
+                    self.assertEqual(struct.unpack("!H", data[:2])[0], 1007)
+                    break
+        finally:
+            sock.close(); stream.close()
+        self.assertEqual(bytes(audio), self.audio[:700])
+        self.assertEqual([json.loads(t.split(b"\r\n\r\n", 1)[1])["Metadata"][0]["Data"]["text"]["Text"] for t in texts],
+                         ["Public", "fixture", "only"][:len(texts)])
+        self.assertTrue(texts and all(b"Path:audio.metadata" in t for t in texts))
+        # idle_close: a connection that never sends SSML is closed by the server (1001).
+        sock = socket.create_connection(self.server.server_address, timeout=2)
+        stream = sock.makefile("rb")
+        sock.sendall(b"GET /edge HTTP/1.1\r\nHost:localhost\r\nUpgrade:websocket\r\nConnection:Upgrade\r\n"
+                     b"Sec-WebSocket-Version:13\r\nSec-WebSocket-Key:c2l4dGVlbi1ieXRlLWtleQ==\r\n\r\n")
+        while stream.readline() != b"\r\n":
+            pass
+        self.assertEqual(server.read_frame(stream), (8, struct.pack("!H", 1001)))
+        sock.close(); stream.close()
+        raw = self.log.read_text()
+        self.assertIn('"idle_closed"', raw)
+        self.assertIn('"words_sent": ', raw)
+
     def test_declined_turn_and_auth_status(self):
         address = f"http://127.0.0.1:{self.server.server_port}"
         control = urllib.request.Request(address + "/control", method="POST",

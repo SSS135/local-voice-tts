@@ -229,10 +229,13 @@ public final class EdgeBackend implements SpeechBackend {
             long frames = 0, firstAudio = 0;
             byte[] frame = null;
             boolean inputDone = false;
-            long deadline = began + (request.networkTimeoutMs > 0 ? Math.min(attemptTimeoutMillis, request.networkTimeoutMs) : attemptTimeoutMillis);
+            // Inactivity bound, not a whole-turn bound: a paragraph turn streams for as long as its audio keeps coming
+            // (a slow link or decoder), and fails only after this long without a new frame or decoded block.
+            long idleLimit = request.networkTimeoutMs > 0 ? Math.min(attemptTimeoutMillis, request.networkTimeoutMs) : attemptTimeoutMillis;
+            long progress = began;
             while (true) {
                 if (stopped(cancellation)) throw new EdgeRetry.CancelledException();
-                if (SystemClock.elapsedRealtime() > deadline) throw new IOException("Edge request timed out");
+                if (SystemClock.elapsedRealtime() - progress > idleLimit) throw new IOException("Edge request timed out");
                 turn.check();
                 if (!inputDone) {
                     if (frame == null) frame = turn.frame();
@@ -242,6 +245,7 @@ public final class EdgeBackend implements SpeechBackend {
                             codec.getInputBuffer(index).put(frame);
                             // MPEG-2 layer III at 24 kHz: 576 samples (24 ms) per frame.
                             codec.queueInputBuffer(index, 0, frame.length, frames++ * 24000L, 0); frame = null;
+                            progress = SystemClock.elapsedRealtime();
                         } else if (index >= 0) {
                             codec.queueInputBuffer(index, 0, 0, frames * 24000L, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inputDone = true;
                         }
@@ -277,7 +281,7 @@ public final class EdgeBackend implements SpeechBackend {
                         }
                         if (firstAudio == 0) { firstAudio = SystemClock.elapsedRealtime(); prewarm(); }
                         if (stopped(cancellation) || !sink.write(block)) return Boolean.FALSE;
-                        samples += block.length; emitted[0] += block.length;
+                        samples += block.length; emitted[0] += block.length; progress = SystemClock.elapsedRealtime();
                     }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) break;
                 }
