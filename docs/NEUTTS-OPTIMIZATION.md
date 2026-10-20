@@ -232,7 +232,7 @@ The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, in
 | ORT NNAPI EP | Deprecated (Android 15) but the darwinn TPU HAL is present on gs201 | EP lacks MatMulInteger, DynamicQuantizeLinear, LayerNorm, 1-D Conv and ConvTranspose (ORT NNAPI op list) | ≈0 (graph fragments) | Drop |
 | Tensor TPU via LiteRT NPU / Tensor SDK | No | Tensor SDK beta lists **G5/G6 only** ([developers.google.com/edge/litert/next/tensor-sdk](https://developers.google.com/edge/litert/next/tensor-sdk)) | — | Not available |
 | AICore / ML Kit GenAI | No | Gemini Nano only, Pixel 9+ ([ML Kit GenAI](https://developers.google.com/ml-kit/genai)) | — | Not available |
-| MNN CPU | Untested | 1.66–1.85× over llama.cpp on Kirin/SD 8xx, measured by the MNN authors, no Tensor device ([arXiv 2506.19884](https://arxiv.org/html/2506.19884)) | Unknown | Only if items 1–4 fall short |
+| MNN CPU | Runs (3.6.1; export needs a rope-scaling fix) | Measured warm and interleaved against llama.cpp ([NEUTTS-MNN.md](NEUTTS-MNN.md)). Decode 0.75× with 4 threads and the full head (45 vs 60 tok/s), 0.77× with the speech head (63 vs 82), 0.84× with 2 A78 threads (59 vs 70). Prefill 0.68–0.88×. The 4-bit export has 3× the logit KL of Q4_0. The authors' 1.66–1.85× ([arXiv 2506.19884](https://arxiv.org/html/2506.19884)) does not carry over to G2. | Negative | Drop |
 
 Thermal: for memory-bound decode, DRAM energy is the same whichever engine runs it. Measurements on a Pixel 7 showed GPU llama.cpp spending more energy per token than CPU, with CPU and GPU governors pulling each other's clocks down ([arXiv 2507.02135](https://arxiv.org/html/2507.02135v1)). Offloading does not reduce heat for the backbone.
 
