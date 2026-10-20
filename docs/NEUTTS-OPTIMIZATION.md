@@ -24,10 +24,28 @@ Two facts discovered during this research change the picture.
    - The vocabulary is 194,256 tokens: Llama-3 BPE (128k), plus specials, plus 65,536 speech tokens. The embedding is tied and stored in **Q8_0 (111.9M params, 118.9 MB)**.
    - Every generated token multiplies the hidden state against all 194,256 rows. That is 118.9 MB of Q8_0 against 67.7 MB for the whole transformer (Q4_0 47.8 MB + Q4_1 19.9 MB): **64% of weight bytes and 49% of MACs per token.** Only 65,537 rows (speech tokens plus `<|SPEECH_GENERATION_END|>`) can ever be useful.
    - Effective bandwidth is about 90 tok/s × 187 MB ≈ 17 GB/s, so token generation is bandwidth-bound.
-2. **The real service probably never runs on the X1 cores.**
-   - gs201's `init.gs201.rc` sets `foreground` = CPUs 0-5 and `background` = 0-3. Only `top-app` gets 0-7 ([init.gs201.rc L754-759](https://android.googlesource.com/device/google/gs201/+/refs/heads/main/conf/init.gs201.rc)).
-   - A TTS engine bound by a client app sits in `foreground` at best (inferred; verify with `/proc/<pid>/cpuset`).
-   - Our CLI numbers come from `adb shell`, which has all cores. They are optimistic for the app.
+2. ~~The real service probably never runs on the X1 cores.~~ **Refuted on the device (2026-10-20):** system_server binds the engine (`c:android`, flags `0x4080001` = AUTO_CREATE | FOREGROUND_SERVICE | SCHEDULE_LIKE_TOP_APP), so `org.localvoice.tts` is in `/top-app` (CPUs 0-7, sched group TOP_APP, procstate 5). This holds with the client app in front, after HOME, and with the screen off (dozing). The `adb shell` CLI with all cores is the realistic setting, and `taskset 3f` below does not apply.
+
+## Status after the 2026-10-20 round
+
+Numbers are in `docs/NEUTTS-PHONE-BENCH.md` ("Optimization round"). Sustained warm RTF is **≈ 1.35–1.42** for the best configuration, so the goal is not met: a warm Pixel 7 Pro caps its BIG cores at ≈ 1.0–1.2 GHz.
+
+| # | Lever | Status |
+|---|---|---|
+| 1 | Speech-only head | **Done** (`neutts_jni.cpp`). Pooled LAST embeddings plus one ggml `mul_mat` over a row view of llama's own repacked tied head (rows 128256–193799 cover END 128261 and speech 128262–193797). It needs no llama.cpp patch and no extra memory; it includes `llama-model.h` from the pinned source for `model->output`. Logits are bit-identical to the full head (CLI `head`: max \|Δ\| 0 over 3 seeds × 150 steps; the full-vocabulary top-50 never held another token, so sampling is unchanged). Backbone tok/s ×1.35 (wireless charger, status 2) and ×1.43 (warm, wired). There is no memory saving: the repacked 119 MB head is reused, not removed. Removing it needs a llama.cpp patch. |
+| 2 | Decode chunk 50 / lookback 50 | **Done as config** (`streamChunk`, `streamLookback`; the catalog sets 50/50, the backend default stays upstream 25/50). Decode has almost no fixed cost (kernels are 191 of 197 ms at F=81), so frames per audio-second fall 164 → 107. Host check against a one-shot decode of the 6 voice references: log-mel L1 0.294 (upstream 25/50), 0.319 (50/50), 0.353 (50/25). Quality is **provisional** until the `docs/TTS-QUANT-QUALITY.md` gate passes. ORT spinning was 2× slower (rejected). `use_device_allocator_for_initializers` changed nothing (rejected). Profile at F=81: DynamicQuantizeMatMul 42%, fp32 Conv 33%, ConvTranspose 4%. |
+| 3 | Longer NeuTTS segments | **Done as config** (`segmentLimit`, catalog 250; jo worst case ≈ 1,910 of 2,048 tokens). The passage takes 6 prefills instead of 9. Reference trimming was not done (it needs a speaker-similarity check). |
+| 4 | Two-sequence batching | Measured, not built. `llama-batched-bench` t2: batch 2 gives 1.49× tokens/s (1.35× with the cut head). This is the largest remaining lever. |
+| 5 | Placement/ADPF | Pinning premise refuted (see fact 2). ADPF was not tried. |
+| 6 | Decoder memory | `use_device_allocator_for_initializers` gave no RSS change. Model surgery (int8 convs) not done. |
+| 7 | Pure Q4_0 (`ffn_down` Q4_1 → Q4_0, from the Q8_0 GGUF, `--pure --token-embedding-type q8_0`) | **No speed gain** (warm-ish interleaved: 102/88.6/85.5 vs 95.1/85.8/85.6 tok/s); RSS +2.5 MB. Not adopted. `ffn_down` is 19.9 of ≈ 108 MB per token after item 1, and the generic Q4_1 dotprod path is also bandwidth-bound. A repacked Q4_1 kernel can therefore save at most a few %. |
+
+Still open to close the warm gap (prefill ≈ 20%, generation 48 codes/s against the 50 needed, decode ≈ 30 s per 37 s overlapped):
+- two-sequence batching (item 4);
+- shorter references (prefill and depth);
+- int8 decoder convs, which cut about a third of decode time;
+- chunk 50 / lookback 25 if the quality gate allows it;
+- ADPF or duty-cycling to reduce heat.
 
 ## Ranked recommendations
 
@@ -66,7 +84,7 @@ Rejected (evidence below):
 
 ## First three steps
 
-The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, invoked as `say m <voice> <file> out.wav g/b/d` and `gen m <n> g/b`. Prefix every app_process run with `taskset 3f` to emulate the `foreground` cpuset (cpu0-5). Also run the official b11729 Android binaries from the bench.
+The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, invoked as `say m <voice> <file> out.wav g/b/d` and `gen m <n> g/b`. Run unpinned (the service is in `top-app`, all cores; see fact 2). Also run the official b11729 Android binaries from the bench.
 
 1. **Measure what decides the order (½–1 day, no app changes).**
    - Run `llama-batched-bench -m nano-Q4_0.gguf -c 4096 -b 512 -ub 512 -npp 600 -ntg 128 -npl 1,2,3,4 -t 2 -C 0x30 --cpu-strict 1`, then repeat with `-t 4 -C 0xF0` and with `-C 0xC0`. This gives the batch-2 cost behind item 4 and the gap between A78-only and X1 throughput.
@@ -87,7 +105,7 @@ The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, in
 3. **Implement items 2 and 3, then run a sustained test.**
    - Use `NeuTtsStream` CHUNK 50 after the first window, LOOKBACK 25 or 50 (A/B both), and a NeuTTS-specific `SpeechPlan` limit computed from the context budget. Set ORT `allow_spinning=1`, `spin_duration_us=1000` and `force_spinning_stop=1` if profiling shows the fixed cost is wakeups.
    - Quality: decode each segment's codes once in full and compare against the streamed output (SNR and log-mel L1, with the seed fixed by the CLI). Then run the WER check.
-   - Sustained: concatenate `passage.txt` 8 times (about 5 min) and run `say` under `taskset 3f`. Log `dumpsys thermalservice` and the cpufreq of policy4/policy6 every 10 s. Report RTF per minute, stalls, first audio and peak BIG temperature.
+   - Sustained: concatenate `passage.txt` 8 times (about 5 min) and run `say` unpinned. Log `dumpsys thermalservice` and the cpufreq of policy4/policy6 every 10 s. Report RTF per minute, stalls, first audio and peak BIG temperature.
 
 ## Evidence per item
 
@@ -98,7 +116,7 @@ The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, in
 - The KV-cached incremental use of LAST pooling has not been exercised upstream, so check it against full logits in step 2.
 - Alternative: a roughly 30-line patch to our vendored copy that makes `output` a row view and n_vocab-aware logits. Row offsets must be multiples of 4 for the repack.
 - `tensor_buft_overrides` and `use_extra_bufts` are in `llama_model_params` ([LC/include/llama.h#L325](https://github.com/ggml-org/llama.cpp/blob/412a363c655b479279d3050d0d1c67a5733697b4/include/llama.h#L325), #L353).
-- Speech ids are 128720–194255 (vocab − 65,536), and the end token is 128261 (GGUF EOS). The end token is not contiguous with the speech rows, so compute it as one extra row.
+- Speech ids are 128262–193797 and the end token is 128261 (GGUF EOS), directly before them (checked on the device; the earlier "vocab − 65,536" guess was wrong).
 - No prior art was found for vocabulary trimming in llama.cpp-based TTS (OuteTTS, Orpheus, TTS.cpp).
 
 ### 2. Decoder streaming cost

@@ -143,7 +143,8 @@ public final class LocalVoiceService extends TextToSpeechService {
                 params == null ? null : params.getString(TextToSpeech.Engine.KEY_FEATURE_NETWORK_TIMEOUT_MS),
                 params == null ? null : params.getString(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT));
             // Adapter-owned preprocessing (chunking=backend) gets whole sentences; others also get clause-cut first audio.
-            List<SpeechPlan.Segment> segments = SpeechPlan.segments(text,!"backend".equals(config.get("chunking")));
+            List<SpeechPlan.Segment> segments = SpeechPlan.segments(text,!"backend".equals(config.get("chunking")),
+                Integer.parseInt(config.getOrDefault("segmentLimit",Integer.toString(SpeechPlan.LIMIT))));
             Rendered.Queue queue = new Rendered.Queue();
             synth.execute(()->render(token,model,voice,config,text,segments,speed,pitch,options,started,queue));
             Playback playback = new Playback(callback,token,text,model.id,speed,started,queue);

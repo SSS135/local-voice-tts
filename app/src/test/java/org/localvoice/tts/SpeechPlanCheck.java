@@ -38,6 +38,9 @@ public final class SpeechPlanCheck {
             previous = s.end;
         }
         check(previous == run.length(), "all text covered");
+        List<SpeechPlan.Segment> longer = SpeechPlan.segments(run, true, 280);
+        for (int i = 0; i < longer.size(); i++) check(longer.get(i).end - longer.get(i).start <= SpeechPlan.limit(i, 280) + SpeechPlan.MIN_REST, "segmentLimit bounds later segments");
+        check(longer.get(0).end == pieces.get(0).end && longer.size() < pieces.size(), "segmentLimit keeps the first segment, packs later ones");
         check(SpeechPlan.segments("3.14 and v1.2 stay whole.", true).size() == 1, "decimal points are not sentence ends");
         check(SpeechPlan.segments(" \n ", true).isEmpty(), "blank text has no segments");
     }

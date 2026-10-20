@@ -18,8 +18,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * NeuTTS Nano (Neuphonic): Q4_0 GGUF backbone via llama.cpp, NeuCodec int8 ONNX decoder, eSpeak NG en-us phonemes.
  * Each voice is a pre-encoded reference (codes + transcript) from the neutts repository samples.
- * Audio streams per 25-code chunk; NeuCodec decodes each chunk on its own thread while the backbone keeps generating,
- * and PCM is written in order on the synthesis thread. Speed uses Sonic time stretching (no native rate control).
+ * Audio streams per chunk of codes (NeuTtsStream; config streamChunk/streamLookback); NeuCodec decodes each chunk on
+ * its own thread while the backbone keeps generating, and PCM is written in order on the synthesis thread. Speed uses
+ * Sonic time stretching (no native rate control).
  */
 public final class NeuTtsBackend implements SpeechBackend {
     public static final int SAMPLE_RATE = 24000;
@@ -31,7 +32,8 @@ public final class NeuTtsBackend implements SpeechBackend {
 
     private final Object handleLock = new Object();
     private long handle;
-    private int speechBase, endToken;
+    private int speechBase, endToken, streamChunk, streamLookback;
+    private long nextSeed = -1;
     private final List<Voice> voices = new ArrayList<>();
     private ExecutorService decoderThread;
 
@@ -40,6 +42,10 @@ public final class NeuTtsBackend implements SpeechBackend {
         int threads = threads(config, "numThreads", 2), batchThreads = threads(config, "batchThreads", 4);
         int decoderThreads = threads(config, "decoderThreads", 3);
         int context = Integer.parseInt(config.getOrDefault("contextSize", "2048"));
+        streamChunk = Integer.parseInt(config.getOrDefault("streamChunk", Integer.toString(NeuTtsStream.UPSTREAM_CHUNK)));
+        streamLookback = Integer.parseInt(config.getOrDefault("streamLookback", Integer.toString(NeuTtsStream.UPSTREAM_LOOKBACK)));
+        // Reproducible runs (device CLI, quality checks): segment k uses seed + k; absent = random per call.
+        if (config.containsKey("seed")) nextSeed = Long.parseLong(config.get("seed"));
         for (String name : required(config, "voices").split(",")) {
             String prefix = required(config, "voiceDir") + "/" + name.strip();
             voices.add(new Voice(readCodes(file(directory, prefix + ".codes")),
@@ -72,11 +78,11 @@ public final class NeuTtsBackend implements SpeechBackend {
         if (cancellation.isCancelled() || phones.codePoints().noneMatch(Character::isLetter)) return;
         long started = System.nanoTime();
         int[] prompt = NeuTtsNative.prefill(handle, NeuTtsFrontend.prompt(voice.phones, phones, voice.codes)
-            .getBytes(StandardCharsets.UTF_8), ThreadLocalRandom.current().nextInt());
+            .getBytes(StandardCharsets.UTF_8), nextSeed >= 0 ? (int) nextSeed++ : ThreadLocalRandom.current().nextInt());
         if (prompt == null) return;
         long prefilled = System.nanoTime(), generating = 0;
         long[] firstAudio = {0}, samples = {0}, decoding = {0};
-        NeuTtsStream stream = new NeuTtsStream(voice.codes);
+        NeuTtsStream stream = new NeuTtsStream(voice.codes, streamChunk, streamLookback);
         PcmTimeStretch stretch = new PcmTimeStretch(SAMPLE_RATE, speed);
         ArrayDeque<NeuTtsStream.Window> windows = new ArrayDeque<>();
         ArrayDeque<Future<float[]>> decoded = new ArrayDeque<>();
@@ -90,7 +96,7 @@ public final class NeuTtsBackend implements SpeechBackend {
                     if (token == -2) return;
                     ended = token == endToken || token == -1;
                     int code = token - speechBase;
-                    // A non-speech token decodes nothing (upstream would still count it as a frame position).
+                    // The native head samples only speech codes and the end token; anything else would decode nothing.
                     NeuTtsStream.Window window = ended ? stream.finish() : code >= 0 && code < CODES ? stream.add(code) : null;
                     if (window != null) {
                         windows.add(window);

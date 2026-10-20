@@ -6,18 +6,23 @@
 #include <sys/auxv.h>
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <cstring>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <vector>
 #include "ggml-cpu.h"
 #include "llama.h"
+#include "llama-model.h"  // llama_model::output (internal header of the pinned b11729 source): the tied head tensor
 #include "onnxruntime_c_api.h"
 #include <espeak-ng/speak_lib.h>
 
 #define LOG_TAG "LocalVoiceNeuTTS"
 
 namespace {
+
+constexpr int SPEECH_CODES = 65536;
 
 struct Engine {
     llama_model *model = nullptr;
@@ -26,7 +31,15 @@ struct Engine {
     ggml_threadpool *pool = nullptr, *batchPool = nullptr;  // persistent workers; without them ggml spawns threads per graph
     const llama_vocab *vocab = nullptr;
     std::vector<llama_token> cached;  // tokens whose KV entries are in ctx, in order
-    int nCtx = 0, nBatch = 0;
+    int nCtx = 0, nBatch = 0, threads = 1;
+    // Speech-only LM head. The context outputs the final hidden state (pooled LAST embeddings), so llama's graph skips
+    // the 194,256-row tied head; only rows that can be sampled are multiplied: the 65,536 speech codes and the end token.
+    llama_token speechBase = -1, endToken = -1, headFirst = 0;
+    ggml_context *head = nullptr;
+    ggml_cgraph *headGraph = nullptr;
+    ggml_tensor *hidden = nullptr, *headLogits = nullptr;  // headLogits row i = token headFirst + i
+    std::vector<uint8_t> headWork;
+    std::vector<llama_token_data> candidates;
     std::atomic<bool> abort{false};
     OrtEnv *env = nullptr;
     OrtSession *session = nullptr;
@@ -90,12 +103,15 @@ bool cpuSupported() {
 }
 
 void quietLog(ggml_log_level level, const char *text, void *) {
+    // Pooled embeddings output every prompt token; llama warns on each prompt evaluated with llama_batch_get_one.
+    if (strstr(text, "embeddings required but some input tokens")) return;
     if (level == GGML_LOG_LEVEL_WARN || level == GGML_LOG_LEVEL_ERROR) __android_log_write(ANDROID_LOG_WARN, LOG_TAG, text);
 }
 
 void release(Engine *e) {
     if (!e) return;
     if (e->sampler) llama_sampler_free(e->sampler);
+    if (e->head) ggml_free(e->head);
     if (e->ctx) llama_free(e->ctx);
     if (e->pool) ggml_threadpool_free(e->pool);
     if (e->batchPool) ggml_threadpool_free(e->batchPool);
@@ -151,6 +167,61 @@ bool initEspeak(JNIEnv *env, const std::string &path, const std::string &voice) 
 
 bool abortRequested(void *data) { return static_cast<Engine *>(data)->abort.load(); }
 
+llama_token singleToken(const llama_vocab *vocab, const char *piece) {
+    llama_token out[2];
+    return llama_tokenize(vocab, piece, (int32_t) strlen(piece), out, 2, false, true) == 1 ? out[0] : -1;
+}
+
+// One row view of the loaded head covering the end token and the speech codes (adjacent in the NeuTTS vocabulary),
+// so the slice costs no memory. The view starts and ends on multiples of 8: CPU repack layouts interleave 4 or 8 rows
+// and keep the plain per-row byte offset at group boundaries.
+bool buildHead(Engine *e) {
+    ggml_tensor *out = e->model->output;
+    e->speechBase = singleToken(e->vocab, "<|speech_0|>");
+    e->endToken = singleToken(e->vocab, "<|SPEECH_GENERATION_END|>");
+    int64_t n = llama_model_n_embd(e->model);
+    e->headFirst = std::min(e->speechBase, e->endToken) & ~7;
+    int64_t rows = ((std::max(e->speechBase + SPEECH_CODES, e->endToken + 1) - e->headFirst + 7) & ~7);
+    if (!out || out->ne[0] != n || e->speechBase < 0 || e->endToken < 0 || rows > SPEECH_CODES + 64 ||
+        e->headFirst + rows > out->ne[1]) return false;
+    ggml_init_params params = {ggml_tensor_overhead() * 4 + ggml_graph_overhead() + (n + rows) * sizeof(float) + 4096, nullptr, false};
+    e->head = ggml_init(params);
+    if (!e->head) return false;
+    e->hidden = ggml_new_tensor_1d(e->head, GGML_TYPE_F32, n);
+    ggml_tensor *slice = ggml_view_2d(e->head, out, n, rows, out->nb[1], (size_t) e->headFirst * out->nb[1]);
+    slice->buffer = out->buffer;  // with extra (the repack layout), selects the same kernel llama uses for the head
+    slice->extra = out->extra;
+    e->headLogits = ggml_mul_mat(e->head, slice, e->hidden);
+    e->headGraph = ggml_new_graph(e->head);
+    ggml_build_forward_expand(e->headGraph, e->headLogits);
+    e->candidates.resize(SPEECH_CODES + 1);
+    return true;
+}
+
+float headLogit(const Engine *e, llama_token token) { return static_cast<const float *>(e->headLogits->data)[token - e->headFirst]; }
+
+// Head logits for the last evaluated token, on the generation thread pool.
+bool computeHead(Engine *e) {
+    const float *state = llama_get_embeddings_seq(e->ctx, 0);
+    if (!state) return false;
+    memcpy(e->hidden->data, state, ggml_nbytes(e->hidden));
+    ggml_cplan plan = ggml_graph_plan(e->headGraph, e->threads, e->pool);
+    if (e->headWork.size() < plan.work_size) e->headWork.resize(plan.work_size);
+    plan.work_data = e->headWork.data();
+    return ggml_graph_compute(e->headGraph, &plan) == GGML_STATUS_SUCCESS;
+}
+
+// llama_sampler_sample over the speech codes and the end token only.
+llama_token sampleHead(Engine *e) {
+    for (int i = 0; i < SPEECH_CODES; i++) e->candidates[i] = {e->speechBase + i, headLogit(e, e->speechBase + i), 0.0f};
+    e->candidates[SPEECH_CODES] = {e->endToken, headLogit(e, e->endToken), 0.0f};
+    llama_token_data_array array = {e->candidates.data(), e->candidates.size(), -1, false};
+    llama_sampler_apply(e->sampler, &array);
+    llama_token token = array.data[array.selected].id;
+    llama_sampler_accept(e->sampler, token);
+    return token;
+}
+
 }  // namespace
 
 extern "C" {
@@ -175,6 +246,8 @@ JNIEXPORT jlong JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_open(JNIEnv
     cp.n_threads = threads;  // single-token steps: barrier cost grows with threads on big.LITTLE
     cp.n_threads_batch = batchThreads;
     cp.no_perf = true;
+    cp.embeddings = true;  // with pooling LAST the graph ends at the final hidden state; buildHead() multiplies the rows we sample
+    cp.pooling_type = LLAMA_POOLING_TYPE_LAST;
     cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;  // ~20% faster single-token steps on Pixel 7 Pro CPU than auto (enabled)
     cp.abort_callback = abortRequested;
     cp.abort_callback_data = e;
@@ -187,6 +260,8 @@ JNIEXPORT jlong JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_open(JNIEnv
     llama_attach_threadpool(e->ctx, e->pool, e->batchPool);
     e->nCtx = (int) llama_n_ctx(e->ctx);
     e->nBatch = (int) llama_n_batch(e->ctx);
+    e->threads = threads;
+    if (!buildHead(e)) { release(e); throwJava(env, "NeuTTS backbone lacks the expected speech-token head"); return 0; }
     if (!openDecoder(env, e, jstring8(env, decoder), decoderThreads)) { release(e); return 0; }
     return reinterpret_cast<jlong>(e);
 }
@@ -249,6 +324,7 @@ JNIEXPORT jintArray JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_prefill
         }
         e->cached.insert(e->cached.end(), tokens.begin() + (long) at, tokens.begin() + (long) at + count);
     }
+    if (!computeHead(e)) { throwJava(env, "NeuTTS head evaluation failed"); return nullptr; }
     if (e->sampler) llama_sampler_free(e->sampler);
     // llama-cpp-python's chain for NeuTTS: top_k 50, typical 1.0 (no-op), top_p 0.95, min_p 0.05, temperature 1.0.
     e->sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
@@ -268,7 +344,7 @@ JNIEXPORT jintArray JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_prefill
 JNIEXPORT jint JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_next(JNIEnv *env, jclass, jlong handle, jint stop) {
     auto *e = reinterpret_cast<Engine *>(handle);
     if (!e->sampler) { throwJava(env, "NeuTTS prompt was not evaluated"); return -1; }
-    llama_token token = llama_sampler_sample(e->sampler, e->ctx, -1);
+    llama_token token = sampleHead(e);
     if (token == stop) return token;
     if ((int) e->cached.size() >= e->nCtx) return -1;
     int status = llama_decode(e->ctx, llama_batch_get_one(&token, 1));
@@ -280,7 +356,57 @@ JNIEXPORT jint JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_next(JNIEnv 
         return -1;
     }
     e->cached.push_back(token);
+    if (!computeHead(e)) { throwJava(env, "NeuTTS head evaluation failed"); return -1; }
     return token;
+}
+
+// Device check of the speech-only head against llama's full head on a second context: evaluates `prompt`, then
+// `steps` tokens sampled from the speech-only head (seeded). Returns {max |logit difference| over the sampled rows,
+// steps whose full-vocabulary argmax is not a sampled row, steps whose full-vocabulary top-50 holds a token outside the
+// sampled rows (only then can the sampled distribution differ), steps}.
+JNIEXPORT jfloatArray JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_checkHead(JNIEnv *env, jclass, jlong handle,
+        jbyteArray prompt, jint steps, jint seed) {
+    auto *e = reinterpret_cast<Engine *>(handle);
+    llama_memory_clear(llama_get_memory(e->ctx), true);  // both contexts evaluate the prompt in the same batches
+    e->cached.clear();
+    jintArray evaluated = Java_org_localvoice_tts_backend_NeuTtsNative_prefill(env, nullptr, handle, prompt, seed);
+    if (!evaluated) return nullptr;
+    env->DeleteLocalRef(evaluated);
+    llama_context_params cp = llama_context_default_params();
+    cp.n_ctx = (uint32_t) e->nCtx;
+    cp.n_batch = cp.n_ubatch = (uint32_t) e->nBatch;
+    cp.n_threads = cp.n_threads_batch = e->threads;
+    cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;
+    llama_context *full = llama_init_from_model(e->model, cp);
+    if (!full) { throwJava(env, "Cannot create the reference context"); return nullptr; }
+    std::vector<llama_token> tokens = e->cached;
+    bool ok = true;
+    for (size_t at = 0; ok && at < tokens.size(); at += e->nBatch)
+        ok = llama_decode(full, llama_batch_get_one(tokens.data() + at, (int) std::min(tokens.size() - at, (size_t) e->nBatch))) == 0;
+    int nVocab = llama_vocab_n_tokens(e->vocab), argmaxDiffers = 0, foreign = 0, step = 0;
+    float maxDiff = 0;
+    std::vector<float> top;
+    for (; ok && step < steps; step++) {
+        const float *logits = llama_get_logits_ith(full, -1);
+        for (int i = 0; i < SPEECH_CODES; i++) maxDiff = std::max(maxDiff, std::fabs(logits[e->speechBase + i] - headLogit(e, e->speechBase + i)));
+        maxDiff = std::max(maxDiff, std::fabs(logits[e->endToken] - headLogit(e, e->endToken)));
+        auto sampled = [&](int id) { return id == e->endToken || (id >= e->speechBase && id < e->speechBase + SPEECH_CODES); };
+        if (!sampled((int) (std::max_element(logits, logits + nVocab) - logits))) argmaxDiffers++;
+        top.assign(logits, logits + nVocab);
+        std::nth_element(top.begin(), top.begin() + 49, top.end(), std::greater<float>());
+        for (int id = 0; id < nVocab; id++) if (logits[id] >= top[49] && !sampled(id)) { foreign++; break; }
+        llama_token token = sampleHead(e);
+        if (token == e->endToken) { step++; break; }
+        ok = llama_decode(e->ctx, llama_batch_get_one(&token, 1)) == 0 && llama_decode(full, llama_batch_get_one(&token, 1)) == 0 &&
+             computeHead(e);
+        e->cached.push_back(token);
+    }
+    llama_free(full);
+    if (!ok) { throwJava(env, "NeuTTS head check evaluation failed"); return nullptr; }
+    jfloatArray out = env->NewFloatArray(4);
+    jfloat values[4] = {maxDiff, (float) argmaxDiffers, (float) foreign, (float) step};
+    if (out) env->SetFloatArrayRegion(out, 0, 4, values);
+    return out;
 }
 
 JNIEXPORT void JNICALL Java_org_localvoice_tts_backend_NeuTtsNative_cancel(JNIEnv *, jclass, jlong handle) {

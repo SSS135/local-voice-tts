@@ -1,8 +1,52 @@
 # NeuTTS Nano on Pixel 7 Pro: benchmark
 
-Measured 2026-10-19 over adb on Pixel 7 Pro (Tensor G2, Android 17 CP3A.261005.002.A1). The phone was on USB power with the screen unlocked on the home screen; no app was involved. The run was shortened on request to a ~10-minute reduced sweep (see "Cut").
+Measured 2026-10-19 over adb on Pixel 7 Pro (Tensor G2, Android 17 CP3A.261005.002.A1). The phone was on USB power with the screen unlocked on the home screen; no app was involved. The run was shortened on request to a ~10-minute reduced sweep (see "Cut"). The 2026-10-20 optimization round is in the next section; the sections after it are the 2026-10-19 baseline.
 
-## Verdict
+## Optimization round (2026-10-20)
+
+Lever status is in `docs/NEUTTS-OPTIMIZATION.md` ("Status after the 2026-10-20 round"). Runs used `NeuTtsCli` unpinned, which is the realistic setting: the bound service sits in `top-app` on CPUs 0-7. Every run used threads 2/4/3, voice dave, and `passage.txt` (777 chars). In the tables, *base* is commit b8ce35d. *head* adds the speech-only head. *best* is head plus `streamChunk=50 streamLookback=50 segmentLimit=250`.
+
+**Headline: sustained, warm phone.** Wired charger. Rounds ran back to back with no pauses. Thermal status 2, skin 41–43 °C, BIG 58–66 °C. policy4 (A78) ran at 1.0–1.2 GHz and policy6 (X1) at ≈ 0.98 GHz, against maxima of 2.35 and 2.85 GHz.
+
+| Config (2 interleaved rounds) | RTF | First audio | Stall per 37 s | Backbone `gen` tok/s | WER (single sample each) |
+|---|---|---|---|---|---|
+| base | 1.773 / 1.751 | 2.73 / 2.72 s | 27.2 / 27.4 s | 41.2 / 39.9 | 0.014 / 0.014 |
+| head | 1.607 / 1.639 | 2.93 / 3.01 s | 21.9 / 21.8 s | 59.3 / 56.9 | 0.007 / 0.000 |
+| best | 1.424 / 1.415 | 2.81 / 3.02 s | 14.4 / 13.7 s | (as head) | 0.021 / 0.057 |
+
+**5-minute sustained run of *best*.** `passage.txt` ×8 (287.6 s of audio). The phone started at status 1, skin 39 °C. Overall: RTF 1.238, stall 67.8 s, first audio 1.69 s, peak VmHWM 1,003 MB.
+
+| Minute | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| RTF | 0.96 | 1.16 | 1.36 | 1.35 | 1.32 | 1.35 |
+| Pipeline codes/s | 66 | 54 | 47 | 47 | 48 | 47 |
+| Prefill per segment | 1.06 s | 1.51 s | 2.04 s | 1.96 s | 1.93 s | 1.96 s |
+| Status / skin | 1 / 40–43 °C | 2 / 43 °C | 2 / 42 °C | 2 / 42 °C | 2 / 42 °C | 2 / 42 °C |
+| A78 / X1 clock (GHz) | 1.7–2.1 / 1.4–1.6 | 1.2–1.3 / 1.0–1.6 | 1.0–1.2 / 0.98 | 1.0 / 0.98 | 1.2 / 0.85–0.98 | 0.7–1.2 / 0.98 |
+
+- **It does not keep up with real time once warm.** RTF levels off at ≈ 1.35 after 2 minutes.
+- Warm *best*, per 37 s of audio: prefill 10.5 s (6 segments × ≈ 1.75 s), generation 39 s at 48 codes/s (50 are needed for real time), decode 29.5 s (overlapped).
+- Peak VmHWM was 971–981 MB in every `say` run (ART + llama + ORT, CLI process). No configuration changed memory.
+
+**Earlier numbers, taken before the switch to a wired charger.** The phone was on a **wireless charger**, at status 1–3 and skin 40–45 °C, so these are heat-affected.
+- `llama-bench` b11729, `-p 512 -n 64 -d 512`. tg64: 84.3 (t2) and 90.2 (t4) on the shipped GGUF, against 116.5 and 128.5 on a timing proxy with the vocabulary cut to 65,600 rows (×1.38 / ×1.43). pp512 was unchanged.
+- `llama-batched-bench` t2, npp 600, ntg 64: S_TG for B = 1/2/4 is 52.5/78.2/145.5 on the shipped GGUF and 71.4/96.0/163.9 on the proxy. A batch of 2 therefore costs ≈ 1.34–1.39× a single token.
+- CLI `gen 300 2/4`: base 72.3/74.1 tok/s, head 99.1/99.8 tok/s. `head` exactness: max \|Δlogit\| 0 over 3 seeds × 150 steps.
+- NeuCodec through the app's ORT 1.28.2, 3 threads, `taskset 3f`. F = 31/56/81/106/131 took 131/219/322/415/535 ms (≈ 4 ms per frame, near-zero fixed cost).
+  - `allow_spinning=1`: 292/420/573/754/970 ms.
+  - `use_device_allocator_for_initializers=1`: same times, and RSS after load was 340 MB either way.
+  - Unpinned F=81 profile: 197 ms run, of which 191 ms is kernels. DynamicQuantizeMatMul 42%, Conv 33%, ConvTranspose 4%.
+- End-to-end, with the phone heating from status 2 to 3 across the runs: base 1.268, head 1.189, chunk 50/lookback 25 1.418, chunk 50/lookback 50 1.466. The order effect dominates these numbers; they are superseded by the warm table.
+
+**Item 7 (pure Q4_0).** Interleaved on a semi-warm phone (status 1, skin 39–42 °C):
+- shipped GGUF: 102.0/88.6/85.5 tok/s, VmHWM 940.4–940.8 MB;
+- pure Q4_0: 95.1/85.8/85.6 tok/s, VmHWM 943.0–943.2 MB;
+- WER with fixed seeds: dave seed 1000 0.007 vs 0.036, jo seed 2000 0.064 vs 0.071.
+- No speed gain.
+
+WER uses faster-whisper small.en on single samples. Most differences are ASR normalization, such as "one hundred and twelve" → "112" or "harbour" → "harbor". **All quality figures here are provisional** until the protocol in `docs/TTS-QUANT-QUALITY.md` is run.
+
+## Verdict (2026-10-19 baseline)
 
 - **Real-time on CPU: yes, with a thin margin.** The best config is Q4_0 on CPU with 4 threads, unpinned (what an app gets).
   - Backbone generates 92 tok/s at a 512-token context (RTF 0.54).

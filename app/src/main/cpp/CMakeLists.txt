@@ -88,7 +88,7 @@ set_target_properties(lv_onnxruntime PROPERTIES IMPORTED_LOCATION ${LV_ORT_DIR}/
   IMPORTED_NO_SONAME OFF)
 
 add_library(neutts_jni SHARED neutts_jni.cpp)
-target_include_directories(neutts_jni PRIVATE ${LV_ROOT}/third_party/onnxruntime-c-api-1.28.2)
+target_include_directories(neutts_jni PRIVATE ${LV_ROOT}/third_party/onnxruntime-c-api-1.28.2 ${LV_LLAMA}/src)
 target_link_libraries(neutts_jni PRIVATE llama lv_espeak lv_onnxruntime log)
 target_compile_options(neutts_jni PRIVATE -fvisibility=hidden)
 # Keep llama/ggml/eSpeak symbols private so they never interpose on sherpa-onnx's own eSpeak copy.

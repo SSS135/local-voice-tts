@@ -51,13 +51,17 @@ public class NeuTtsFrontendTest {
         }
     }
 
-    /** Incremental overlap-add equals upstream _infer_stream_ggml, which re-runs _linear_overlap_add over all frames. */
+    /**
+     * Incremental overlap-add equals upstream _infer_stream_ggml, which re-runs _linear_overlap_add over all frames;
+     * longer later chunks and other lookbacks equal the same loop run with those sizes.
+     */
     @Test public void streamMatchesUpstreamChunking() throws Exception {
+        for (int[] config : new int[][]{{25, 50}, {50, 50}, {50, 25}})
         for (int reference : new int[]{1, 10, 51, 372})
-            for (int generated : new int[]{0, 1, 29, 30, 31, 54, 55, 56, 100, 333}) {
+            for (int generated : new int[]{0, 1, 29, 30, 31, 54, 55, 56, 84, 85, 100, 333}) {
                 int[] ref = codes(reference, 7);
                 int[] gen = codes(generated, 11);
-                NeuTtsStream stream = new NeuTtsStream(ref);
+                NeuTtsStream stream = new NeuTtsStream(ref, config[0], config[1]);
                 List<float[]> blocks = new ArrayList<>();
                 // Decode out of band (as the backend's decoder thread does); mixing stays in window order.
                 List<NeuTtsStream.Window> windows = new ArrayList<>();
@@ -65,9 +69,9 @@ public class NeuTtsFrontendTest {
                 NeuTtsStream.Window last = stream.finish();
                 if (last != null) windows.add(last);
                 for (NeuTtsStream.Window w : windows) blocks.add(stream.mix(w, fakeDecode(w.codes)));
-                float[] expected = upstream(ref, gen);
+                float[] expected = upstream(ref, gen, config[0], config[1]);
                 float[] actual = concat(blocks);
-                assertEquals(reference + "/" + generated, expected.length, actual.length);
+                assertEquals(Arrays.toString(config) + reference + "/" + generated, expected.length, actual.length);
                 for (int i = 0; i < expected.length; i++) assertEquals(reference + "/" + generated + "@" + i, expected[i], actual[i], 1e-5f);
                 assertEquals(generated, stream.generated());
             }
@@ -86,22 +90,28 @@ public class NeuTtsFrontendTest {
         return out;
     }
 
-    /** Literal port of neutts.py's streaming loop (token_cache, audio_cache, full re-overlap-add each chunk). */
-    private static float[] upstream(int[] ref, int[] gen) throws Exception {
-        final int hop = 480, chunk = 25, look = 5, back = 50, ov = 1, stride = chunk * hop;
+    /**
+     * Literal port of neutts.py's streaming loop (token_cache, audio_cache, full re-overlap-add each chunk). The first
+     * chunk is 25 codes and later ones {@code later} (upstream 25); each frame sits at its chunk's output position.
+     */
+    private static float[] upstream(int[] ref, int[] gen, int later, int back) throws Exception {
+        final int hop = 480, look = 5, ov = 1;
+        List<Integer> offsets = new ArrayList<>();
         List<Integer> cache = new ArrayList<>();
         for (int c : ref) cache.add(c);
         List<float[]> audio = new ArrayList<>(), out = new ArrayList<>();
         int samples = 0, decoded = ref.length;
         for (int g : gen) {
             cache.add(g);
+            int chunk = decoded == ref.length ? 25 : later;
             if (cache.size() - decoded >= chunk + look) {
                 int start = Math.max(decoded - back - ov, 0), end = decoded + chunk + look + ov;
                 int s0 = (decoded - start) * hop, s1 = s0 + (chunk + 2 * ov) * hop;
                 float[] recon = fakeDecode(sub(cache, start, Math.min(end, cache.size())));
                 audio.add(Arrays.copyOfRange(recon, Math.min(s0, recon.length), Math.min(s1, recon.length)));
-                float[] all = overlapAdd(audio, stride);
-                int newEnd = audio.size() * stride;
+                offsets.add(samples);
+                float[] all = overlapAdd(audio, offsets);
+                int newEnd = samples + chunk * hop;
                 out.add(Arrays.copyOfRange(all, samples, newEnd));
                 samples = newEnd;
                 decoded += chunk;
@@ -113,22 +123,23 @@ public class NeuTtsFrontendTest {
             int s0 = (cache.size() - start - remaining - ov) * hop;
             float[] recon = fakeDecode(sub(cache, start, cache.size()));
             audio.add(Arrays.copyOfRange(recon, Math.min(s0, recon.length), recon.length));
-            float[] all = overlapAdd(audio, stride);
+            offsets.add(samples);
+            float[] all = overlapAdd(audio, offsets);
             out.add(Arrays.copyOfRange(all, Math.min(samples, all.length), all.length));
         }
         return concat(out);
     }
 
-    private static float[] overlapAdd(List<float[]> frames, int stride) {
+    private static float[] overlapAdd(List<float[]> frames, List<Integer> offsets) {
         int total = 0;
-        for (int i = 0; i < frames.size(); i++) total = Math.max(total, stride * i + frames.get(i).length);
+        for (int i = 0; i < frames.size(); i++) total = Math.max(total, offsets.get(i) + frames.get(i).length);
         double[] sum = new double[total], weight = new double[total];
         for (int f = 0; f < frames.size(); f++) {
             float[] frame = frames.get(f);
             for (int i = 0; i < frame.length; i++) {
                 double t = (i + 1) / (double) (frame.length + 1), w = 0.5 - Math.abs(t - 0.5);
-                sum[f * stride + i] += w * frame[i];
-                weight[f * stride + i] += w;
+                sum[offsets.get(f) + i] += w * frame[i];
+                weight[offsets.get(f) + i] += w;
             }
         }
         float[] out = new float[total];

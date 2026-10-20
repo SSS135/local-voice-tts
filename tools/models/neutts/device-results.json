@@ -60,5 +60,191 @@
    "note": "llama_decode aborted via abort callback (ret 2)"
   },
   "memory_loaded": "TOTAL PSS 720 MB, RSS 849 MB, native heap 476 MB"
+ },
+ "pixel7pro_opt_2026_10_20": {
+  "note": "NeuTtsCli unpinned (service runs in top-app, CPUs 0-7), threads 2/4/3, voice dave, passage.txt. base = b8ce35d; head = speech-only LM head; best = head + streamChunk=50 streamLookback=50 segmentLimit=250. WER faster-whisper small.en, single samples, provisional.",
+  "service_cpuset": "/top-app, Cpus_allowed 0-7, sched group TOP_APP, procstate 5; engine bound by system_server with flags 0x4080001 (incl. BIND_SCHEDULE_LIKE_TOP_APP); same with client in background and screen off",
+  "warm_wired_interleaved": {
+   "conditions": "wired charger, no pauses, thermal status 2, skin 41-43 C, A78 1.0-1.2 GHz, X1 ~0.98 GHz",
+   "base": {
+    "rtf": [
+     1.773,
+     1.751
+    ],
+    "first_audio_ms": [
+     2733,
+     2720
+    ],
+    "stall_ms": [
+     27197,
+     27428
+    ],
+    "gen_tok_s": [
+     41.2,
+     39.9
+    ],
+    "wer": [
+     0.014,
+     0.014
+    ]
+   },
+   "head": {
+    "rtf": [
+     1.607,
+     1.639
+    ],
+    "first_audio_ms": [
+     2934,
+     3014
+    ],
+    "stall_ms": [
+     21939,
+     21815
+    ],
+    "gen_tok_s": [
+     59.3,
+     56.9
+    ],
+    "wer": [
+     0.007,
+     0.0
+    ]
+   },
+   "best": {
+    "rtf": [
+     1.424,
+     1.415
+    ],
+    "first_audio_ms": [
+     2814,
+     3018
+    ],
+    "stall_ms": [
+     14382,
+     13727
+    ],
+    "wer": [
+     0.021,
+     0.057
+    ],
+    "segments": 6
+   }
+  },
+  "sustained_best_5min": {
+   "audio_ms": 287620,
+   "wall_ms": 355970,
+   "rtf": 1.238,
+   "stall_ms": 67808,
+   "first_audio_ms": 1688,
+   "peak_vmhwm_kb": 1002688,
+   "rtf_per_minute": [
+    0.957,
+    1.158,
+    1.363,
+    1.352,
+    1.322,
+    1.353
+   ],
+   "codes_per_s_per_minute": [
+    66.1,
+    53.7,
+    46.6,
+    47.4,
+    47.5,
+    46.7
+   ],
+   "thermal": "status 1 -> 2 within 1 min, skin 39 -> 42-43 C, BIG 81 -> 61-67 C"
+  },
+  "wireless_charger_heat_affected": {
+   "llama_bench_tg64_d512": {
+    "t2": [
+     84.26,
+     116.49
+    ],
+    "t4": [
+     90.16,
+     128.5
+    ],
+    "note": "shipped vs vocab-cut proxy (65,600 rows)"
+   },
+   "batched_bench_t2_S_TG_B1_2_4": {
+    "shipped": [
+     52.5,
+     78.18,
+     145.45
+    ],
+    "proxy": [
+     71.38,
+     96.02,
+     163.92
+    ]
+   },
+   "cli_gen_tok_s": {
+    "base": [
+     72.3,
+     74.1
+    ],
+    "head": [
+     99.1,
+     99.8
+    ]
+   },
+   "head_exactness": "max |dlogit| 0, full-vocab argmax and top-50 always within speech+END, 3 seeds x 150 steps",
+   "neucodec_ms_F31_56_81_106_131_3thr_taskset3f": {
+    "default": [
+     130.7,
+     218.9,
+     321.7,
+     414.5,
+     534.6
+    ],
+    "allow_spinning_1": [
+     291.6,
+     419.8,
+     573.2,
+     754.1,
+     969.5
+    ],
+    "device_allocator_for_initializers": [
+     131.7,
+     218.3,
+     319.6,
+     410.4,
+     531.5
+    ],
+    "rss_after_load_kb": 340000
+   },
+   "neucodec_profile_F81": {
+    "run_ms": 197.3,
+    "kernel_ms": 190.8,
+    "DynamicQuantizeMatMul": 0.422,
+    "Conv": 0.334,
+    "ConvTranspose": 0.042
+   }
+  },
+  "q4_0_pure_item7": {
+   "file": "llama-quantize --allow-requantize --pure --token-embedding-type q8_0 from Q8_0 GGUF, sha256 107b327f0a07572446914523774339fcad97a4c7b48301b93748b615443cdd3d",
+   "gen_tok_s_shipped": [
+    102.0,
+    88.6,
+    85.5
+   ],
+   "gen_tok_s_pure": [
+    95.1,
+    85.8,
+    85.6
+   ],
+   "vmhwm_kb_shipped": 940800,
+   "vmhwm_kb_pure": 943160,
+   "wer_dave_seed1000": [
+    0.007,
+    0.036
+   ],
+   "wer_jo_seed2000": [
+    0.064,
+    0.071
+   ],
+   "verdict": "no speed gain; not adopted"
+  }
  }
 }

@@ -14,8 +14,9 @@ import org.localvoice.tts.backend.NeuTtsBackend;
 /**
  * Device CLI over the app's own NeuTTS code (no APK install): run with app_process, see tools/models/neutts/REPRODUCE.md.
  *   phon <modelDir> <textFile>                      raw eSpeak phonemes per line (parity with phoneme_parity.py)
- *   say  <modelDir> <voice> <textFile> <out.wav> [gen/batch/decoder threads, e.g. 2/4/2]
+ *   say  <modelDir> <voice> <textFile> <out.wav> [gen/batch/decoder threads, e.g. 2/4/2] [key=value config, e.g. streamChunk=50]
  *   gen  <modelDir> <tokens> [threads]                backbone tokens/s without decoding
+ *   head <modelDir> <steps> [seeds]                  speech-only head logits vs the full head (exactness check)
  * "say" splits text like the service (SpeechPlan.segments) and reports first-audio latency, RTF and the playback
  * stall a real-time consumer would hear (audio arriving after the previous audio finished playing).
  */
@@ -61,9 +62,35 @@ public final class NeuTtsCli {
             backend.close();
             return;
         }
+        if (args[0].equals("head")) {  // head <modelDir> <steps> [seeds]: speech-only head vs full head (dave, fixed text)
+            NeuTtsBackend backend = new NeuTtsBackend();
+            backend.load(dir, config);
+            Class<?> nat = Class.forName("org.localvoice.tts.backend.NeuTtsNative"), front = Class.forName("org.localvoice.tts.backend.NeuTtsFrontend");
+            java.lang.reflect.Field handleField = NeuTtsBackend.class.getDeclaredField("handle"), voicesField = NeuTtsBackend.class.getDeclaredField("voices");
+            handleField.setAccessible(true); voicesField.setAccessible(true);
+            Object dave = ((List<?>) voicesField.get(backend)).get(0);
+            java.lang.reflect.Field codes = dave.getClass().getDeclaredField("codes"), phones = dave.getClass().getDeclaredField("phones");
+            codes.setAccessible(true); phones.setAccessible(true);
+            java.lang.reflect.Method espeak = NeuTtsBackend.class.getDeclaredMethod("espeak", String.class);
+            java.lang.reflect.Method phonesOf = front.getDeclaredMethod("phones", String.class, java.util.function.UnaryOperator.class);
+            java.lang.reflect.Method prompt = front.getDeclaredMethod("prompt", String.class, String.class, int[].class);
+            java.lang.reflect.Method check = nat.getDeclaredMethod("checkHead", long.class, byte[].class, int.class, int.class);
+            espeak.setAccessible(true); phonesOf.setAccessible(true); prompt.setAccessible(true); check.setAccessible(true);
+            java.util.function.UnaryOperator<String> g2p = t -> { try { return (String) espeak.invoke(null, t); } catch (Exception x) { throw new RuntimeException(x); } };
+            String target = (String) phonesOf.invoke(null, "The quick brown fox jumps over the lazy dog, then rests by the river.", g2p);
+            byte[] text = ((String) prompt.invoke(null, phones.get(dave), target, codes.get(dave))).getBytes(StandardCharsets.UTF_8);
+            int seeds = args.length > 3 ? Integer.parseInt(args[3]) : 3;
+            for (int seed = 1; seed <= seeds; seed++) {
+                float[] r = (float[]) check.invoke(null, handleField.getLong(backend), text, Integer.parseInt(args[2]), seed);
+                System.out.printf("seed %d max_abs_logit_diff %.3g full_argmax_outside %d full_top50_outside %d steps %d%n", seed, r[0], (int) r[1], (int) r[2], (int) r[3]);
+            }
+            backend.close();
+            return;
+        }
         int voice = Integer.parseInt(args[2]);
         String text = new String(Files.readAllBytes(new File(args[3]).toPath()), StandardCharsets.UTF_8).strip();
         if (args.length > 5) threads(config, args[5]);
+        for (int i = 6; i < args.length; i++) config.put(args[i].substring(0, args[i].indexOf('=')), args[i].substring(args[i].indexOf('=') + 1));
         long t0 = System.nanoTime();
         NeuTtsBackend backend = new NeuTtsBackend();
         backend.load(dir, config);
@@ -73,7 +100,7 @@ public final class NeuTtsCli {
         long[] first = {0}, samples = {0};
         double[] playedUntil = {0}, stall = {0};
         long start = System.nanoTime();
-        List<SpeechPlan.Segment> segments = SpeechPlan.segments(text, true);
+        List<SpeechPlan.Segment> segments = SpeechPlan.segments(text, true, Integer.parseInt(config.getOrDefault("segmentLimit", Integer.toString(SpeechPlan.LIMIT))));
         for (SpeechPlan.Segment segment : segments) {
             backend.synthesize(text.substring(segment.start, segment.end), "en-US", voice, 1f, () -> false, block -> {
                 double now = (System.nanoTime() - start) / 1e6;

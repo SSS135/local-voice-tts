@@ -20,5 +20,7 @@ final class NeuTtsNative {
     static native void cancel(long handle);
     /** NeuCodec decode of int32 codes [1,1,F] to 24 kHz audio. */
     static native float[] decode(long handle, int[] codes);
+    /** Device check of the speech-only head vs the full head (neutts_jni.cpp checkHead); evaluates a fresh prompt. */
+    static native float[] checkHead(long handle, byte[] utf8Prompt, int steps, int seed);
     static native void close(long handle);
 }

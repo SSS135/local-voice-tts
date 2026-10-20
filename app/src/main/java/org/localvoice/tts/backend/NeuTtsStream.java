@@ -3,21 +3,30 @@ package org.localvoice.tts.backend;
 import java.util.Arrays;
 
 /**
- * NeuTTS streaming decode ({@code NeuTTS._infer_stream_ggml}, neutts ac69851f): every 25 new codes (plus 5
- * lookforward) decode a window with 50 codes of lookback, keep 25 + 2 overlap frames and linearly cross-fade them
- * ({@code _linear_overlap_add}). The overlap-add is incremental but sums the same weighted frames in the same order.
+ * NeuTTS streaming decode ({@code NeuTTS._infer_stream_ggml}, neutts ac69851f): every chunk of new codes (plus 5
+ * lookforward) decodes a window with lookback codes before it, keeps chunk + 2 overlap frames and linearly
+ * cross-fades them ({@code _linear_overlap_add}). Upstream uses 25-code chunks with 50 lookback; here the first chunk
+ * is 25 codes (first audio) and later chunks may be longer, which decodes fewer frames per second of audio. The
+ * overlap-add is incremental but sums the same weighted frames in the same order.
  */
 final class NeuTtsStream {
 
-    static final int HOP = 480, CHUNK = 25, LOOKFORWARD = 5, LOOKBACK = 50, OVERLAP = 1, STRIDE = CHUNK * HOP;
+    static final int HOP = 480, FIRST_CHUNK = 25, LOOKFORWARD = 5, OVERLAP = 1;
+    /** Upstream's constants: chunk 25, lookback 50. */
+    static final int UPSTREAM_CHUNK = 25, UPSTREAM_LOOKBACK = 50;
 
     private int[] tokens;
-    private final int referenceLength;
+    private final int referenceLength, chunk, lookback;
     private int size, decodedTokens;
     private float[] tailAudio = new float[0], tailWeight = new float[0];  // pending cross-fade from decodedSamples on
 
+    NeuTtsStream(int[] referenceCodes) { this(referenceCodes, UPSTREAM_CHUNK, UPSTREAM_LOOKBACK); }
+
     /** Reference codes come first: they are decode context (lookback) for the first chunk. */
-    NeuTtsStream(int[] referenceCodes) {
+    NeuTtsStream(int[] referenceCodes, int chunk, int lookback) {
+        if (chunk < FIRST_CHUNK || lookback < 0) throw new IllegalArgumentException("chunk " + chunk + ", lookback " + lookback);
+        this.chunk = chunk;
+        this.lookback = lookback;
         tokens = Arrays.copyOf(referenceCodes, referenceCodes.length + 1024);
         size = decodedTokens = referenceLength = referenceCodes.length;
     }
@@ -35,19 +44,20 @@ final class NeuTtsStream {
     Window add(int code) {
         if (size == tokens.length) tokens = Arrays.copyOf(tokens, size * 2);
         tokens[size++] = code;
-        if (size - decodedTokens < CHUNK + LOOKFORWARD) return null;
-        int start = Math.max(decodedTokens - LOOKBACK - OVERLAP, 0);
-        int end = Math.min(decodedTokens + CHUNK + LOOKFORWARD + OVERLAP, size);
+        int length = decodedTokens == referenceLength ? FIRST_CHUNK : chunk;
+        if (size - decodedTokens < length + LOOKFORWARD) return null;
+        int start = Math.max(decodedTokens - lookback - OVERLAP, 0);
+        int end = Math.min(decodedTokens + length + LOOKFORWARD + OVERLAP, size);
         int sampleStart = (decodedTokens - start) * HOP;
-        decodedTokens += CHUNK;
-        return new Window(Arrays.copyOfRange(tokens, start, end), sampleStart, sampleStart + (CHUNK + 2 * OVERLAP) * HOP, STRIDE);
+        decodedTokens += length;
+        return new Window(Arrays.copyOfRange(tokens, start, end), sampleStart, sampleStart + (length + 2 * OVERLAP) * HOP, length * HOP);
     }
 
     /** Upstream's final, non-constant chunk over the remaining codes, or null. */
     Window finish() {
         int remaining = size - decodedTokens;
         if (remaining <= 0) return null;
-        int start = Math.max(size - (LOOKBACK + OVERLAP + remaining), 0);
+        int start = Math.max(size - (lookback + OVERLAP + remaining), 0);
         int sampleStart = Math.max((size - start - remaining - OVERLAP) * HOP, 0);
         decodedTokens = size;
         return new Window(Arrays.copyOfRange(tokens, start, size), sampleStart, Integer.MAX_VALUE, Integer.MAX_VALUE);

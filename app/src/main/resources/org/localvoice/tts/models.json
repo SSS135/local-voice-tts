@@ -642,7 +642,10 @@
         "numThreads": "2",
         "batchThreads": "4",
         "decoderThreads": "3",
-        "contextSize": "2048"
+        "contextSize": "2048",
+        "streamChunk": "50",
+        "streamLookback": "50",
+        "segmentLimit": "250"
       },
       "voices": [
         {"name":"dave","label":"NeuTTS Dave","language":"en-GB","speaker":0},

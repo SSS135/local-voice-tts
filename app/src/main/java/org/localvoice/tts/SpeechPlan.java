@@ -51,13 +51,16 @@ final class SpeechPlan {
      * sentence whole; otherwise the first sentence is cut at a clause for fast first audio and overlong sentences
      * are cut at clauses, then spaces.
      */
-    static List<Segment> segments(String text, boolean splitSentences) {
+    static List<Segment> segments(String text, boolean splitSentences) { return segments(text, splitSentences, LIMIT); }
+
+    /** As {@link #segments(String, boolean)} with a backend-specific cap on later segments ({@code segmentLimit} config). */
+    static List<Segment> segments(String text, boolean splitSentences, int maxLimit) {
         List<int[]> sentences = sentences(text);
         List<Segment> out = new ArrayList<>();
         int s = 0;
         while (s < sentences.size()) {
             int start = sentences.get(s)[0], end = sentences.get(s)[1];
-            int limit = limit(out.size());
+            int limit = limit(out.size(), maxLimit);
             if (splitSentences && end - start > limit + MIN_REST) {
                 int cut = cut(text, start, end, limit, out.isEmpty());
                 out.add(new Segment(start, trimEnd(text, start, cut), pause(text, start, cut)));
@@ -97,7 +100,9 @@ final class SpeechPlan {
         return out;
     }
 
-    static int limit(int index) { return (int) Math.min(LIMIT, FIRST_LIMIT * Math.pow(1.5, index)); }
+    static int limit(int index) { return limit(index, LIMIT); }
+
+    static int limit(int index, int maxLimit) { return (int) Math.min(maxLimit, FIRST_LIMIT * Math.pow(1.5, index)); }
 
     private static int cut(String text, int start, int end, int limit, boolean first) {
         int max = Math.min(end - MIN_REST, start + limit), min = start + (first ? 12 : limit / 3);
