@@ -46,6 +46,60 @@ Lever status is in `docs/NEUTTS-OPTIMIZATION.md` ("Status after the 2026-10-20 r
 
 WER uses faster-whisper small.en on single samples. Most differences are ASR normalization, such as "one hundred and twelve" → "112" or "harbour" → "harbor". **All quality figures here are provisional** until the protocol in `docs/TTS-QUANT-QUALITY.md` is run.
 
+## Two-sequence batching (item 4, 2026-10-20): parked
+
+Branch `experiment/neutts-batching`, config `batchSegments=true` (default off). Segment k+1 generates beside segment k in one `llama_decode`, with one KV stream per sequence and the LAST-pooling ubatch patch (`app/src/main/cpp/CMakeLists.txt`). Its prompt is fed in chunks of `batchPrefillChunk`.
+
+**Correctness.** CLI `batch m 150 1`, forced tokens, batched vs unbatched: mean KL 4.4e-4, max KL 3.9e-3, top-1 140/150. This is far below the Q4_0 quantization KL (~0.07).
+
+**Why a pair step costs ~1.7× instead of ~1.3×.** The probe was a native bench with our engine setup (embeddings + LAST pooling, speech-only row-view head, per-sequence KV), unpinned, 2 threads, depth 1000. It interleaves 1-token and 2-token steps at constant depth. Per-op times come from the scheduler eval callback, ms per step:
+
+| Op | 1 token | 2 tokens | Ratio |
+|---|---|---|---|
+| Attention `kq` + softmax + `kqv` (f16 KV, per sequence) | 3.97 | 7.66 | 1.93 |
+| FFN `gate`/`up`/`down` (Q4_0 repacked, `gemv` per column) | 3.61 | 5.47 | 1.52 |
+| `Q`/`K`/`V`/`attn_out` (Q4_0 repacked) | 1.36 | 1.73 | 1.28 |
+| Rest (rope, norms, cont, swiglu) | 2.22 | 2.64 | 1.19 |
+| Speech head, 65,544 rows Q8_0, 1 vs 2 columns (outside the graph) | 1.73 | 3.33 | 1.93 |
+| Step total: decode + head + sampling (no callback) | 10.07 | 17.28 | 1.72 |
+
+- **Nothing in our path is avoidable overhead.**
+  - Pooling and the output copy cost 0.06 ms.
+  - Both tokens share one ubatch (each op runs once per layer).
+  - Sampling takes 0.14 ms per sequence.
+  - `poll=0` changed nothing, and two 1-column heads cost the same as one 2-column head.
+  - The JNI `step()` matches the probe (pair 20.4 vs 20.5 ms).
+- **The cost is per-token work that batching cannot share.**
+  - Attention over each sequence's own 1,000-token KV is ≈ 40% of a single step.
+  - The repacked Q4_0/Q8_0 matmuls run one `gemv` per column below 4 columns. On a warm Tensor G2 they are compute-bound, not bandwidth-bound: FFN 1.5×, head 1.93×.
+- **Other configurations, same probe.**
+  - Logits mode with the full 194k head (llama-batched-bench's path): 1.78×.
+  - Depth 150: 1.62×.
+  - Flash attention auto: 1.66× and slower in absolute terms.
+  - Unified KV: 1.49×, but 16 ms single steps.
+- **llama-batched-bench measured the same way.** Unpinned, t2, npp 1000, ntg 64, fa off: S_TG 41.5 → 56.6 t/s, a pair cost of 1.47×. Its ratio looks better only because its single-token step is slower: 24.1 ms against our 14.4 ms in logits mode and 10.1 ms with the speech head. In absolute terms its pair step is also slower than ours (35.4 vs 26.2 ms in logits mode).
+- **Threads.** Pair steps on the 4-thread batch pool (now in `step()`) cost 17.8 instead of 19.3 ms; single steps are unchanged at 11.1 ms. Ratio: 1.60× against 2-thread single steps. CLI `bgen 100 1000`: pair 17.0 vs single 10.5 ms.
+
+**End to end, ABAB, interleaved.**
+- Setup: the passage, dave, 2/4/3, `streamChunk=50 streamLookback=50 segmentLimit=250`. B adds `batchSegments=true flashAttn=false batchPrefillChunk=128`.
+- Phone: status 1 → 2, BIG 62 → 66 °C. A NeuTTS model download was running in the app.
+
+| Run | A1 | B1 | A2 | B2 |
+|---|---|---|---|---|
+| RTF | 0.895 | 1.137 | 1.444 | 1.453 |
+| Stall per 37 s | 0.1 s | 8.7 s | 15.0 s | 17.8 s |
+| First audio | 1.71 s | 2.05 s | 2.87 s | 3.45 s |
+| VmHWM | 973 MB | 1,009 MB | 976 MB | 1,008 MB |
+
+- Heating dominates the order: A1 ran cool.
+- The warm pair (A2/B2) is a tie, matching the earlier rounds: unified KV gave A 1.415 / B 1.778 / A 1.420; per-sequence KV gave 1.069 / 1.275 / 1.394 / 1.398.
+- Batching adds ≈ 35 MB and does not improve first audio.
+- At a 1.6–1.7× pair cost, the ceiling is ≈ 1.2× on the overlapped generation share only. The NeuCodec decoder competes for the same cores, so the gain stays below the 10% merge bar.
+
+**Verdict: parked.** To reopen, check two things:
+- whether a 2-column `gemm` kernel (i8mm, not present on G2) is available on the target CPU;
+- whether shorter references cut the attention share.
+
 ## Verdict (2026-10-19 baseline)
 
 - **Real-time on CPU: yes, with a thin margin.** The best config is Q4_0 on CPU with 4 threads, unpinned (what an app gets).
