@@ -214,7 +214,10 @@ public final class LocalVoiceService extends TextToSpeechService {
             // Continued without any stop: the request was queued behind the previous one (QUEUE_ADD), which then
             // lingered for nothing; later requests of this caller hold nothing back.
             if (claimed != null && claimed.stoppedAt == 0 && claimed.pausedText == null) queuingCallers.add(caller);
-            Log.i("LocalVoiceTiming","request model="+model.id+" chars="+text.length()+" handoff="+handoff
+            // Per-request thread-count A/B without reinstalling; a changed value reloads the model.
+            String threads = params == null ? null : params.getString("numThreads");
+            if (!model.network && threads != null && threads.matches("[1-4]")) config.put("numThreads",threads);
+            Log.i("LocalVoiceTiming","request model="+model.id+" chars="+text.length()+" handoff="+handoff+" threads="+config.get("numThreads")
                 +(previous == null ? "" : " tailMs="+previous.pcm.length*1000L/previous.rate+" claimed="+(claimed != null)+" sinceStopMs="+(previous.stoppedAt == 0 ? -1 : started-previous.stoppedAt)+" vsPlayEndMs="+(started-previous.playEnd)));
             Rendered.Queue queue = new Rendered.Queue();
             if (any) synth.execute(()->render(token,model,voice,config,text,plan,stream,maxLimit,speed,pitch,options,started,queue));

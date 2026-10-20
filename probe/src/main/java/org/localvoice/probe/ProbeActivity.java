@@ -22,6 +22,7 @@ public final class ProbeActivity extends Activity {
     void savePcm(String id){ByteArrayOutputStream pcm=chainPcm.remove(id);if(pcm==null)return;try(FileOutputStream out=new FileOutputStream(new File(getExternalFilesDir(null),id+".pcm"))){pcm.writeTo(out);}catch(IOException e){Log.e("LVProbe","pcm",e);}}
     /** toFile: chain without playback (synthesizeToFile), for measuring PCM and render timing while the device is in use. */
     int say(String text,String id){Bundle params=new Bundle();String handoff=getIntent().getStringExtra("handoff");if(handoff!=null)params.putString("paragraph_handoff",handoff);// handoff=false: engine A/B switch for the paragraph tail handoff
+        String threads=getIntent().getStringExtra("numThreads");if(threads!=null)params.putString("numThreads",threads);// engine A/B: local model inference threads (1-4)
         return getIntent().getBooleanExtra("toFile",false)?tts.synthesizeToFile(text,params,new File(getExternalFilesDir(null),id+".wav"),id):tts.speak(text,TextToSpeech.QUEUE_FLUSH,params,id);}
     /** chainFile: JSON array of paragraphs in the external files dir; avoids shell quoting of long texts. */
     String chainText()throws IOException{String file=getIntent().getStringExtra("chainFile");if(file==null)return getIntent().getStringExtra("chain");if(!file.matches("[A-Za-z0-9_.-]{1,64}"))throw new IOException("invalid chainFile");return new String(java.nio.file.Files.readAllBytes(new File(getExternalFilesDir(null),file).toPath()),"UTF-8");}

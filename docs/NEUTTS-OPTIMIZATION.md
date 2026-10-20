@@ -36,7 +36,7 @@ Numbers are in `docs/NEUTTS-PHONE-BENCH.md` ("Optimization round"). Sustained wa
 | 2 | Decode chunk 50 / lookback 50 | **Done as config** (`streamChunk`, `streamLookback`; the catalog sets 50/50, the backend default stays upstream 25/50). Decode has almost no fixed cost (kernels are 191 of 197 ms at F=81), so frames per audio-second fall 164 → 107. Host check against a one-shot decode of the 6 voice references: log-mel L1 0.294 (upstream 25/50), 0.319 (50/50), 0.353 (50/25). Quality is **provisional** until the `docs/TTS-QUANT-QUALITY.md` gate passes. ORT spinning was 2× slower (rejected). `use_device_allocator_for_initializers` changed nothing (rejected). Profile at F=81: DynamicQuantizeMatMul 42%, fp32 Conv 33%, ConvTranspose 4%. |
 | 3 | Longer NeuTTS segments | **Done as config** (`segmentLimit`, catalog 250; jo worst case ≈ 1,910 of 2,048 tokens). The passage takes 6 prefills instead of 9. Reference trimming was not done (it needs a speaker-similarity check). |
 | 4 | Two-sequence batching | **Built, parked** (branch `experiment/neutts-batching`, config `batchSegments`, default off). No end-to-end gain on a warm phone (ABAB RTF 1.444 unbatched vs 1.453 batched). A pair step costs 1.6–1.75× a single-token step. That is intrinsic, not a defect of our path; the per-op profile is in `docs/NEUTTS-PHONE-BENCH.md` ("Two-sequence batching"). |
-| 5 | Placement/ADPF | Pinning premise refuted (see fact 2). ADPF was not tried. |
+| 5 | Placement/ADPF | Pinning premise refuted (see fact 2). **ADPF tried and removed**: a hint session over all synthesis threads (deadline 0.7 × audio, power-efficient), ABBA on a warm phone. No cooling, and RTF was unchanged for NeuTTS (1.49 on vs 1.52 off) and Kokoro (1.57 vs 1.46). Both voices run at RTF > 1 warm, so hints can only ask for boost. Details: `docs/NEUTTS-PHONE-BENCH.md` ("ADPF performance hints"). |
 | 6 | Decoder memory | `use_device_allocator_for_initializers` gave no RSS change. Model surgery (int8 convs) not done. |
 | 7 | Pure Q4_0 (`ffn_down` Q4_1 → Q4_0, from the Q8_0 GGUF, `--pure --token-embedding-type q8_0`) | **No speed gain** (warm-ish interleaved: 102/88.6/85.5 vs 95.1/85.8/85.6 tok/s); RSS +2.5 MB. Not adopted. `ffn_down` is 19.9 of ≈ 108 MB per token after item 1, and the generic Q4_1 dotprod path is also bandwidth-bound. A repacked Q4_1 kernel can therefore save at most a few %. |
 
@@ -45,7 +45,7 @@ Still open to close the warm gap (prefill ≈ 20%, generation 48 codes/s against
 - shorter references (prefill and depth);
 - int8 decoder convs, which cut about a third of decode time;
 - chunk 50 / lookback 25 if the quality gate allows it;
-- ADPF or duty-cycling to reduce heat.
+- duty-cycling to reduce heat (ADPF alone did not help; see item 5).
 
 ## Ranked recommendations
 

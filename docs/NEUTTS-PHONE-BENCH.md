@@ -100,6 +100,30 @@ Branch `experiment/neutts-batching`, config `batchSegments=true` (default off). 
 - whether a 2-column `gemm` kernel (i8mm, not present on G2) is available on the target CPU;
 - whether shorter references cut the attention share.
 
+## ADPF performance hints (item 5, 2026-10-20): removed
+
+**What was tried.** The design was hints only, with no pacing and no temperature cap:
+- `PerformanceHintManager` opened one session per request on the render thread.
+- It covered every synthesis thread, found by name in `/proc/self/task` at each segment start. Native threads inherit the render thread's name.
+  - Kokoro: render thread plus 1 ORT worker. eSpeak runs on the render thread.
+  - NeuTTS: 8 tids, namely render, the ggml pools (1 + 3), ORT (2) and `NeuCodec`.
+- Per-thread CPU ticks confirmed that every busy thread was in the session. `dumpsys performance_hint` showed the session only in the on arm, with `PowerEfficient=true`.
+- Each PCM block reported its render time against 0.7 × its audio duration.
+
+**Method.** Probe chain playback of `tests/fixtures/tts-quality-en.txt`, ABBA (on/off/off/on), 150 s blocks back to back, the same text from the start in each block. RTF excludes each block's first segment, which may include a model load. Status reached 1 in every block.
+
+| Voice | Arm | Skin °C | BIG °C | A78 / X1 mean MHz | RTF | Stalls |
+|---|---|---|---|---|---|---|
+| Kokoro (AC, 100%) | on | 39.5 | 63.0 | 1546 / 1486 | 1.57 (1.39, 1.75) | 44 / 204 s |
+| | off | 40.5 | 65.8 | 1380 / 1577 | 1.46 (1.36, 1.57) | 42 / 177 s |
+| NeuTTS jo (battery) | on | 41.1 | 64.4 | 1498 / 1335 | 1.49 (1.45, 1.60) | 27 / 139 s |
+| | off | 40.9 | 61.7 | 1529 / 1188 | 1.52 (1.52, 1.52) | 31 / 187 s |
+
+- **Kokoro.** The phone heated from cold: BIG 42 → 69 °C, and the X1 cap fell from 2.8 to 1.5 GHz. That drift dominates every block. With hints on, RTF was about 7% worse and there was no cooling. Battery current was unusable because the phone was charging, and a NeuTTS download was running in the app.
+- **NeuTTS.** Block 4 ran only 76 s, because the session was stopped. Power was 3.61 W on vs 3.31 W off. Every difference is within block-to-block drift.
+
+**Verdict: removed.** Both voices run at RTF > 1 on a warm Pixel 7 Pro, so every report is behind the deadline and a hint can only ask for more boost. Revisit only for a voice that renders well ahead of real time, together with pacing or duty-cycling.
+
 ## Verdict (2026-10-19 baseline)
 
 - **Real-time on CPU: yes, with a thin margin.** The best config is Q4_0 on CPU with 4 threads, unpinned (what an app gets).
