@@ -620,7 +620,7 @@
     },
     {
       "id": "neutts-nano-en",
-      "label": "NeuTTS Nano · English",
+      "label": "NeuTTS Nano · English (experimental)",
       "backend": "llama-neutts",
       "revision": "neutts-nano-q4-ac69851f-v1",
       "network": false,
