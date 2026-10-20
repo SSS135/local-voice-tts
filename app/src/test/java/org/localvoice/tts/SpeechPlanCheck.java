@@ -45,6 +45,29 @@ public final class SpeechPlanCheck {
         check(SpeechPlan.segments(" \n ", true).isEmpty(), "blank text has no segments");
     }
 
+    @Test public void streamingAndBudget() {
+        // Streaming whole-turn adapters (Edge) get each paragraph as one turn: sentences pack from the first segment.
+        SpeechPlan.Planner stream = new SpeechPlan.Planner(TEXT, false);
+        SpeechPlan.Segment paragraph = stream.next(1000);
+        check(TEXT.substring(paragraph.start, paragraph.end).endsWith("He lit the lamp!") && paragraph.pauseMs == SpeechPlan.PARAGRAPH_PAUSE_MS,
+            "first streamed segment packs the whole paragraph");
+        check(TEXT.substring(stream.next(1000).start).equals("Ships watched for its beam.") && !stream.hasNext(), "paragraph break still splits");
+
+        // Later local segments shrink to what renders before queued audio runs out, never below MIN_BUDGET.
+        check(SpeechPlan.budgetLimit(90, 0, 0) == 90, "no learned cost keeps the growth limit");
+        check(SpeechPlan.budgetLimit(90, 25, 10000) == 90, "fast model keeps the growth limit");
+        check(SpeechPlan.budgetLimit(90, 25, 1500) == 48, "slow model gets a shorter segment: " + SpeechPlan.budgetLimit(90, 25, 1500));
+        check(SpeechPlan.budgetLimit(90, 60, 0) == SpeechPlan.MIN_BUDGET, "floor");
+        SpeechPlan.Planner local = new SpeechPlan.Planner("Nobody greeted her. The lanterns along the wall were dark, and the fountain in the center had frozen solid.", true);
+        local.next(SpeechPlan.FIRST_LIMIT);
+        SpeechPlan.Segment cut = local.next(SpeechPlan.MIN_BUDGET);
+        check(cut.pauseMs == SpeechPlan.CLAUSE_PAUSE_MS && cut.end - cut.start <= SpeechPlan.MIN_BUDGET, "budget cuts a long sentence at a clause");
+
+        List<SpeechPlan.Segment> tiny = SpeechPlan.segments("\"Hello?\" Her voice sounded smaller than she expected. The echo came back wrong.", true);
+        check(tiny.get(0).end == 53, "a short first sentence packs the next one within the first limit: " + tiny);
+        check(SpeechPlan.pauseMs(300, 2f) == 150 && SpeechPlan.pauseMs(300, 1f) == 300 && SpeechPlan.pauseMs(300, .25f) == 600, "pauses scale with rate");
+    }
+
     @Test public void words() {
         String text = "\"Hello,\" she said — (it's 42%)!";
         List<SpeechPlan.Word> words = SpeechPlan.words(text, 0, text.length());

@@ -55,28 +55,54 @@ final class SpeechPlan {
 
     /** As {@link #segments(String, boolean)} with a backend-specific cap on later segments ({@code segmentLimit} config). */
     static List<Segment> segments(String text, boolean splitSentences, int maxLimit) {
-        List<int[]> sentences = sentences(text);
+        Planner plan = new Planner(text, splitSentences);
         List<Segment> out = new ArrayList<>();
-        int s = 0;
-        while (s < sentences.size()) {
+        while (plan.hasNext()) out.add(plan.next(limit(out.size(), maxLimit)));
+        return out;
+    }
+
+    /** Plans segments one at a time, so the caller can size each from how much audio is already queued. */
+    static final class Planner {
+        private final String text; private final List<int[]> sentences; private final boolean split;
+        private int s, count;
+        Planner(String text, boolean splitSentences) {
+            this.text = text; this.sentences = sentences(text); this.split = splitSentences;
+        }
+        boolean hasNext() { return s < sentences.size(); }
+        /** Next segment of at most about {@code limit} chars: whole sentences, an overlong one cut when splitting. */
+        Segment next(int limit) {
             int start = sentences.get(s)[0], end = sentences.get(s)[1];
-            int limit = limit(out.size(), maxLimit);
-            if (splitSentences && end - start > limit + MIN_REST) {
-                int cut = cut(text, start, end, limit, out.isEmpty());
-                out.add(new Segment(start, trimEnd(text, start, cut), pause(text, start, cut)));
+            boolean first = count++ == 0;
+            if (split && end - start > limit + MIN_REST) {
+                int cut = cut(text, start, end, limit, first);
                 sentences.get(s)[0] = skipSpace(text, cut, end);
-                continue;
+                return new Segment(start, trimEnd(text, start, cut), pause(text, start, cut));
             }
-            // Pack following whole sentences (never on the first segment: it must be fast).
-            while (!out.isEmpty() && s + 1 < sentences.size() && sentences.get(s + 1)[1] - start <= limit
+            // Pack following whole sentences up to the limit; a lone short first sentence left a short first segment
+            // whose audio ran out before the next one rendered.
+            while (s + 1 < sentences.size() && sentences.get(s + 1)[1] - start <= limit
                     && !paragraph(text, end, sentences.get(s + 1)[0])) {
                 end = sentences.get(++s)[1];
             }
             s++;
-            out.add(new Segment(start, end, s < sentences.size() && paragraph(text, end, sentences.get(s)[0]) ? PARAGRAPH_PAUSE_MS : pause(text, start, end)));
+            return new Segment(start, end, s < sentences.size() && paragraph(text, end, sentences.get(s)[0]) ? PARAGRAPH_PAUSE_MS : pause(text, start, end));
         }
-        return out;
     }
+
+    /** Shortest later segment the render budget may ask for: shorter cuts cost prosody and per-call overhead. */
+    static final int MIN_BUDGET = 40;
+
+    /**
+     * Cap on a later segment so it renders before the audio already queued ahead of it runs out ({@code queuedMs}),
+     * at the model's learned render cost; no cost yet keeps the growth limit.
+     */
+    static int budgetLimit(int growthLimit, double msPerChar, long queuedMs) {
+        if (!(msPerChar > 0)) return growthLimit;
+        return (int) Math.min(growthLimit, Math.max(MIN_BUDGET, queuedMs * 0.8 / msPerChar));
+    }
+
+    /** Segment pause at a speech rate: model speech gets faster with rate, so must the silence between segments. */
+    static int pauseMs(int pauseMs, float speed) { return Math.round(pauseMs / Math.max(.5f, speed)); }
 
     /** Sentence ranges with surrounding whitespace removed; a line break always ends a sentence. */
     static List<int[]> sentences(String text) {

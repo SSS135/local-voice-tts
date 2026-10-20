@@ -14,29 +14,40 @@ public final class EdgeAudio {
 
     public static void validateMp3(byte[] bytes) throws IOException {
         if (bytes.length == 0 || bytes.length > MAX_MP3_BYTES) throw new IOException("Invalid Edge MP3 size");
-        int offset=0, frames=0;
-        if (bytes.length >= 10 && bytes[0]=='I' && bytes[1]=='D' && bytes[2]=='3') {
-            int length=0;
-            for(int i=6;i<10;i++) {
-                if((bytes[i]&128)!=0) throw new IOException("Invalid Edge MP3 tag");
-                length=(length<<7)|(bytes[i]&127);
-            }
-            offset=10+length+((bytes[5]&16)!=0?10:0);
-        }
+        int offset=Math.max(0,id3Length(bytes,0,bytes.length)), frames=0;
         while(offset<bytes.length) {
-            if(bytes.length-offset<4) throw new IOException("Truncated Edge MP3 frame");
-            int h=((bytes[offset]&255)<<24)|((bytes[offset+1]&255)<<16)|((bytes[offset+2]&255)<<8)|(bytes[offset+3]&255);
-            int version=(h>>>19)&3, layer=(h>>>17)&3, rateIndex=(h>>>10)&3, bitIndex=(h>>>12)&15;
-            if((h&0xFFE00000)!=0xFFE00000 || version==1 || layer!=1 || rateIndex==3 || bitIndex==0 || bitIndex==15)
-                throw new IOException("Invalid Edge MP3 frame");
-            int rate=SAMPLE_RATES[rateIndex]/(version==3?1:version==2?2:4);
-            if(rate!=24000 || ((h>>>6)&3)!=3) throw new EdgeRetry.FatalException("Unsupported Edge MP3 format");
-            int bitrate=(version==3?V1_BITRATE:V2_BITRATE)[bitIndex]*1000;
-            int size=(version==3?144:72)*bitrate/rate+((h>>>9)&1);
-            if(size<4 || size>bytes.length-offset) throw new IOException("Truncated Edge MP3 frame");
+            int size=frameLength(bytes,offset,bytes.length-offset);
+            if(size==0) throw new IOException("Truncated Edge MP3 frame");
             offset+=size; frames++;
         }
         if(frames<2) throw new IOException("Edge MP3 contains insufficient complete audio");
+    }
+
+    /** Length of the ID3v2 tag starting at {@code offset}: 0 = no tag, -1 = more bytes needed to tell. */
+    static int id3Length(byte[] bytes, int offset, int available) throws IOException {
+        if (available >= 3 && !(bytes[offset]=='I' && bytes[offset+1]=='D' && bytes[offset+2]=='3')) return 0;
+        if (available < 10) return -1;
+        int length=0;
+        for(int i=offset+6;i<offset+10;i++) {
+            if((bytes[i]&128)!=0) throw new IOException("Invalid Edge MP3 tag");
+            length=(length<<7)|(bytes[i]&127);
+        }
+        return 10+length+((bytes[offset+5]&16)!=0?10:0);
+    }
+
+    /** Size of the 24 kHz mono MPEG audio frame starting at {@code offset}; 0 = it is not complete yet. */
+    static int frameLength(byte[] bytes, int offset, int available) throws IOException {
+        if(available<4) return 0;
+        int h=((bytes[offset]&255)<<24)|((bytes[offset+1]&255)<<16)|((bytes[offset+2]&255)<<8)|(bytes[offset+3]&255);
+        int version=(h>>>19)&3, layer=(h>>>17)&3, rateIndex=(h>>>10)&3, bitIndex=(h>>>12)&15;
+        if((h&0xFFE00000)!=0xFFE00000 || version==1 || layer!=1 || rateIndex==3 || bitIndex==0 || bitIndex==15)
+            throw new IOException("Invalid Edge MP3 frame");
+        int rate=SAMPLE_RATES[rateIndex]/(version==3?1:version==2?2:4);
+        if(rate!=24000 || ((h>>>6)&3)!=3) throw new EdgeRetry.FatalException("Unsupported Edge MP3 format");
+        int bitrate=(version==3?V1_BITRATE:V2_BITRATE)[bitIndex]*1000;
+        int size=(version==3?144:72)*bitrate/rate+((h>>>9)&1);
+        if(size<4) throw new IOException("Invalid Edge MP3 frame");
+        return size>available ? 0 : size;
     }
 
     public static final class Pcm {

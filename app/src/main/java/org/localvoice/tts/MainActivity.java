@@ -89,6 +89,11 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
             public void onStartTrackingTouch(SeekBar slider){stopPreview();}
             public void onStopTrackingTouch(SeekBar slider){getSharedPreferences("voices",MODE_PRIVATE).edit().putFloat(SpeechRatePolicy.PREFERENCE,.5f+slider.getProgress()/10f).apply();}
         });
+        // TailHandoff: overlap the next paragraph's first-audio latency with the end of the current one.
+        CheckBox handoff=new CheckBox(this);handoff.setText("Short pauses between paragraphs");handoff.setTextSize(14);handoff.setTextColor(ui.ink);handoff.setMinHeight(ui.dp(48));
+        handoff.setChecked(getSharedPreferences("voices",MODE_PRIVATE).getBoolean(TailHandoff.PREFERENCE,true));
+        handoff.setOnCheckedChangeListener((box,checked)->getSharedPreferences("voices",MODE_PRIVATE).edit().putBoolean(TailHandoff.PREFERENCE,checked).apply());
+        header.addView(handoff,new LinearLayout.LayoutParams(-1,-2));
         voiceCount=ui.text(header,"Voices",14,ui.muted,false);voiceCount.setPadding(0,ui.dp(8),0,ui.dp(4));
         // Filters sit directly above the voice list they filter.
         header.addView(search,new LinearLayout.LayoutParams(-1,-2));

@@ -2,11 +2,8 @@ package org.localvoice.tts.backend;
 
 import android.media.AudioFormat;
 import android.media.MediaCodec;
-import android.media.MediaDataSource;
-import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.SystemClock;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,9 +11,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -63,12 +58,71 @@ public final class EdgeBackend implements SpeechBackend {
             throw new EdgeRetry.FatalException("Invalid Edge voice metadata");
     }
     @Override public int sampleRate() { return 24000; }
+    @Override public boolean streams() { return true; }
+    @Override public boolean timesWords() { return true; }
     @Override public void cancel() {
         cancelled = true;
         WebSocket socket = activeSocket;
         if (socket != null) socket.cancel();
     }
-    @Override public void close() { cancel(); voice = null; }
+    @Override public void close() {
+        cancel(); voice = null;
+        Relay idle; synchronized (this) { idle = spare; spare = null; }
+        if (idle != null) idle.socket.cancel();
+    }
+    /**
+     * Connection opened ahead for the next turn: saves its TLS/WebSocket handshake (0.75-0.9 s on a Pixel 7 Pro).
+     * Opened only once a turn of an explicitly requested online voice is playing; it carries no text until the next turn.
+     */
+    private Relay spare;
+    private static final long SPARE_MAX_AGE_MS = 30_000;
+    private Request connection() {
+        return headers(endpoint == null ? url("/edge/v1").addQueryParameter("ConnectionId", id()).build().toString() : endpoint)
+                .header("Pragma", "no-cache").header("Cache-Control", "no-cache").header("Origin", EdgeProtocol.ORIGIN).build();
+    }
+    private void prewarm() {
+        synchronized (this) { if (spare != null || voice == null) return; }
+        Relay relay = new Relay();
+        relay.socket = CLIENT.newWebSocket(connection(), relay);
+        synchronized (this) { if (spare == null) { spare = relay; return; } }
+        relay.socket.cancel();
+    }
+    /** Forwards a socket's events to the turn that uses it; until then it only records whether the socket opened or died. */
+    private static final class Relay extends WebSocketListener {
+        volatile WebSocket socket;
+        private final long created = SystemClock.elapsedRealtime();
+        private WebSocketListener target;
+        private boolean open, dead;
+        synchronized boolean usable() { return !dead && SystemClock.elapsedRealtime() - created < SPARE_MAX_AGE_MS; }
+        void attach(WebSocketListener turn) {
+            boolean opened;
+            synchronized (this) { target = turn; opened = open; }
+            if (opened) turn.onOpen(socket, null);
+        }
+        private synchronized WebSocketListener target() { return target; }
+        @Override public void onOpen(WebSocket ws, Response response) {
+            WebSocketListener turn;
+            synchronized (this) { open = true; turn = target; }
+            if (turn != null) turn.onOpen(ws, response);
+        }
+        @Override public void onMessage(WebSocket ws, String message) { WebSocketListener turn = target(); if (turn != null) turn.onMessage(ws, message); }
+        @Override public void onMessage(WebSocket ws, ByteString message) { WebSocketListener turn = target(); if (turn != null) turn.onMessage(ws, message); }
+        @Override public void onClosing(WebSocket ws, int code, String reason) {
+            WebSocketListener turn;
+            synchronized (this) { dead = true; turn = target; }
+            if (turn != null) turn.onClosing(ws, code, reason); else ws.close(1000, null);
+        }
+        @Override public void onClosed(WebSocket ws, int code, String reason) {
+            WebSocketListener turn;
+            synchronized (this) { dead = true; turn = target; }
+            if (turn != null) turn.onClosed(ws, code, reason);
+        }
+        @Override public void onFailure(WebSocket ws, Throwable t, Response response) {
+            WebSocketListener turn;
+            synchronized (this) { dead = true; turn = target; }
+            if (turn != null) turn.onFailure(ws, t, response); else if (response != null) response.close();
+        }
+    }
 
     private boolean stopped(Cancellation cancellation) { return cancelled || cancellation.isCancelled(); }
     private static String id() { return UUID.randomUUID().toString().replace("-", ""); }
@@ -97,11 +151,12 @@ public final class EdgeBackend implements SpeechBackend {
         };
         EdgeRetry.Observer observer = currentHost == null ? EdgeRetry.NO_OBSERVER
                 : (waiting, attempts) -> currentHost.reportStatus(waiting ? (currentHost.isNetworkAvailable() ? "retrying" : "waiting_network") : "ready", attempts);
-        int start = 0;
-        long emitted = 0;
+        // A turn that fails after its audio started playing resumes at the word being spoken (start[0]), not at the turn start.
+        int[] start = {0};
+        long[] emitted = {0};
         // Bound individual server turns after XML escaping, including non-ASCII/surrogate pairs.
-        while (start < text.length() && !stopped(cancellation)) {
-            int end = start, bytes = 0, boundary = -1;
+        while (start[0] < text.length() && !stopped(cancellation)) {
+            int end = start[0], bytes = 0, boundary = -1;
             while (end < text.length()) {
                 int next = end + Character.charCount(text.codePointAt(end));
                 int size = EdgeProtocol.xml(text.substring(end, next)).getBytes(StandardCharsets.UTF_8).length;
@@ -109,126 +164,246 @@ public final class EdgeBackend implements SpeechBackend {
                 bytes += size; end = next;
                 if (Character.isWhitespace(text.codePointBefore(end)) || ".!?。！？".indexOf(text.codePointBefore(end)) >= 0) boundary = end;
             }
-            if (end < text.length() && boundary > start) end = boundary;
-            String chunk = text.substring(start, end);
-            java.util.List<EdgeProtocol.Boundary> boundaries = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+            if (end < text.length() && boundary > start[0]) end = boundary;
+            int turnEnd = end;
             Options request = options;
-            EdgeAudio.Pcm pcm;
             String voiceId = voice;
+            boolean accepted;
             try {
-                pcm = EdgeRetry.run(() -> {
-                    boundaries.clear();
-                    byte[] mp3;
+                accepted = EdgeRetry.run(() -> {
                     try {
-                        mp3 = request(chunk, speed, request.pitch, request.networkTimeoutMs, cancellation, boundaries);
+                        return turn(text, start, turnEnd, speed, request, cancellation, sink, emitted);
                     } catch (EdgeRetry.DeclinedException declined) {
                         if (DECLINES.skip(voiceId)) throw declined;
                         throw new EdgeRetry.OutageException(declined);
                     }
-                    if (mp3 == null || stopped(cancellation)) throw new EdgeRetry.CancelledException();
-                    EdgeAudio.validateMp3(mp3);
-                    return decode(mp3, cancellation);
                 }, pending, network, observer, request.networkTimeoutMs, request.networkRetries, request.boundOffline);
             } catch (EdgeRetry.DeclinedException declined) {
                 // Never fail on content: this fragment stays silent and reading continues. The message has no text.
                 android.util.Log.w("LocalVoice", "Edge declined fragment voice=" + voice + " " + declined.getMessage());
-                start = end;
+                start[0] = turnEnd;
                 continue;
             }
             DECLINES.audio(voiceId);
-            for (long[] word : EdgeProtocol.placeWords(chunk, boundaries, sampleRate()))
-                if (word[0] < pcm.samples()) sink.word(emitted + word[0], start + (int) word[1], start + (int) word[2]);
-            if (!pcm.commit(pending, sink)) return;
-            emitted += pcm.samples();
-            start = end;
+            if (!accepted) return;
+            start[0] = turnEnd;
         }
     }
 
-    private byte[] request(String text, float speed, float pitch, long budgetMillis, Cancellation cancellation, java.util.List<EdgeProtocol.Boundary> boundaries) throws Exception {
-        String ssml = voiceName==null ? EdgeProtocol.ssml(text, voice, speed, pitch, id())
-                : EdgeProtocol.ssml(text,voice,voiceName,voiceLocale,speed,pitch,id());
-        Request request = headers(endpoint == null ? url("/edge/v1").addQueryParameter("ConnectionId", id()).build().toString() : endpoint)
-                .header("Pragma", "no-cache").header("Cache-Control", "no-cache").header("Origin", EdgeProtocol.ORIGIN).build();
-        CountDownLatch done = new CountDownLatch(1);
-        AtomicBoolean terminal = new AtomicBoolean();
-        AtomicBoolean opened = new AtomicBoolean();
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        IOException[] error = new IOException[1];
-        WebSocket socket = CLIENT.newWebSocket(request, new WebSocketListener() {
-            private void fail(WebSocket ws, String message) {
-                fail(ws, new IOException(message));
-            }
-            private void fail(WebSocket ws, IOException failure) {
-                if (terminal.compareAndSet(false, true)) {
-                    error[0] = failure;
-                    ws.cancel(); done.countDown();
+    /**
+     * One server turn for text[start[0], end), streamed: MP3 frames are decoded as they arrive and each decoded
+     * buffer leaves at once, preceded by the WordBoundary markers it covers, so first audio does not wait for the
+     * turn to finish. A failure after audio left moves start[0] to the word then being spoken; the retry resumes
+     * there. Returns false when the sink stopped accepting audio.
+     */
+    private Boolean turn(String text, int[] start, int end, float speed, Options request, Cancellation cancellation,
+                         PcmSink sink, long[] emitted) throws Exception {
+        int from = start[0];
+        String chunk = text.substring(from, end);
+        String ssml = voiceName==null ? EdgeProtocol.ssml(chunk, voice, speed, request.pitch, id())
+                : EdgeProtocol.ssml(chunk,voice,voiceName,voiceLocale,speed,request.pitch,id());
+        long began = SystemClock.elapsedRealtime(), base = emitted[0], samples = 0;
+        Turn turn = new Turn(ssml, cancellation);
+        Relay relay;
+        synchronized (this) { relay = spare; spare = null; }
+        boolean warm = relay != null && relay.usable();
+        if (!warm) {
+            if (relay != null) relay.socket.cancel();
+            relay = new Relay();
+            relay.socket = CLIENT.newWebSocket(connection(), relay);
+        }
+        WebSocket socket = relay.socket;
+        relay.attach(turn);
+        activeSocket = socket;
+        MediaCodec codec = null;
+        int spoken = -1;
+        try {
+            codec = MediaCodec.createDecoderByType("audio/mpeg");
+            MediaFormat format = MediaFormat.createAudioFormat("audio/mpeg", 24000, 1);
+            format.setInteger(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT);
+            codec.configure(format, null, null, 0); codec.start();
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            java.util.ArrayDeque<long[]> words = new java.util.ArrayDeque<>();
+            int encoding = AudioFormat.ENCODING_PCM_16BIT;
+            int[] placed = {0, 0};
+            long frames = 0, firstAudio = 0;
+            byte[] frame = null;
+            boolean inputDone = false;
+            long deadline = began + (request.networkTimeoutMs > 0 ? Math.min(attemptTimeoutMillis, request.networkTimeoutMs) : attemptTimeoutMillis);
+            while (true) {
+                if (stopped(cancellation)) throw new EdgeRetry.CancelledException();
+                if (SystemClock.elapsedRealtime() > deadline) throw new IOException("Edge request timed out");
+                turn.check();
+                if (!inputDone) {
+                    if (frame == null) frame = turn.frame();
+                    if (frame != null || turn.ended()) {
+                        int index = codec.dequeueInputBuffer(0);
+                        if (index >= 0 && frame != null) {
+                            codec.getInputBuffer(index).put(frame);
+                            // MPEG-2 layer III at 24 kHz: 576 samples (24 ms) per frame.
+                            codec.queueInputBuffer(index, 0, frame.length, frames++ * 24000L, 0); frame = null;
+                        } else if (index >= 0) {
+                            codec.queueInputBuffer(index, 0, 0, frames * 24000L, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inputDone = true;
+                        }
+                    }
+                }
+                int index = codec.dequeueOutputBuffer(info, frame == null && !turn.ended() ? 10000 : 1000);
+                if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    MediaFormat output = codec.getOutputFormat();
+                    if (output.getInteger(MediaFormat.KEY_SAMPLE_RATE) != 24000 || output.getInteger(MediaFormat.KEY_CHANNEL_COUNT) != 1)
+                        throw new EdgeRetry.FatalException("Unsupported decoded Edge format");
+                    if (output.containsKey(MediaFormat.KEY_PCM_ENCODING)) encoding = output.getInteger(MediaFormat.KEY_PCM_ENCODING);
+                    if (encoding != AudioFormat.ENCODING_PCM_16BIT && encoding != AudioFormat.ENCODING_PCM_FLOAT)
+                        throw new EdgeRetry.FatalException("Unsupported decoded Edge PCM");
+                } else if (index >= 0) {
+                    float[] block = null;
+                    try {
+                        if (info.size > 0) {
+                            ByteBuffer output = codec.getOutputBuffer(index).order(ByteOrder.LITTLE_ENDIAN);
+                            output.position(info.offset); output.limit(info.offset + info.size);
+                            int width = encoding == AudioFormat.ENCODING_PCM_FLOAT ? 4 : 2;
+                            if (info.size % width != 0) throw new IOException("Invalid decoded Edge PCM");
+                            if (info.size / width > EdgeAudio.MAX_PCM_SAMPLES - samples) throw new IOException("Edge decoded audio exceeds limit");
+                            block = new float[info.size / width];
+                            for (int i = 0; i < block.length; i++) block[i] = width == 4 ? output.getFloat() : output.getShort() / 32768f;
+                            for (float value : block) if (!Float.isFinite(value)) throw new IOException("Invalid Edge decoded PCM");
+                        }
+                    } finally { codec.releaseOutputBuffer(index, false); }
+                    if (block != null) {
+                        place(turn, chunk, placed, words);
+                        for (long[] word; (word = words.peek()) != null && word[0] < samples + block.length; words.poll()) {
+                            sink.word(base + word[0], from + (int) word[1], from + (int) word[2]);
+                            spoken = (int) word[1];
+                        }
+                        if (firstAudio == 0) { firstAudio = SystemClock.elapsedRealtime(); prewarm(); }
+                        if (stopped(cancellation) || !sink.write(block)) return Boolean.FALSE;
+                        samples += block.length; emitted[0] += block.length;
+                    }
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) break;
                 }
             }
-            @Override public void onOpen(WebSocket ws, Response response) {
-                opened.set(true);
-                if (stopped(cancellation)) { fail(ws, "Edge request cancelled"); return; }
-                if (!ws.send(EdgeProtocol.config()) || !ws.send(ssml)) fail(ws, "Edge request send failed");
+            if (samples == 0) throw new IOException("Edge decoded no audio");
+            place(turn, chunk, placed, words);
+            for (long[] word : words) sink.word(base + word[0], from + (int) word[1], from + (int) word[2]);
+            android.util.Log.i("LocalVoiceTiming", "edge turn chars=" + chunk.length() + " warm=" + warm + " openMs=" + (turn.openedAt - began)
+                    + " firstAudioMs=" + (firstAudio - began) + " totalMs=" + (SystemClock.elapsedRealtime() - began) + " audioMs=" + samples * 1000 / 24000);
+            return Boolean.TRUE;
+        } catch (IOException failure) {
+            if (samples > 0) start[0] = from + Math.max(0, spoken);
+            throw failure;
+        } catch (RuntimeException malformedAudio) {
+            if (samples > 0) start[0] = from + Math.max(0, spoken);
+            throw new IOException("Edge audio decode failed", malformedAudio);
+        } finally {
+            turn.finish(); socket.cancel(); activeSocket = null;
+            if (codec != null) { try { codec.stop(); } catch (RuntimeException ignored) {} codec.release(); }
+        }
+    }
+
+    /** Places newly received boundaries in the turn text, in reading order: {sample, start, end}; placed = {count, cursor}. */
+    private void place(Turn turn, String chunk, int[] placed, java.util.ArrayDeque<long[]> words) {
+        for (EdgeProtocol.Boundary word; (word = turn.boundary(placed[0])) != null; placed[0]++) {
+            int at = chunk.indexOf(word.text, placed[1]);
+            // A word missing from the remaining text (normalized by the service) is skipped.
+            if (at < 0) continue;
+            placed[1] = at + word.text.length();
+            words.add(new long[]{word.ticks * sampleRate() / 10_000_000L, at, placed[1]});
+        }
+    }
+
+    /** Listener side of one server turn: MP3 payload split into whole frames, word boundaries, end or failure. */
+    private final class Turn extends WebSocketListener {
+        private final String ssml;
+        private final Cancellation cancellation;
+        private final java.util.List<EdgeProtocol.Boundary> boundaries = new java.util.ArrayList<>();
+        private byte[] data = new byte[16384];
+        private int head, tail, audioBytes;
+        private boolean opened, ended, terminal, tagChecked;
+        private IOException error;
+        volatile long openedAt;
+        Turn(String ssml, Cancellation cancellation) { this.ssml = ssml; this.cancellation = cancellation; }
+
+        synchronized void check() throws IOException { if (error != null) throw error; }
+        synchronized boolean ended() { return ended; }
+        synchronized EdgeProtocol.Boundary boundary(int index) { return index < boundaries.size() ? boundaries.get(index) : null; }
+        /** Next complete MPEG frame, or null until more bytes arrive; an incomplete remainder at turn end is dropped. */
+        synchronized byte[] frame() throws IOException {
+            if (!tagChecked) {
+                int tag = EdgeAudio.id3Length(data, head, tail - head);
+                if (tag < 0 || tag > tail - head) return null;
+                head += tag; tagChecked = true;
             }
-            @Override public void onMessage(WebSocket ws, String message) {
-                if (terminal.get() || stopped(cancellation)) return;
-                String path = EdgeProtocol.path(message.split("\r\n\r\n", 2)[0]);
+            int size = EdgeAudio.frameLength(data, head, tail - head);
+            if (size == 0) return null;
+            head += size;
+            return java.util.Arrays.copyOfRange(data, head - size, head);
+        }
+        synchronized void finish() { terminal = true; }
+        private synchronized void fail(WebSocket ws, IOException failure) {
+            if (terminal) return;
+            terminal = true; error = failure; ws.cancel();
+        }
+        private synchronized void append(byte[] bytes) {
+            if (tail + bytes.length > data.length) {
+                System.arraycopy(data, head, data, 0, tail - head); tail -= head; head = 0;
+                if (tail + bytes.length > data.length) data = java.util.Arrays.copyOf(data, Math.max(data.length * 2, tail + bytes.length));
+            }
+            System.arraycopy(bytes, 0, data, tail, bytes.length); tail += bytes.length;
+        }
+        @Override public void onOpen(WebSocket ws, Response response) {
+            openedAt = SystemClock.elapsedRealtime();
+            synchronized (this) { opened = true; }
+            if (stopped(cancellation)) { fail(ws, new IOException("Edge request cancelled")); return; }
+            if (!ws.send(EdgeProtocol.config()) || !ws.send(ssml)) fail(ws, new IOException("Edge request send failed"));
+        }
+        @Override public void onMessage(WebSocket ws, String message) {
+            if (stopped(cancellation)) return;
+            String path = EdgeProtocol.path(message.split("\r\n\r\n", 2)[0]);
+            synchronized (this) {
+                if (terminal) return;
                 if (path.equals("turn.end")) {
-                    if (terminal.compareAndSet(false, true)) {
-                        if (bytes.size() == 0) error[0] = failure(EdgeProtocol.classify(0, 0, true), "Edge turn ended without audio", 0, null);
-                        ws.close(1000, "complete"); done.countDown();
-                    }
+                    terminal = true; ended = true;
+                    if (audioBytes == 0) error = failure(EdgeProtocol.classify(0, 0, true), "Edge turn ended without audio", 0, null);
+                    ws.close(1000, "complete");
                 } else if (path.equals("audio.metadata")) {
                     String[] parts = message.split("\r\n\r\n", 2);
                     if (parts.length == 2) boundaries.addAll(EdgeProtocol.wordBoundaries(parts[1]));
                 } else if (!path.equals("turn.start") && !path.equals("response")) {
-                    fail(ws, "Unexpected Edge response");
+                    fail(ws, new IOException("Unexpected Edge response"));
                 }
             }
-            @Override public void onMessage(WebSocket ws, ByteString message) {
-                if (terminal.get() || stopped(cancellation)) return;
-                try {
-                    if (message.size() > EdgeProtocol.MAX_AUDIO_BYTES + 8194) throw new IOException("Edge audio frame too large");
-                    byte[] data = EdgeProtocol.audioPayload(message.toByteArray());
-                    if (bytes.size() + data.length > EdgeProtocol.MAX_AUDIO_BYTES) throw new IOException("Edge audio exceeds limit");
-                    bytes.write(data);
-                } catch (IOException e) { fail(ws, e.getMessage()); }
-            }
-            @Override public void onFailure(WebSocket ws, Throwable t, Response response) {
-                String reason = response == null ? "Edge connection failed" : "Edge HTTP " + response.code();
-                int code = response == null ? 0 : response.code();
-                long now = System.currentTimeMillis();
-                long retryAfter = response == null ? 0 : EdgeProtocol.retryAfter(response.header("Retry-After"), now);
-                EdgeProtocol.Outcome outcome = EdgeProtocol.classify(code, 0, false);
-                if (outcome == EdgeProtocol.Outcome.AUTH) EdgeGec.syncClock(response.header("Date"), now);
-                if (response != null) response.close();
-                // Transport exceptions contain connection diagnostics, never the outgoing SSML body.
-                fail(ws, failure(outcome, reason + " phase=" + (opened.get() ? "audio" : "handshake")
-                        + " audioBytes=" + bytes.size() + " cause=" + t.getClass().getSimpleName(), retryAfter, t));
-            }
-            @Override public void onClosing(WebSocket ws, int code, String reason) {
-                if (!terminal.get()) closed(ws, code);
-                else ws.close(code, reason);
-            }
-            @Override public void onClosed(WebSocket ws, int code, String reason) {
-                if (!terminal.get()) closed(ws, code);
-            }
-            private void closed(WebSocket ws, int code) {
-                fail(ws, failure(EdgeProtocol.classify(0, code, false), "Edge closed before completing audio code=" + code
-                        + " phase=" + (opened.get() ? "audio" : "handshake") + " audioBytes=" + bytes.size(), 0, null));
-            }
-        });
-        activeSocket = socket;
-        try {
-            long deadline = SystemClock.elapsedRealtime() + (budgetMillis > 0 ? Math.min(attemptTimeoutMillis, budgetMillis) : attemptTimeoutMillis);
-            while (!done.await(25, TimeUnit.MILLISECONDS)) {
-                if (stopped(cancellation)) return null;
-                if (SystemClock.elapsedRealtime() > deadline) throw new IOException("Edge request timed out");
-            }
-            if (stopped(cancellation)) return null;
-            if (error[0] != null) throw error[0];
-            return bytes.toByteArray();
-        } finally {
-            terminal.set(true); socket.cancel(); activeSocket = null;
+        }
+        @Override public void onMessage(WebSocket ws, ByteString message) {
+            if (stopped(cancellation)) return;
+            try {
+                if (message.size() > EdgeProtocol.MAX_AUDIO_BYTES + 8194) throw new IOException("Edge audio frame too large");
+                byte[] payload = EdgeProtocol.audioPayload(message.toByteArray());
+                synchronized (this) {
+                    if (terminal) return;
+                    if (audioBytes + payload.length > EdgeProtocol.MAX_AUDIO_BYTES) throw new IOException("Edge audio exceeds limit");
+                    audioBytes += payload.length; append(payload);
+                }
+            } catch (IOException e) { fail(ws, e); }
+        }
+        @Override public void onFailure(WebSocket ws, Throwable t, Response response) {
+            String reason = response == null ? "Edge connection failed" : "Edge HTTP " + response.code();
+            int code = response == null ? 0 : response.code();
+            long now = System.currentTimeMillis();
+            long retryAfter = response == null ? 0 : EdgeProtocol.retryAfter(response.header("Retry-After"), now);
+            EdgeProtocol.Outcome outcome = EdgeProtocol.classify(code, 0, false);
+            if (outcome == EdgeProtocol.Outcome.AUTH) EdgeGec.syncClock(response.header("Date"), now);
+            if (response != null) response.close();
+            // Transport exceptions contain connection diagnostics, never the outgoing SSML body.
+            fail(ws, failure(outcome, reason + " phase=" + (opened() ? "audio" : "handshake")
+                    + " audioBytes=" + audioBytes() + " cause=" + t.getClass().getSimpleName(), retryAfter, t));
+        }
+        @Override public void onClosing(WebSocket ws, int code, String reason) { closed(ws, code); ws.close(code, reason); }
+        @Override public void onClosed(WebSocket ws, int code, String reason) { closed(ws, code); }
+        private synchronized boolean opened() { return opened; }
+        private synchronized int audioBytes() { return audioBytes; }
+        private void closed(WebSocket ws, int code) {
+            fail(ws, failure(EdgeProtocol.classify(0, code, false), "Edge closed before completing audio code=" + code
+                    + " phase=" + (opened() ? "audio" : "handshake") + " audioBytes=" + audioBytes(), 0, null));
         }
     }
 
@@ -241,81 +416,4 @@ public final class EdgeBackend implements SpeechBackend {
         }
     }
 
-    private EdgeAudio.Pcm decode(byte[] mp3, Cancellation cancellation) throws IOException {
-        MediaExtractor extractor = new MediaExtractor();
-        MediaCodec codec = null;
-        try {
-            extractor.setDataSource(new MediaDataSource() {
-                @Override public int readAt(long position, byte[] buffer, int offset, int size) {
-                    if (position < 0 || position >= mp3.length) return -1;
-                    int n = Math.min(size, mp3.length - (int) position);
-                    System.arraycopy(mp3, (int) position, buffer, offset, n); return n;
-                }
-                @Override public long getSize() { return mp3.length; }
-                @Override public void close() {}
-            });
-            if (extractor.getTrackCount() == 0) throw new IOException("Edge returned invalid MP3");
-            MediaFormat format = extractor.getTrackFormat(0);
-            String mime = format.getString(MediaFormat.KEY_MIME);
-            if (!"audio/mpeg".equals(mime)) throw new EdgeRetry.FatalException("Unsupported Edge codec");
-            if (format.getInteger(MediaFormat.KEY_SAMPLE_RATE) != 24000 || format.getInteger(MediaFormat.KEY_CHANNEL_COUNT) != 1)
-                throw new EdgeRetry.FatalException("Unsupported Edge audio format");
-            extractor.selectTrack(0);
-            codec = MediaCodec.createDecoderByType(mime);
-            format.setInteger(MediaFormat.KEY_PCM_ENCODING, AudioFormat.ENCODING_PCM_16BIT);
-            codec.configure(format, null, null, 0); codec.start();
-            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-            boolean inputDone = false;
-            int encoding = AudioFormat.ENCODING_PCM_16BIT;
-            EdgeAudio.Pcm pcm = new EdgeAudio.Pcm();
-            long deadline = SystemClock.elapsedRealtime() + 20000;
-            while (!stopped(cancellation)) {
-                if (SystemClock.elapsedRealtime() > deadline) throw new IOException("Edge audio decode timed out");
-                if (!inputDone) {
-                    int index = codec.dequeueInputBuffer(10000);
-                    if (index >= 0) {
-                        ByteBuffer input = codec.getInputBuffer(index);
-                        int size = extractor.readSampleData(input, 0);
-                        if (size < 0) {
-                            codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inputDone = true;
-                        } else {
-                            codec.queueInputBuffer(index, 0, size, Math.max(0, extractor.getSampleTime()), 0); extractor.advance();
-                        }
-                    }
-                }
-                int index = codec.dequeueOutputBuffer(info, 10000);
-                if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    MediaFormat output = codec.getOutputFormat();
-                    if (output.getInteger(MediaFormat.KEY_SAMPLE_RATE) != 24000 || output.getInteger(MediaFormat.KEY_CHANNEL_COUNT) != 1)
-                        throw new EdgeRetry.FatalException("Unsupported decoded Edge format");
-                    if (output.containsKey(MediaFormat.KEY_PCM_ENCODING)) encoding = output.getInteger(MediaFormat.KEY_PCM_ENCODING);
-                    if (encoding != AudioFormat.ENCODING_PCM_16BIT && encoding != AudioFormat.ENCODING_PCM_FLOAT)
-                        throw new EdgeRetry.FatalException("Unsupported decoded Edge PCM");
-                } else if (index >= 0) {
-                    try {
-                        if (info.size > 0 && !stopped(cancellation)) {
-                            ByteBuffer output = codec.getOutputBuffer(index).order(ByteOrder.LITTLE_ENDIAN);
-                            output.position(info.offset); output.limit(info.offset + info.size);
-                            int width = encoding == AudioFormat.ENCODING_PCM_FLOAT ? 4 : 2;
-                            if (info.size % width != 0) throw new IOException("Invalid decoded Edge PCM");
-                            if(info.size/width>EdgeAudio.MAX_PCM_SAMPLES-pcm.samples()) throw new IOException("Edge decoded audio exceeds limit");
-                            float[] block = new float[info.size / width];
-                            for (int i=0;i<block.length;i++) block[i] = width == 4 ? output.getFloat() : output.getShort()/32768f;
-                            pcm.add(block);
-                        }
-                    } finally { codec.releaseOutputBuffer(index, false); }
-                    if (stopped(cancellation)) throw new EdgeRetry.CancelledException();
-                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        return pcm.complete();
-                    }
-                }
-            }
-            throw new EdgeRetry.CancelledException();
-        } catch (RuntimeException malformedAudio) {
-            throw new IOException("Edge audio decode failed", malformedAudio);
-        } finally {
-            if (codec != null) { try { codec.stop(); } catch (RuntimeException ignored) {} codec.release(); }
-            extractor.release();
-        }
-    }
 }

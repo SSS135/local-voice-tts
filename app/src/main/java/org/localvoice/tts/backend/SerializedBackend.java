@@ -15,6 +15,8 @@ public final class SerializedBackend implements AutoCloseable {
     public SerializedBackend() { this(BackendRegistry::create); }
     public SerializedBackend(Function<String,SpeechBackend> factory) { this.factory = java.util.Objects.requireNonNull(factory); }
     public long begin() { return generation.incrementAndGet(); }
+    /** Current generation without starting a new one: work outside a request stops once it changes. */
+    public long current() { return generation.get(); }
     public boolean cancelled(long token) { return generation.get() != token; }
     public void cancel() { generation.incrementAndGet(); SpeechBackend b = backend; if (b != null) b.cancel(); }
     public synchronized SpeechBackend load(String id,String kind,File directory,Map<String,String> config) throws Exception {
@@ -49,6 +51,7 @@ public final class SerializedBackend implements AutoCloseable {
     }
     /** Whether the loaded adapter streams; call from Ready.onReady on the executing thread. */
     public synchronized boolean streams() { return backend != null && backend.streams(); }
+    public synchronized boolean timesWords() { return backend != null && backend.timesWords(); }
     public interface Ready { void onReady(int sampleRate) throws Exception; }
     private void closeLoaded() { if (backend != null) backend.close(); backend = null; modelId = null; backendKind = null; modelDirectory = null; loadedConfig = null; }
     @Override public void close() { cancel(); synchronized(this) { closeLoaded(); } }

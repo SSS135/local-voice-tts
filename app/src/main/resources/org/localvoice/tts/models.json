@@ -483,7 +483,7 @@
       "licenseText": "Online speech uses Microsoft's consumer Read Aloud service and is subject to Microsoft service terms. Text is sent to Microsoft when you explicitly choose an online voice and request speech. This unofficial endpoint may change or become unavailable.",
       "licenseAsset": "",
       "description": "Internet required. No model download. Text leaves the device only when an online voice is selected and speech is requested.",
-      "config": {},
+      "config": {"chunking": "stream", "segmentLimit": "1000", "paragraphPauseMs": "600"},
       "voices": [],
       "files": []
     },

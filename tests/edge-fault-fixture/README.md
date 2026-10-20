@@ -17,7 +17,7 @@ The server binds only127.0.0.1. GET `/health` reports readiness, MP3 hash and re
 Default `faults.json` performs these global connection actions, then repeats success:
 
 1. Send800 MP3 bytes, then abort without `turn.end`.
-2. Send all but the last MP3 byte followed by `turn.end`. Strict complete-frame validation must reject it before PCM emission.
+2. Send all but the last MP3 byte followed by `turn.end`. The streaming adapter plays the complete frames and drops the incomplete final frame.
 3. Accept SSML and stall6seconds. Observe client cancellation after the bounded attempt timeout.
 4. Send the complete valid MP3 split across1031byte audio fragments and `turn.end`.
 

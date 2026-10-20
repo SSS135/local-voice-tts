@@ -43,6 +43,8 @@ public interface SpeechBackend extends AutoCloseable {
                     Cancellation cancellation, PcmSink sink) throws Exception;
     /** True when one synthesize() call writes PCM progressively during its compute, not once at its end. */
     default boolean streams() { return false; }
+    /** True when a streaming adapter reports {@link PcmSink#word} for every word before writing its first sample. */
+    default boolean timesWords() { return false; }
     /** May be called concurrently; must not free inference resources. */
     default void cancel() {}
     @Override void close();
