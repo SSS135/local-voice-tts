@@ -28,6 +28,11 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private Button getVoices,refreshCatalog,cancelRefresh;
     private VoiceAdapter voiceAdapter;
     private List<Catalog.VoiceSpec> availableVoices=Collections.emptyList(),filteredVoices=Collections.emptyList();
+    private List<VoiceGroups.Row> voiceRows=Collections.emptyList();
+    /** Saved folds persist in "voice_groups"; filter folds are transient and reset when the filter changes. */
+    private final Map<String,Boolean> savedFolds=new HashMap<>(),filterFolds=new HashMap<>();
+    private boolean filtering;
+    private String filterKey="",foldAnchor="";
     private final List<String> languageTags=new ArrayList<>();
     private String languageTag="",selectedVoice="",voiceSignature="uninitialized";
     private List<Catalog.Model> renderedCatalog;
@@ -45,6 +50,7 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
 
     @Override public void onCreate(Bundle state) {
         Ui.theme(this);super.onCreate(state);ui=new Ui(this);store=new ModelStore(this);
+        for(Map.Entry<String,?> fold:getSharedPreferences("voice_groups",MODE_PRIVATE).getAll().entrySet())if(fold.getValue() instanceof Boolean)savedFolds.put(fold.getKey(),(Boolean)fold.getValue());
         root=ui.root();setContentView(root);ui.appBar(root,"Local Voice","",()->{});
         FrameLayout content=new FrameLayout(this);root.addView(content,new LinearLayout.LayoutParams(-1,0,1));
         View voices=createVoices();content.addView(voices,new FrameLayout.LayoutParams(-1,-1));pages.add(voices);
@@ -159,10 +165,25 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
             for(Catalog.VoiceSpec voice:source)if(VoiceFilter.matches(voice.id,voice.label,voice.languageTag,tag,query,Locale.getDefault()))result.add(voice);
             uiHandler.post(()->{
                 if(isDestroyed()||generation!=filterGeneration)return;
-                filteredVoices=result;voiceCount.setText(voiceCountLabel(result.size()));empty.setText(source.isEmpty()?"No voices installed":"No matching voices");empty.setVisibility(result.isEmpty()?View.VISIBLE:View.GONE);getVoices.setVisibility(source.isEmpty()?View.VISIBLE:View.GONE);voiceAdapter.notifyDataSetChanged();
+                filteredVoices=result;filtering=!query.isEmpty()||!tag.isEmpty();if(!filterKey.equals(tag+"\n"+query)){filterKey=tag+"\n"+query;filterFolds.clear();}
+                voiceCount.setText(voiceCountLabel(result.size()));empty.setText(source.isEmpty()?"No voices installed":"No matching voices");empty.setVisibility(result.isEmpty()?View.VISIBLE:View.GONE);getVoices.setVisibility(source.isEmpty()?View.VISIBLE:View.GONE);rebuildRows();
             });
         });
         uiHandler.postDelayed(pendingFilter,100);
+    }
+    /** O(voices) on the UI thread; only runs after a filter result or a fold toggle. */
+    private void rebuildRows(){
+        if(foldAnchor.isEmpty())foldAnchor=selectedVoice;
+        Map<String,String> labels=new HashMap<>();Set<String> split=new HashSet<>();
+        for(Catalog.Model model:Catalog.MODELS){labels.put(model.id,model.label);if(model.network)split.add(model.id);}
+        voiceRows=VoiceGroups.rows(availableVoices,filteredVoices,filtering,labels,split,foldAnchor,filtering?filterFolds:savedFolds,Locale.getDefault());
+        voiceAdapter.notifyDataSetChanged();
+    }
+    private void toggleGroup(VoiceGroups.Row row){
+        boolean open=!row.expanded;
+        if(filtering)filterFolds.put(row.key,open);
+        else{savedFolds.put(row.key,open);getSharedPreferences("voice_groups",MODE_PRIVATE).edit().putBoolean(row.key,open).apply();}
+        rebuildRows();
     }
     private void chooseVoice(Catalog.VoiceSpec voice){stopPreview();try{store.selectVoice(voice.id);}catch(IllegalArgumentException unavailable){showStatus("Voice unavailable. Check Downloads.");voiceSignature="uninitialized";changed();return;}selectedVoice=voice.id;voiceAdapter.notifyDataSetChanged();if(ttsReady)applyAndroidVoice(voice.id);}
     private boolean applyAndroidVoice(String id){Set<Voice> voices=tts.getVoices();if(voices!=null)for(Voice voice:voices)if(voice.getName().equals(id))return tts.setVoice(voice)==TextToSpeech.SUCCESS;return false;}
@@ -179,20 +200,50 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private void showStatus(String message){setTextIfChanged(speechStatus,message);setVisibleIfChanged(speechStatus,message.isEmpty()?View.GONE:View.VISIBLE);}
 
     private final class VoiceAdapter extends BaseAdapter{
-        public int getCount(){return filteredVoices.size();}public Object getItem(int position){return filteredVoices.get(position);}public long getItemId(int position){return position;}
+        public int getCount(){return voiceRows.size();}public Object getItem(int position){return voiceRows.get(position);}public long getItemId(int position){return position;}
+        @Override public int getViewTypeCount(){return 2;}
+        @Override public int getItemViewType(int position){return voiceRows.get(position).voice==null?0:1;}
         public View getView(int position,View recycled,ViewGroup parent){
+            VoiceGroups.Row item=voiceRows.get(position);
+            if(item.voice==null)return groupView(item,recycled,parent);
             VoiceRow row;
             if(recycled==null){row=new VoiceRow();LinearLayout layout=new LinearLayout(MainActivity.this);layout.setOrientation(LinearLayout.HORIZONTAL);layout.setGravity(Gravity.CENTER_VERTICAL);layout.setPadding(ui.dp(12),ui.dp(8),ui.dp(8),ui.dp(8));layout.setMinimumHeight(ui.dp(72));layout.setFocusable(true);
                 row.check=new ImageView(MainActivity.this);row.check.setImageResource(R.drawable.ic_check_24);row.check.setImageTintList(ColorStateList.valueOf(ui.accent));row.check.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);LinearLayout.LayoutParams icon=new LinearLayout.LayoutParams(ui.dp(24),ui.dp(24));icon.setMarginEnd(ui.dp(8));layout.addView(row.check,icon);
                 LinearLayout copy=ui.column();row.name=ui.text(copy,"",16,ui.ink,true);row.locale=ui.text(copy,"",14,ui.muted,false);copy.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);layout.addView(copy,new LinearLayout.LayoutParams(0,-2,1));
                 row.listen=new Button(MainActivity.this);row.listen.setAllCaps(false);row.listen.setTextSize(14);row.listen.setMinWidth(ui.dp(72));row.listen.setMinHeight(ui.dp(48));row.listen.setTextColor(ui.accent);row.listen.setBackgroundTintList(ColorStateList.valueOf(ui.accentSoft));LinearLayout.LayoutParams action=new LinearLayout.LayoutParams(-2,-2);action.setMarginStart(ui.dp(8));layout.addView(row.listen,action);row.layout=layout;layout.setTag(row);recycled=layout;
             }else row=(VoiceRow)recycled.getTag();
-            Catalog.VoiceSpec voice=filteredVoices.get(position);boolean selected=voice.id.equals(selectedVoice),playing=voice.id.equals(previews.voice());row.check.setVisibility(selected?View.VISIBLE:View.INVISIBLE);row.name.setText(voice.label);Catalog.Model model=Catalog.findModel(voice.modelId);row.locale.setText(voice.languageTag+(model.network?" · Online":" · Offline"));row.layout.setBackground(ui.ripple(selected?ui.accentSoft:ui.surface,selected?ui.accent:ui.border,12));row.layout.setContentDescription(voice.label+", "+languageLabel(voice.languageTag)+(selected?", selected":""));row.layout.setSelected(selected);
+            Catalog.VoiceSpec voice=item.voice;boolean selected=voice.id.equals(selectedVoice),playing=voice.id.equals(previews.voice());row.check.setVisibility(selected?View.VISIBLE:View.INVISIBLE);row.name.setText(voice.label);Catalog.Model model=Catalog.findModel(voice.modelId);row.locale.setText(voice.languageTag+(model.network?" · Online":" · Offline"));row.layout.setBackground(ui.ripple(selected?ui.accentSoft:ui.surface,selected?ui.accent:ui.border,12));row.layout.setContentDescription(voice.label+", "+languageLabel(voice.languageTag)+(selected?", selected":""));row.layout.setSelected(selected);
             row.layout.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName("android.widget.RadioButton");info.setCheckable(true);info.setChecked(selected);}});
             row.layout.setOnClickListener(v->chooseVoice(voice));row.listen.setText(playing?"Stop":"Listen");row.listen.setContentDescription((playing?"Stop preview of ":"Listen to ")+voice.label);row.listen.setOnClickListener(v->listen(voice));return recycled;
         }
     }
     private static final class VoiceRow{LinearLayout layout;ImageView check;TextView name,locale;Button listen;}
+    private static final class GroupRow{LinearLayout layout;ImageView chevron;TextView name,count;}
+    private View groupView(VoiceGroups.Row item,View recycled,ViewGroup parent){
+        GroupRow row;
+        if(recycled==null){row=new GroupRow();LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.HORIZONTAL);layout.setGravity(Gravity.CENTER_VERTICAL);layout.setMinimumHeight(ui.dp(48));layout.setFocusable(true);layout.setClickable(true);
+            row.chevron=new ImageView(this);row.chevron.setImageResource(R.drawable.ic_expand_more_24);row.chevron.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);LinearLayout.LayoutParams icon=new LinearLayout.LayoutParams(ui.dp(24),ui.dp(24));icon.setMarginEnd(ui.dp(8));layout.addView(row.chevron,icon);
+            row.name=new TextView(this);row.name.setTypeface(android.graphics.Typeface.create("sans-serif-medium",android.graphics.Typeface.NORMAL));row.name.setTextColor(ui.ink);layout.addView(row.name,new LinearLayout.LayoutParams(0,-2,1));
+            row.count=new TextView(this);row.count.setTextSize(14);row.count.setTextColor(ui.muted);LinearLayout.LayoutParams count=new LinearLayout.LayoutParams(-2,-2);count.setMarginStart(ui.dp(8));layout.addView(row.count,count);
+            if(Build.VERSION.SDK_INT>=28)layout.setAccessibilityHeading(true);
+            row.layout=layout;layout.setTag(row);recycled=layout;
+        }else row=(GroupRow)recycled.getTag();
+        // Language sub-groups are indented under their model header.
+        row.layout.setPadding(ui.dp(item.depth==0?8:28),ui.dp(item.depth==0?12:6),ui.dp(12),ui.dp(item.depth==0?8:6));
+        row.layout.setBackground(ui.ripple(ui.background,0,12));
+        row.name.setText(item.label);row.name.setTextSize(item.depth==0?17:15);
+        String count=filtering?item.shown+" of "+item.total:voiceCountLabel(item.total);row.count.setText(count);
+        boolean expanded=item.expanded;
+        row.chevron.setImageTintList(ColorStateList.valueOf(expanded?ui.accent:ui.muted));
+        row.chevron.setRotation(expanded?0:parent.getLayoutDirection()==View.LAYOUT_DIRECTION_RTL?90:-90);
+        row.layout.setContentDescription(item.label+", "+(filtering?item.shown+" of "+item.total+" voices match":count));
+        if(Build.VERSION.SDK_INT>=30)row.layout.setStateDescription(expanded?"Expanded":"Collapsed");
+        row.layout.setAccessibilityDelegate(new View.AccessibilityDelegate(){
+            @Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());info.addAction(expanded?AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE:AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);}
+            @Override public boolean performAccessibilityAction(View host,int action,Bundle args){if(action==(expanded?AccessibilityNodeInfo.ACTION_COLLAPSE:AccessibilityNodeInfo.ACTION_EXPAND)){toggleGroup(item);return true;}return super.performAccessibilityAction(host,action,args);}
+        });
+        row.layout.setOnClickListener(v->toggleGroup(item));return recycled;
+    }
 
     private void confirmDownload(Catalog.Model model){
         String message=model.network
