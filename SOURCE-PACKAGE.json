@@ -134,7 +134,8 @@
     "tools/models/neutts/passage.txt",
     "tools/models/neutts/build-cli.ps1",
     "tools/models/neutts/cli/NeuTtsCli.java",
-    "tools/models/neutts/device-results.json"
+    "tools/models/neutts/device-results.json",
+    "tools/models/neutts/quant_kld.py"
   ],
   "sourceArchives": [
     {

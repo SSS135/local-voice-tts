@@ -100,7 +100,7 @@ The harness is `tools/models/neutts/build-cli.ps1` with `cli/NeuTtsCli.java`, in
    - Acceptance:
      - A new CLI mode compares slice logits against full logits on a fixed prompt (max |Δ| < 1e-4).
      - `gen m 200 2/4` throughput rises by ≥ 1.3×.
-     - `say` RTF and WER (faster-whisper small) are no worse than 0.007 + noise.
+     - `say` RTF no worse; quality per the gate in `docs/TTS-QUANT-QUALITY.md`.
      - `dumpsys meminfo` shows the native heap drop.
 3. **Implement items 2 and 3, then run a sustained test.**
    - Use `NeuTtsStream` CHUNK 50 after the first window, LOOKBACK 25 or 50 (A/B both), and a NeuTTS-specific `SpeechPlan` limit computed from the context budget. Set ORT `allow_spinning=1`, `spin_duration_us=1000` and `force_spinning_stop=1` if profiling shows the fixed cost is wakeups.
