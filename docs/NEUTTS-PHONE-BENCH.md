@@ -124,6 +124,82 @@ Branch `experiment/neutts-batching`, config `batchSegments=true` (default off). 
 
 **Verdict: removed.** Both voices run at RTF > 1 on a warm Pixel 7 Pro, so every report is behind the deadline and a hint can only ask for more boost. Revisit only for a voice that renders well ahead of real time, together with pacing or duty-cycling.
 
+## Decoder int8 convs (item 6, 2026-10-20): ready, not applied
+
+Candidates are built from the shipped int8 decoder by `tools/models/neutts/quant_conv.py`; only its 9 fp32 Conv1d layers change. The gate is `tools/models/neutts/decoder_gate.py` (`docs/TTS-QUANT-QUALITY.md` case b).
+
+| Id | Conv layers become | Bytes |
+|---|---|---|
+| int8 | shipped anchor, fp32 convs | 312,292,102 |
+| mm-pc | im2col + DynamicQuantizeLinear/MatMulInteger, per-channel s8 weights. ORT_ENABLE_ALL fuses this into `DynamicQuantizeMatMul` | 214,829,861 |
+| mm-pc-keep | mm-pc, but `embed` (k7) and `post_net.1.conv2` stay fp32 | 246,274,010 |
+| mm-pt | mm-pc with per-tensor weights | 214,792,988 |
+| convint | ORT `quantize_dynamic`: ConvInteger, u8 per-tensor weights | 214,797,747 |
+| qdq | ORT `quantize_static` QDQ (fuses to `QLinearConv`), per-channel s8, activations calibrated on 84 Q4_0 sequences (`tools/models/neutts/sentences.txt` × emily/paul/sophie/steven, disjoint from the test set) | 214,923,890 |
+| fp16 | fp16 weights + Cast. ORT folds the Cast back to fp32 at load, so only the file shrinks | 247,282,015 |
+
+**Quality (host, onnxruntime 1.28.0, ORT_ENABLE_ALL, one-shot decode).**
+- Test set: 206 real clips. 200 are forced sequences that the Q8_0 GGUF sampled for `tests/fixtures/tts-quality-en.txt` × dave/jo with seed 1 (all ended; 38,324 codes); the other 6 are the voices' reference codes.
+- Reference: fp32 `neucodec-onnx-decoder` (sha 2a43d034).
+- SNR is the median / 10th percentile over clips. The pause residual is the error power in frames where the fp32 output is below −50 dBFS.
+
+| Id | Median SNR | p10 SNR | Pause residual | SNR / pause gate |
+|---|---|---|---|---|
+| int8 | 23.21 | 15.54 | −75.31 dB | anchor |
+| mm-pc | 22.67 | 16.45 | −74.92 dB | pass |
+| mm-pc-keep | 22.72 | 16.41 | −74.27 dB | pass |
+| fp16 | 22.95 | 16.61 | −75.25 dB | pass |
+| convint | 22.06 | 15.73 | −73.77 dB | fail (median −1.15 dB) |
+| qdq | 21.19 | 13.74 | −72.70 dB | fail |
+| mm-pt | 20.91 | 12.29 | −72.37 dB | fail |
+
+**Full gate, mm-pc vs int8** (paired bootstrap over sentences, 10,000 resamples):
+
+| Metric | int8 | mm-pc | Δ 95% CI | Margin | Result |
+|---|---|---|---|---|---|
+| ViSQOL v3 audio vs fp32 | 4.7254 | 4.7251 | [−0.0007, +0.0001] | lower ≥ −0.05 | pass |
+| UTMOS (`utmos22_strong`) | 4.145 | 4.144 | [−0.008, +0.003] | ⊂ [−0.05, 0.05] | pass |
+| WER (large-v3, normalized) | 0.0418 | 0.0414 | [−0.0013, 0.0000] | upper ≤ 0.01 | pass |
+| SIM (ECAPA vs the prompt wav) | 0.5095 | 0.5098 | [−0.0002, +0.0007] | lower ≥ −0.01 | pass |
+| MR-STFT / log-mel L1 vs fp32 | 0.1026 / 0.0412 | 0.1058 / 0.0427 | — | regression detector only | — |
+
+- **ViSQOL** skips 9 clips shorter than its minimum patch (about 0.5 s). It is also near its ceiling (≈ 4.73) for both decoders, so it barely discriminates here.
+- **Still required:** an ABX listening check, which `docs/TTS-QUANT-QUALITY.md` requires for int8 convs whatever the metrics say. It has not been run.
+  - Material for it: the 10 clips with the largest MR-STFT distance to fp32, exported as fp32 / int8 / mm-pc wavs.
+  - Most of these are dave; mm-pc's SNR on them is 3.9–19.2 dB.
+
+**Phone speed.** Same Pixel 7 Pro. `dec2` (random codes, `Ort::Session::Run` timing) on the app's own `libonnxruntime.so` 1.28.2 from the sherpa-onnx 1.13.8 AAR (sha 33847ad4).
+- Unpinned, ORT_ENABLE_ALL, `allow_spinning=0` (as `neutts_jni.cpp`).
+- Arms interleaved per round, with no cool-down.
+- Each cell is the median of per-round medians, each round 5 runs after 1 warm-up. Decode RTF = ms ÷ audio (0.6 s at F=31, 1.6 s at F=81).
+- Run A: 3 rounds, status 0 → 1, skin 36 → 40 °C.
+- Run B: 2 rounds, warm, status 2, skin 41–44 °C.
+
+| Id | Threads | F=31 ms (RTF) A | F=81 ms (RTF) A | F=81 ms B | VmRSS after runs |
+|---|---|---|---|---|---|
+| int8 | 3 | 76.5 (0.128) | 176.6 (0.110) | 225.6 / 199.7 | 354 MB |
+| mm-pc | 3 | 66.5 (0.111) | 133.9 (0.084) | 137.0 / 157.2 | 258 MB |
+| mm-pt | 3 | 70.8 (0.118) | 136.1 (0.085) | 143.5 / 153.7 | 258 MB |
+| mm-pc-keep | 3 | 74.1 (0.123) | 148.2 (0.093) | 153.1 / 167.8 | 291 MB |
+| convint | 3 | — | — | 143.7 / 154.5 | 259 MB |
+| int8 | 4 | 71.6 (0.119) | 141.5 (0.088) | 149.7 / 160.5 | 354 MB |
+| mm-pc | 4 | 65.0 (0.108) | 111.9 (0.070) | 117.8 / 122.3 | 258 MB |
+| mm-pt | 4 | 65.0 (0.108) | 111.2 (0.070) | 126.3 / 127.5 | 258 MB |
+| mm-pc-keep | 4 | 65.3 (0.109) | 121.1 (0.076) | 133.2 / 133.5 | 291 MB |
+| convint | 4 | — | — | 179.7 / 152.8 | 259 MB |
+
+- Session load was 0.63–0.74 s warm for every arm.
+- qdq and fp16 were not timed: qdq fails the gate, and fp16 runs the same fp32 kernels.
+- Host timings were not used, because the host was loaded.
+
+**Verdict.**
+- **mm-pc:**
+  - decode at F=81 is 24% faster (3 threads) and 21% faster (4 threads); at F=31 it is 9–13% faster;
+  - RSS −96 MB, download −97 MB;
+  - every metric passes with a wide margin.
+- **Adopt** after the ABX: new catalog revision `neutts-nano-q4-ac69851f-v2` with asset `neucodec-decoder-int8-conv.onnx` (214,829,861 bytes, sha256 e872608a0fe564d14dafb0b48d8eb322fd1c3a1db2a77f3073638dddfc6a74f0; `quant_conv.py <shipped int8> OUT mm` reproduces it byte for byte). Not yet published.
+- **Effect on RTF:** at 107 frames per audio-second, the overlapped decode share falls from ≈ 30 s to ≈ 23 s per 37 s of audio. It competes with the backbone for the same cores, so the end-to-end RTF gain is smaller and has not been measured.
+
 ## Verdict (2026-10-19 baseline)
 
 - **Real-time on CPU: yes, with a thin margin.** The best config is Q4_0 on CPU with 4 threads, unpinned (what an app gets).

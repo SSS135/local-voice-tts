@@ -135,7 +135,9 @@
     "tools/models/neutts/build-cli.ps1",
     "tools/models/neutts/cli/NeuTtsCli.java",
     "tools/models/neutts/device-results.json",
-    "tools/models/neutts/quant_kld.py"
+    "tools/models/neutts/quant_kld.py",
+    "tools/models/neutts/quant_conv.py",
+    "tools/models/neutts/decoder_gate.py"
   ],
   "sourceArchives": [
     {
