@@ -19,12 +19,14 @@ final class RequestPolicy {
     /**
      * {@code timeoutMs}/{@code retries}: the client's KEY_FEATURE_NETWORK_TIMEOUT_MS / KEY_FEATURE_NETWORK_RETRIES_COUNT
      * string values (null when unset). Pitch is passed natively only to network adapters; local PCM is shaped by the service.
+     * Without either key, waiting for an offline device is unlimited (cancellable; Edge Read Aloud pauses offline too).
      */
     static SpeechBackend.Options options(int pitchPercent, boolean network, String timeoutMs, String retries) {
         long timeout = parse(timeoutMs);
         long count = parse(retries);
         return new SpeechBackend.Options(network ? SpeechRatePolicy.pitch(pitchPercent) : 1f,
-            timeout > 0 ? timeout : DEFAULT_NETWORK_TIMEOUT_MS, count >= 0 ? (int) Math.min(Integer.MAX_VALUE, count) : -1);
+            timeout > 0 ? timeout : DEFAULT_NETWORK_TIMEOUT_MS, count >= 0 ? (int) Math.min(Integer.MAX_VALUE, count) : -1,
+            timeout > 0 || count >= 0);
     }
 
     static int errorCode(Throwable failure, boolean network) {

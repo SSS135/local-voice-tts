@@ -106,5 +106,15 @@ final class EdgeGec {
         byte[] digest=digest(input);
         return hex(cs64(input,digest))+"-"+hex(digest);
     }
-    static String value() { return value(System.currentTimeMillis()/1000); }
+    /** Server clock minus device clock in ms; the token is time-bucketed, so a skewed device clock gets 403. */
+    static volatile long skewMillis;
+    /** Port of edge-tts DRM.handle_client_response_error: learn the skew from a rejected handshake's Date header. */
+    static void syncClock(String serverDate, long nowMillis) {
+        if (serverDate == null) return;
+        try {
+            skewMillis = java.time.ZonedDateTime.parse(serverDate.trim(), java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME)
+                    .toInstant().toEpochMilli() - nowMillis;
+        } catch (RuntimeException invalidDate) { }
+    }
+    static String value() { return value((System.currentTimeMillis()+skewMillis)/1000); }
 }

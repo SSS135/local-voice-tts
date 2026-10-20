@@ -30,6 +30,22 @@ final class EdgeProtocol {
         int hz = Math.round((Math.max(0.5f, Math.min(2f, Float.isFinite(pitch) ? pitch : 1f)) - 1f) * 150);
         return (hz >= 0 ? "+" : "") + hz + "Hz";
     }
+    enum Outcome { DECLINED, TRANSIENT, AUTH, FATAL }
+    /**
+     * Class of a failed server turn. {@code http}: handshake HTTP status (0 = none); {@code close}: WebSocket close
+     * code before turn.end (0 = none); {@code emptyTurn}: turn.end arrived with no audio.
+     * Sources: edge-tts 7.3.1 communicate.py raises NoAudioReceived (no retry) when a turn yields no audio and retries
+     * only HTTP 403, once, after DRM.handle_client_response_error resyncs the Sec-MS-GEC clock from the Date header;
+     * RFC 6455 7.4.1 close codes; Microsoft Q&amp;A 2151150: Azure TTS closes with 1007 on SSML it cannot parse.
+     * SSML is sent only after the upgrade, so any handshake 4xx is configuration, never content.
+     */
+    static Outcome classify(int http, int close, boolean emptyTurn) {
+        if (emptyTurn || close == 1007 || close == 1008) return Outcome.DECLINED;
+        if (http == 401 || http == 403) return Outcome.AUTH;
+        if (http >= 300 && http < 500 && http != 408 && http != 409 && http != 425 && http != 429) return Outcome.FATAL;
+        if (close == 1002) return Outcome.FATAL;
+        return Outcome.TRANSIENT;
+    }
     static long retryAfter(String value, long nowMillis) {
         if (value == null) return 0;
         try {

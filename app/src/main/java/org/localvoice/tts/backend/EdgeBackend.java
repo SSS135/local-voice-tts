@@ -30,6 +30,8 @@ public final class EdgeBackend implements SpeechBackend {
     static final OkHttpClient CLIENT = new OkHttpClient.Builder().retryOnConnectionFailure(false)
             .followRedirects(false).followSslRedirects(false)
             .connectTimeout(10, TimeUnit.SECONDS).readTimeout(45, TimeUnit.SECONDS).build();
+    /** Shared by all instances so the per-voice decline streak survives requests and adapter reloads. */
+    static final EdgeRetry.DeclineGuard DECLINES = new EdgeRetry.DeclineGuard();
     private volatile WebSocket activeSocket;
     private volatile boolean cancelled;
     private String voice;
@@ -111,13 +113,29 @@ public final class EdgeBackend implements SpeechBackend {
             String chunk = text.substring(start, end);
             java.util.List<EdgeProtocol.Boundary> boundaries = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
             Options request = options;
-            EdgeAudio.Pcm pcm = EdgeRetry.run(() -> {
-                boundaries.clear();
-                byte[] mp3 = request(chunk, speed, request.pitch, request.networkTimeoutMs, cancellation, boundaries);
-                if (mp3 == null || stopped(cancellation)) throw new EdgeRetry.CancelledException();
-                EdgeAudio.validateMp3(mp3);
-                return decode(mp3, cancellation);
-            }, pending, network, observer, request.networkTimeoutMs, request.networkRetries);
+            EdgeAudio.Pcm pcm;
+            String voiceId = voice;
+            try {
+                pcm = EdgeRetry.run(() -> {
+                    boundaries.clear();
+                    byte[] mp3;
+                    try {
+                        mp3 = request(chunk, speed, request.pitch, request.networkTimeoutMs, cancellation, boundaries);
+                    } catch (EdgeRetry.DeclinedException declined) {
+                        if (DECLINES.skip(voiceId)) throw declined;
+                        throw new EdgeRetry.OutageException(declined);
+                    }
+                    if (mp3 == null || stopped(cancellation)) throw new EdgeRetry.CancelledException();
+                    EdgeAudio.validateMp3(mp3);
+                    return decode(mp3, cancellation);
+                }, pending, network, observer, request.networkTimeoutMs, request.networkRetries, request.boundOffline);
+            } catch (EdgeRetry.DeclinedException declined) {
+                // Never fail on content: this fragment stays silent and reading continues. The message has no text.
+                android.util.Log.w("LocalVoice", "Edge declined fragment voice=" + voice + " " + declined.getMessage());
+                start = end;
+                continue;
+            }
+            DECLINES.audio(voiceId);
             for (long[] word : EdgeProtocol.placeWords(chunk, boundaries, sampleRate()))
                 if (word[0] < pcm.samples()) sink.word(emitted + word[0], start + (int) word[1], start + (int) word[2]);
             if (!pcm.commit(pending, sink)) return;
@@ -138,12 +156,11 @@ public final class EdgeBackend implements SpeechBackend {
         IOException[] error = new IOException[1];
         WebSocket socket = CLIENT.newWebSocket(request, new WebSocketListener() {
             private void fail(WebSocket ws, String message) {
-                fail(ws, message, null);
+                fail(ws, new IOException(message));
             }
-            private void fail(WebSocket ws, String message, Throwable cause) {
+            private void fail(WebSocket ws, IOException failure) {
                 if (terminal.compareAndSet(false, true)) {
-                    error[0] = cause instanceof EdgeRetry.FatalException || cause instanceof EdgeRetry.TransientException
-                            ? (IOException) cause : new IOException(message, cause);
+                    error[0] = failure;
                     ws.cancel(); done.countDown();
                 }
             }
@@ -157,7 +174,7 @@ public final class EdgeBackend implements SpeechBackend {
                 String path = EdgeProtocol.path(message.split("\r\n\r\n", 2)[0]);
                 if (path.equals("turn.end")) {
                     if (terminal.compareAndSet(false, true)) {
-                        if (bytes.size() == 0) error[0] = new IOException("Edge returned no audio");
+                        if (bytes.size() == 0) error[0] = failure(EdgeProtocol.classify(0, 0, true), "Edge turn ended without audio", 0, null);
                         ws.close(1000, "complete"); done.countDown();
                     }
                 } else if (path.equals("audio.metadata")) {
@@ -179,27 +196,25 @@ public final class EdgeBackend implements SpeechBackend {
             @Override public void onFailure(WebSocket ws, Throwable t, Response response) {
                 String reason = response == null ? "Edge connection failed" : "Edge HTTP " + response.code();
                 int code = response == null ? 0 : response.code();
-                long retryAfter = response == null ? 0 : EdgeProtocol.retryAfter(response.header("Retry-After"), System.currentTimeMillis());
+                long now = System.currentTimeMillis();
+                long retryAfter = response == null ? 0 : EdgeProtocol.retryAfter(response.header("Retry-After"), now);
+                EdgeProtocol.Outcome outcome = EdgeProtocol.classify(code, 0, false);
+                if (outcome == EdgeProtocol.Outcome.AUTH) EdgeGec.syncClock(response.header("Date"), now);
                 if (response != null) response.close();
-                if (code>=300 && code<500 && code!=408 && code!=409 && code!=425 && code!=429) {
-                    fail(ws, reason, new EdgeRetry.FatalException(reason)); return;
-                }
-                if (retryAfter > 0) {
-                    fail(ws, reason, new EdgeRetry.TransientException(reason, retryAfter, t)); return;
-                }
                 // Transport exceptions contain connection diagnostics, never the outgoing SSML body.
-                fail(ws, reason + " phase=" + (opened.get() ? "audio" : "handshake")
-                        + " audioBytes=" + bytes.size() + " cause=" + t.getClass().getSimpleName(), t);
+                fail(ws, failure(outcome, reason + " phase=" + (opened.get() ? "audio" : "handshake")
+                        + " audioBytes=" + bytes.size() + " cause=" + t.getClass().getSimpleName(), retryAfter, t));
             }
             @Override public void onClosing(WebSocket ws, int code, String reason) {
-                if (!terminal.get()) {
-                    String message = "Edge closed before completing audio code=" + code;
-                    if (code==1002 || code==1007 || code==1008) fail(ws,message,new EdgeRetry.FatalException(message));
-                    else fail(ws,message);
-                } else ws.close(code, reason);
+                if (!terminal.get()) closed(ws, code);
+                else ws.close(code, reason);
             }
             @Override public void onClosed(WebSocket ws, int code, String reason) {
-                if (!terminal.get()) fail(ws, "Edge closed before completing audio code=" + code);
+                if (!terminal.get()) closed(ws, code);
+            }
+            private void closed(WebSocket ws, int code) {
+                fail(ws, failure(EdgeProtocol.classify(0, code, false), "Edge closed before completing audio code=" + code
+                        + " phase=" + (opened.get() ? "audio" : "handshake") + " audioBytes=" + bytes.size(), 0, null));
             }
         });
         activeSocket = socket;
@@ -214,6 +229,15 @@ public final class EdgeBackend implements SpeechBackend {
             return bytes.toByteArray();
         } finally {
             terminal.set(true); socket.cancel(); activeSocket = null;
+        }
+    }
+
+    private static IOException failure(EdgeProtocol.Outcome outcome, String message, long retryAfter, Throwable cause) {
+        switch (outcome) {
+            case DECLINED: return new EdgeRetry.DeclinedException(message);
+            case AUTH: return new EdgeRetry.AuthException(message);
+            case FATAL: return new EdgeRetry.FatalException(message, cause);
+            default: return retryAfter > 0 ? new EdgeRetry.TransientException(message, retryAfter, cause) : new IOException(message, cause);
         }
     }
 

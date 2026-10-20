@@ -44,9 +44,10 @@ public final class VoiceStabilityCheck {
         check(SampleTextActivity.sample("fr") == null && SampleTextActivity.sample(null) == null,"unsupported sample language must defer to Settings");
 
         SpeechBackend.Options online = RequestPolicy.options(150,true,"5000","2"), local = RequestPolicy.options(150,false,null,null), invalid = RequestPolicy.options(0,true,"soon","-3");
-        check(online.pitch == 1.5f && online.networkTimeoutMs == 5000 && online.networkRetries == 2,"client network keys/pitch");
-        check(local.pitch == 1f && local.networkTimeoutMs == RequestPolicy.DEFAULT_NETWORK_TIMEOUT_MS && local.networkRetries == -1,"local defaults");
-        check(invalid.pitch == 1f && invalid.networkTimeoutMs == RequestPolicy.DEFAULT_NETWORK_TIMEOUT_MS && invalid.networkRetries == -1,"invalid keys must use defaults");
+        check(online.pitch == 1.5f && online.networkTimeoutMs == 5000 && online.networkRetries == 2 && online.boundOffline,"client network keys/pitch");
+        check(local.pitch == 1f && local.networkTimeoutMs == RequestPolicy.DEFAULT_NETWORK_TIMEOUT_MS && local.networkRetries == -1 && !local.boundOffline,"local defaults");
+        check(invalid.pitch == 1f && invalid.networkTimeoutMs == RequestPolicy.DEFAULT_NETWORK_TIMEOUT_MS && invalid.networkRetries == -1 && !invalid.boundOffline,"invalid keys must use defaults");
+        check(RequestPolicy.options(100,true,null,"0").boundOffline,"retry key alone bounds offline waits");
 
         check(RequestPolicy.errorCode(new EdgeRetry.ExhaustedException(true,null),true) == TextToSpeech.ERROR_NETWORK_TIMEOUT,"timeout code");
         check(RequestPolicy.errorCode(new EdgeRetry.ExhaustedException(false,null),true) == TextToSpeech.ERROR_NETWORK,"retry count code");

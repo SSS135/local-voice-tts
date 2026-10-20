@@ -129,6 +129,19 @@ class FixtureTest(unittest.TestCase):
         self.assertEqual(self.receive(stream), (self.audio, True))
         sock.close(); stream.close()
 
+    def test_declined_turn_and_auth_status(self):
+        address = f"http://127.0.0.1:{self.server.server_port}"
+        control = urllib.request.Request(address + "/control", method="POST",
+                  data=b'{"actions":[{"type":"no_audio"},{"type":"http_fail","status":403}],"repeat_last":false}',
+                  headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(control).close()
+        sock, stream = self.connect("declined")
+        self.assertEqual(self.receive(stream), (b"", True))
+        sock.close(); stream.close()
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            urllib.request.urlopen(urllib.request.Request(address + "/edge", headers={"Upgrade": "websocket"}))
+        self.assertEqual(error.exception.code, 403)
+
 
 if __name__ == "__main__":
     unittest.main()

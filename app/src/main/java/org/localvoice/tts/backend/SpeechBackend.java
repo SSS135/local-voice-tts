@@ -22,14 +22,17 @@ public interface SpeechBackend extends AutoCloseable {
     }
     /** Per-request settings beyond synthesize()'s arguments. */
     final class Options {
-        public static final Options DEFAULT = new Options(1f, 0, -1);
+        public static final Options DEFAULT = new Options(1f, 0, -1, true);
         /** Pitch factor (1 = unchanged), for adapters that render pitch natively; the service shapes the rest. */
         public final float pitch;
         /** Network adapters: retry budget per server turn in ms (0 = unbounded) and retries after the first attempt (-1 = unbounded). */
         public final long networkTimeoutMs;
         public final int networkRetries;
-        public Options(float pitch, long networkTimeoutMs, int networkRetries) {
+        /** False: waiting for the device network is unlimited and does not spend networkTimeoutMs. */
+        public final boolean boundOffline;
+        public Options(float pitch, long networkTimeoutMs, int networkRetries, boolean boundOffline) {
             this.pitch = pitch; this.networkTimeoutMs = networkTimeoutMs; this.networkRetries = networkRetries;
+            this.boundOffline = boundOffline;
         }
     }
     /** Called on the synthesis thread before each synthesize() with that request's options. */

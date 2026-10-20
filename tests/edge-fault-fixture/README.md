@@ -30,7 +30,7 @@ Invoke-RestMethod -Method Post -Uri $control -ContentType application/json -Body
 Invoke-RestMethod -Method Post -Uri $control -ContentType application/json -Body '{"actions":[{"type":"success"}]}'
 ```
 
-Supported actions: `success` (optional `fragment_bytes`), `close` (optional `bytes`), `truncate` (optional `drop_bytes`), `stall` (optional `seconds`), `http_fail` (HTTP503 before upgrade). `repeat_last:true` repeats indefinitely until another control request. `repeat_last:false` switches to success after the list. In-flight actions keep their captured behavior; configure first, then send a new public client request. Do not send actual private text to this fixture.
+Supported actions: `success` (optional `fragment_bytes`), `close` (optional `bytes`), `truncate` (optional `drop_bytes`), `stall` (optional `seconds`), `http_fail` (HTTP before upgrade, optional `status` 400-599, default 503), `no_audio` (`turn.end` without audio: the client must treat the fragment as declined, silent, with no retry). `repeat_last:true` repeats indefinitely until another control request. `repeat_last:false` switches to success after the list. In-flight actions keep their captured behavior; configure first, then send a new public client request. Do not send actual private text to this fixture.
 
 Logs contain hashes only: global `attempt_id`, `chunk_attempt`, SHA256 of extracted SSML text, SHA256 of the `<speak>` body (voice/rate included), request-ID hash, timestamps, actions and byte counts. Transport headers change on retries, so compare speak/text hashes instead of whole WebSocket frame hashes. No raw request text, URL query token or SSML body is written. HTTP503 before SSML has no chunk hash; use application retry status for its attempt count.
 

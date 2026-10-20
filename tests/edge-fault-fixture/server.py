@@ -69,12 +69,14 @@ class State:
             raise ValueError("invalid scenario")
         actions = scenario.get("actions", [{"type": "success"}])
         if not isinstance(actions, list) or not actions or len(actions) > 1024 or any(not isinstance(a, dict) or a.get("type") not in
-                              {"success", "close", "truncate", "stall", "http_fail"}
+                              {"success", "close", "truncate", "stall", "http_fail", "no_audio"}
                               for a in actions):
             raise ValueError("invalid actions")
         for action in actions:
             if not 0 <= float(action.get("seconds", 0)) <= 3600:
                 raise ValueError("invalid delay")
+            if not 400 <= int(action.get("status", 503)) <= 599:
+                raise ValueError("invalid status")
             for key in ("bytes", "drop_bytes", "fragment_bytes"):
                 if key in action and not 1 <= int(action[key]) <= 1048576:
                     raise ValueError("invalid byte count")
@@ -157,9 +159,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(404, {"error": "unknown path"})
         action = self.state.next_action()
         if action["type"] == "http_fail":
-            self.state.event("http_fail", status=503)
+            status = int(action.get("status", 503))
+            self.state.event("http_fail", status=status)
             self.close_connection = True
-            return self.reply(503, {"error": "fixture unavailable"})
+            return self.reply(status, {"error": "fixture unavailable"})
         key = self.headers.get("Sec-WebSocket-Key", "")
         accept = base64.b64encode(hashlib.sha1((key + GUID).encode("ascii")).digest()).decode("ascii")
         self.send_response(101)
@@ -201,7 +204,9 @@ class Handler(BaseHTTPRequestHandler):
             self.state.event("stall_elapsed", attempt_id=attempt_id)
             return
         audio = self.state.mp3
-        if kind == "truncate":
+        if kind == "no_audio":
+            audio = b""
+        elif kind == "truncate":
             audio = audio[:-min(len(audio) - 1, int(action.get("drop_bytes", 1)))]
         elif kind == "close":
             audio = audio[:int(action.get("bytes", max(1, len(audio) // 2)))]
@@ -215,7 +220,7 @@ class Handler(BaseHTTPRequestHandler):
             self.connection.shutdown(socket.SHUT_RDWR)
             return
         self.connection.sendall(frame(1, b"Path:turn.end\r\n\r\n"))
-        self.state.event("served_complete" if kind == "success" else "served_truncated",
+        self.state.event({"success": "served_complete", "no_audio": "served_no_audio"}.get(kind, "served_truncated"),
                          attempt_id=attempt_id, bytes_sent=len(audio), audio_sha256=digest(audio))
         # Keep the socket open long enough to observe the client's terminal close/cancel.
         self.connection.settimeout(2)

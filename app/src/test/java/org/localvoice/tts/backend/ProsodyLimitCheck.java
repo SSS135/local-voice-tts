@@ -23,16 +23,16 @@ public final class ProsodyLimitCheck {
         Clock clock = new Clock();
         AtomicInteger attempts = new AtomicInteger();
         EdgeRetry.Attempt<String> failing = () -> { attempts.incrementAndGet(); throw new IOException("down"); };
-        try { EdgeRetry.run(failing, () -> false, clock, EdgeRetry.NO_OBSERVER, 0, 2); throw new AssertionError("retry count ignored"); }
+        try { EdgeRetry.run(failing, () -> false, clock, EdgeRetry.NO_OBSERVER, 0, 2, true); throw new AssertionError("retry count ignored"); }
         catch (EdgeRetry.ExhaustedException expected) { check(!expected.timedOut && attempts.get() == 3, "retries=2 must make 3 attempts, made " + attempts.get()); }
         long start = clock.now;
-        try { EdgeRetry.run(failing, () -> false, clock, EdgeRetry.NO_OBSERVER, 5000, -1); throw new AssertionError("time budget ignored"); }
+        try { EdgeRetry.run(failing, () -> false, clock, EdgeRetry.NO_OBSERVER, 5000, -1, true); throw new AssertionError("time budget ignored"); }
         catch (EdgeRetry.ExhaustedException expected) { check(expected.timedOut && clock.now - start <= 5000, "time budget overrun " + (clock.now - start)); }
         clock.online = false; start = clock.now;
-        try { EdgeRetry.run(() -> "never", () -> false, clock, EdgeRetry.NO_OBSERVER, 3000, -1); throw new AssertionError("offline wait unbounded"); }
+        try { EdgeRetry.run(() -> "never", () -> false, clock, EdgeRetry.NO_OBSERVER, 3000, -1, true); throw new AssertionError("offline wait unbounded with client network keys"); }
         catch (EdgeRetry.ExhaustedException expected) { check(expected.timedOut && clock.now - start <= 3000, "offline budget overrun"); }
         clock.online = true; attempts.set(0);
-        check("ok".equals(EdgeRetry.run(() -> attempts.incrementAndGet() < 3 ? fail() : "ok", () -> false, clock, EdgeRetry.NO_OBSERVER, 60000, 5)), "recovery within budget");
+        check("ok".equals(EdgeRetry.run(() -> attempts.incrementAndGet() < 3 ? fail() : "ok", () -> false, clock, EdgeRetry.NO_OBSERVER, 60000, 5, true)), "recovery within budget");
         System.out.println("PASS SSML/Sonic pitch, speed residual and bounded Edge retries");
     }
     private static String fail() throws IOException { throw new IOException("transient"); }

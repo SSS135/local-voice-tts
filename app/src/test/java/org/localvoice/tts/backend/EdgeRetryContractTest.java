@@ -56,6 +56,15 @@ public final class EdgeRetryContractTest {
         test("stop interrupts a long Retry-After delay", EdgeRetryContractTest::cancelRetryAfter);
         test("default wait wakes promptly when cancelled", EdgeRetryContractTest::defaultWaitCancellation);
         test("unsupported audio format is fatal without retry", EdgeRetryContractTest::fatalFormat);
+        test("server signals classify as declined, transient, auth or fatal", EdgeRetryContractTest::classification);
+        test("declined content returns at once for silence", EdgeRetryContractTest::declined);
+        test("offline waits outlast the budget until network returns or stop", EdgeRetryContractTest::offlineUnbounded);
+        test("client network keys bound offline waits", EdgeRetryContractTest::offlineBounded);
+        test("online server failures exhaust the budget or retry count", EdgeRetryContractTest::onlineBounded);
+        test("auth rejection retries once, then is fatal", EdgeRetryContractTest::authOnce);
+        test("rejected handshake Date header corrects the token clock", EdgeRetryContractTest::clockSkew);
+        test("consecutive declines per voice switch to outage retries until audio", EdgeRetryContractTest::declineGuard);
+        test("unrecovered outage exhausts as a network error, not a timeout", EdgeRetryContractTest::outageExhausted);
         System.out.println("PASS: " + passed + " Edge retry contract tests");
     }
     private static void test(String name, Checked action) throws Exception { action.run(); passed++; System.out.println("PASS " + name); }
@@ -269,5 +278,84 @@ public final class EdgeRetryContractTest {
         try {EdgeRetry.run(()->{attempts.incrementAndGet();EdgeAudio.validateMp3(unsupported);return COMPLETE;},()->false,network,EdgeRetry.NO_OBSERVER);throw new AssertionError("unsupported audio completed");}
         catch(EdgeRetry.FatalException expected) { }
         check(attempts.get()==1 && network.delays.isEmpty(),"unsupported format retried indefinitely");
+    }
+    private static final long BUDGET=120_000;
+    private static void classification() {
+        EdgeProtocol.Outcome declined=EdgeProtocol.Outcome.DECLINED,transientFailure=EdgeProtocol.Outcome.TRANSIENT;
+        check(EdgeProtocol.classify(0,0,true)==declined,"turn.end without audio");
+        for(int close:new int[]{1007,1008}) check(EdgeProtocol.classify(0,close,false)==declined,"close "+close);
+        for(int close:new int[]{1000,1001,1006,1011,1012,1013}) check(EdgeProtocol.classify(0,close,false)==transientFailure,"close "+close);
+        check(EdgeProtocol.classify(0,1002,false)==EdgeProtocol.Outcome.FATAL,"protocol error");
+        for(int http:new int[]{401,403}) check(EdgeProtocol.classify(http,0,false)==EdgeProtocol.Outcome.AUTH,"HTTP "+http);
+        for(int http:new int[]{302,400,404,410}) check(EdgeProtocol.classify(http,0,false)==EdgeProtocol.Outcome.FATAL,"HTTP "+http);
+        for(int http:new int[]{0,101,408,425,429,500,502,503,504}) check(EdgeProtocol.classify(http,0,false)==transientFailure,"HTTP "+http);
+    }
+    private static void declined() throws Exception {
+        Network network=new Network();AtomicInteger attempts=new AtomicInteger();
+        try {EdgeRetry.run(()->{attempts.incrementAndGet();throw new EdgeRetry.DeclinedException("turn.end without audio");},()->false,network,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);throw new AssertionError("declined fragment returned audio");}
+        catch(EdgeRetry.DeclinedException expected) { }
+        check(attempts.get()==1 && network.delays.isEmpty(),"declined content retried");
+    }
+    private static void offlineUnbounded() throws Exception {
+        Network recovers=new Network();recovers.available=false;AtomicInteger attempts=new AtomicInteger();
+        recovers.wait=count->{ check(attempts.get()==0,"requested while offline"); if(count==240) recovers.available=true; };
+        float[] result=EdgeRetry.run(()->{attempts.incrementAndGet();return COMPLETE;},()->false,recovers,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);
+        check(result==COMPLETE && attempts.get()==1 && recovers.now>=60*60*1000L,"offline wait abandoned within the budget");
+        // An hour offline leaves the whole online budget for later server failures.
+        Network failing=new Network();failing.available=false;long[] online={-1};
+        failing.wait=count->{ if(count==240) failing.available=true; };
+        try {EdgeRetry.run(()->{if(online[0]<0) online[0]=failing.now;throw new IOException("HTTP 503");},()->false,failing,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);throw new AssertionError("failing server succeeded");}
+        catch(EdgeRetry.ExhaustedException expected) { check(expected.timedOut,"offline budget reported as retry count"); }
+        long spent=failing.now-online[0];
+        check(online[0]>=60*60*1000L && spent>BUDGET-EdgeRetry.MAX_DELAY_MS && spent<=BUDGET,"offline time spent the online budget: "+spent);
+        Network stopped=new Network();stopped.available=false;AtomicBoolean stop=new AtomicBoolean();
+        stopped.wait=count->{ if(count==1000) stop.set(true); };
+        cancelled(()->EdgeRetry.run(()->COMPLETE,stop::get,stopped,EdgeRetry.NO_OBSERVER,BUDGET,-1,false));
+        check(stopped.delays.size()==1000,"stop did not end the offline wait");
+    }
+    private static void offlineBounded() throws Exception {
+        Network network=new Network();network.available=false;
+        try {EdgeRetry.run(()->COMPLETE,()->false,network,EdgeRetry.NO_OBSERVER,5000,-1,true);throw new AssertionError("offline request completed");}
+        catch(EdgeRetry.ExhaustedException expected) { check(expected.timedOut && network.now==5000,"client offline timeout not honoured"); }
+    }
+    private static void onlineBounded() throws Exception {
+        Network network=new Network();AtomicInteger attempts=new AtomicInteger();
+        try {EdgeRetry.run(()->{attempts.incrementAndGet();throw new IOException("HTTP 500");},()->false,network,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);throw new AssertionError("failing server succeeded");}
+        catch(EdgeRetry.ExhaustedException expected) { check(expected.timedOut && network.now==BUDGET && attempts.get()>1,"online failures not bounded by budget"); }
+        Network counted=new Network();AtomicInteger tries=new AtomicInteger();
+        try {EdgeRetry.run(()->{tries.incrementAndGet();throw new IOException("reset");},()->false,counted,EdgeRetry.NO_OBSERVER,BUDGET,2,true);throw new AssertionError("failing server succeeded");}
+        catch(EdgeRetry.ExhaustedException expected) { check(!expected.timedOut && tries.get()==3,"retry count not honoured"); }
+    }
+    private static void authOnce() throws Exception {
+        Network network=new Network();AtomicInteger attempts=new AtomicInteger();
+        float[] result=EdgeRetry.run(()->{if(attempts.incrementAndGet()==1) throw new EdgeRetry.AuthException("HTTP 403");return COMPLETE;},()->false,network,EdgeRetry.NO_OBSERVER,BUDGET,0,false);
+        check(result==COMPLETE && attempts.get()==2 && network.delays.isEmpty(),"auth rejection not retried once");
+        AtomicInteger rejected=new AtomicInteger();
+        try {EdgeRetry.run(()->{rejected.incrementAndGet();throw new EdgeRetry.AuthException("HTTP 401");},()->false,network,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);throw new AssertionError("rejected token succeeded");}
+        catch(EdgeRetry.FatalException expected) { check(expected.getCause() instanceof EdgeRetry.AuthException,"auth cause lost"); }
+        check(rejected.get()==2 && network.delays.isEmpty(),"auth rejection retried more than once");
+    }
+    private static void clockSkew() {
+        try {
+            long now=java.time.Instant.parse("2026-01-01T00:00:00Z").toEpochMilli();
+            EdgeGec.syncClock("Thu, 1 Jan 2026 00:05:00 GMT",now);
+            check(EdgeGec.skewMillis==300_000,"server clock skew not learned");
+            EdgeGec.syncClock("not a date",now);EdgeGec.syncClock(null,now);
+            check(EdgeGec.skewMillis==300_000,"invalid Date header changed the skew");
+        } finally { EdgeGec.skewMillis=0; }
+    }
+    private static void declineGuard() {
+        EdgeRetry.DeclineGuard guard=new EdgeRetry.DeclineGuard();
+        check(guard.skip("en-US-AriaNeural"),"single decline must be silence");
+        check(guard.skip("en-US-AriaNeural") && guard.skip("en-US-AriaNeural"),"declines up to the limit must be silence");
+        for(int i=0;i<5;i++) check(!guard.skip("en-US-AriaNeural"),"decline after "+EdgeRetry.DeclineGuard.LIMIT+" in a row must be transient");
+        check(guard.skip("ru-RU-SvetlanaNeural"),"streak leaked to another voice");
+        guard.audio("en-US-AriaNeural");
+        check(guard.skip("en-US-AriaNeural"),"audio did not reset the streak");
+    }
+    private static void outageExhausted() throws Exception {
+        Network network=new Network();AtomicInteger attempts=new AtomicInteger();
+        try {EdgeRetry.run(()->{attempts.incrementAndGet();throw new EdgeRetry.OutageException(new EdgeRetry.DeclinedException("turn.end without audio"));},()->false,network,EdgeRetry.NO_OBSERVER,BUDGET,-1,false);throw new AssertionError("outage succeeded");}
+        catch(EdgeRetry.ExhaustedException expected) { check(!expected.timedOut && network.now==BUDGET && attempts.get()>1,"outage not retried within budget or reported as timeout"); }
     }
 }
