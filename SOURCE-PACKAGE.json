@@ -23,6 +23,7 @@
   "optionalProjectFiles": [],
   "projectTrees": [
     "docs",
+    "assets/readme",
     "legal",
     "app/src",
     "probe/src",

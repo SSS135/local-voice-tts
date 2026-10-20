@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="672" viewBox="0 0 1200 672" role="img" aria-labelledby="title desc">
+  <title id="title">How Local Voice works</title>
+  <desc id="desc">Apps call Android TextToSpeech; the Local Voice service segments text, renders ahead, emits rangeStart word marks and applies speed and pitch, then returns PCM. Speech comes from on-device models (Kokoro, Supertonic 3, Pocket TTS, Shtorm, Silero, NeuTTS Nano via sherpa-onnx and llama.cpp) by default, or Microsoft Edge online voices only when enabled. Models install from pinned files checked by size and SHA-256, then appear atomically.</desc>
+  <rect width="1200" height="672" rx="24" fill="#111923"/>
+  <rect x="48" y="96" width="292" height="320" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="72" y="136" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">APPS</text>
+  <text x="72" y="172" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="20" fill="#B7C5D5">Anything that uses</text>
+  <text x="72" y="198" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="20" fill="#B7C5D5">Android TextToSpeech</text>
+  <text x="72" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" fill="#EFF4FA">Edge · Read Aloud</text>
+  <text x="72" y="288" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" fill="#EFF4FA">Chrome · Web Speech</text>
+  <text x="72" y="328" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" fill="#EFF4FA">Android Settings</text>
+  <text x="72" y="368" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" fill="#EFF4FA">Readers, your app</text>
+  <rect x="412" y="96" width="376" height="320" rx="16" fill="#1C2835" stroke="#A5C8FF" stroke-width="1.5"/>
+  <text x="436" y="136" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">LOCAL VOICE SERVICE</text>
+  <text x="436" y="182" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="600" fill="#EFF4FA">Sentence segments</text>
+  <text x="436" y="206" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">small first piece, then larger</text>
+  <text x="436" y="242" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="600" fill="#EFF4FA">Look-ahead render</text>
+  <text x="436" y="266" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">one worker, bounded buffer</text>
+  <text x="436" y="302" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="600" fill="#EFF4FA">Word marks</text>
+  <text x="436" y="326" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">rangeStart for highlighting</text>
+  <text x="436" y="362" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" font-weight="600" fill="#EFF4FA">Speed and pitch</text>
+  <text x="436" y="386" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">0.25–4×, Sonic time-stretch</text>
+  <path d="M340 170 H402" stroke="#B7C5D5" stroke-width="2" fill="none"/><path d="M400 163 L412 170 L400 177 Z" fill="#B7C5D5"/>
+  <text x="376" y="158" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" text-anchor="middle" fill="#B7C5D5">speak</text>
+  <path d="M412 364 H352" stroke="#A5C8FF" stroke-width="2"/><path d="M354 357 L340 364 L354 371 Z" fill="#A5C8FF"/>
+  <text x="376" y="392" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" text-anchor="middle" fill="#A5C8FF">PCM</text>
+  <rect x="860" y="96" width="292" height="196" rx="16" fill="#1C2835" stroke="#A0DDBD" stroke-width="1.5"/>
+  <text x="884" y="136" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A0DDBD">ON DEVICE · DEFAULT</text>
+  <text x="884" y="176" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#EFF4FA">Kokoro · Supertonic 3</text>
+  <text x="884" y="208" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#EFF4FA">Pocket TTS · Shtorm</text>
+  <text x="884" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#EFF4FA">Silero · NeuTTS Nano</text>
+  <text x="884" y="272" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="18" fill="#B7C5D5">sherpa-onnx · llama.cpp</text>
+  <rect x="860" y="312" width="292" height="104" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="884" y="352" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#B7C5D5">ONLINE · OPT-IN</text>
+  <text x="884" y="386" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#EFF4FA">Microsoft Edge voices</text>
+  <path d="M788 194 H850" stroke="#A0DDBD" stroke-width="2" fill="none"/><path d="M848 187 L860 194 L848 201 Z" fill="#A0DDBD"/>
+  <path d="M788 364 H860" stroke="#415064" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="48" y="64" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#EFF4FA">One system engine, many voices</text>
+  <text x="48" y="476" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">MODEL INSTALL</text>
+  <rect x="48" y="496" width="252" height="116" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="72" y="532" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">01</text>
+  <text x="72" y="566" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#EFF4FA">Pinned files</text>
+  <text x="72" y="594" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">Hugging Face, GitHub</text>
+  <path d="M302 554 H318" stroke="#B7C5D5" stroke-width="2" fill="none"/><path d="M316 547 L328 554 L316 561 Z" fill="#B7C5D5"/>
+  <rect x="330" y="496" width="252" height="116" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="354" y="532" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">02</text>
+  <text x="354" y="566" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#EFF4FA">Size + SHA-256</text>
+  <text x="354" y="594" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">every file, before use</text>
+  <path d="M584 554 H600" stroke="#B7C5D5" stroke-width="2" fill="none"/><path d="M598 547 L610 554 L598 561 Z" fill="#B7C5D5"/>
+  <rect x="612" y="496" width="252" height="116" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="636" y="532" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">03</text>
+  <text x="636" y="566" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#EFF4FA">Atomic install</text>
+  <text x="636" y="594" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">no half-installed voices</text>
+  <path d="M866 554 H882" stroke="#B7C5D5" stroke-width="2" fill="none"/><path d="M880 547 L892 554 L880 561 Z" fill="#B7C5D5"/>
+  <rect x="894" y="496" width="252" height="116" rx="16" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+  <text x="918" y="532" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A5C8FF">04</text>
+  <text x="918" y="566" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" fill="#EFF4FA">Voices appear</text>
+  <text x="918" y="594" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#B7C5D5">in the voice list</text>
+</svg>

@@ -12,8 +12,8 @@ Repository root = Gradle root (modules `app`, `probe`, `hosttest`). Source ZIPs 
 | `app/src/test`, `hosttest` | JVM host tests |
 | `app/src/androidTest`, `probe` | device instrumentation and the public TTS client probe app |
 | `tests` | e2e drivers (`e2e/`), Edge fault fixture, fixtures, storage profiling scripts, source-package check |
-| `docs` | current design docs; start with `docs/ARCHITECTURE.md` (backend contract) |
-| `docs/history` | release and verification evidence: immutable |
+| `docs` | current design docs; start with `docs/ARCHITECTURE.md` (backend contract); build, signing, tests and packaging: `docs/DEVELOPMENT.md` |
+| `docs/history` | release and verification evidence (incl. `VERIFICATION-1.0-1.1.md`, moved from README): immutable |
 | `legal` | top-level licence and notice texts shipped in source packages |
 | `third_party/androidx-media3-sonic` | vendored Sonic source and its update script |
 | `third_party/native-source` | pinned sherpa-onnx, piper-phonemize, eSpeak NG source snapshots (`source-manifest.json`), upstream build files; GPL source obligation |

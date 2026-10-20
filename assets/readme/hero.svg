@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Local Voice</title>
+  <desc id="desc">Android system text-to-speech engine. Neural English and Russian voices for every app that reads aloud, computed on the phone. Illustration: the engine's own sample sentences with the current word highlighted from rangeStart word marks above the audio waveform.</desc>
+  <rect width="1200" height="420" rx="24" fill="#111923"/>
+  <g id="title-block">
+    <text x="64" y="96" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="18" letter-spacing="2" fill="#A5C8FF">ANDROID SYSTEM TEXT-TO-SPEECH</text>
+    <text x="60" y="178" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="76" font-weight="700" fill="#EFF4FA">Local Voice</text>
+    <text x="64" y="232" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#EFF4FA">Neural voices for every app that reads aloud,</text>
+    <text x="64" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#EFF4FA">computed on the phone itself.</text>
+    <rect x="64" y="300" width="160" height="40" rx="20" fill="#1C2835" stroke="#415064" stroke-width="1.5"/><text x="144.0" y="326" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#EFF4FA">English · Russian</text>
+    <rect x="236" y="300" width="186" height="40" rx="20" fill="#1C2835" stroke="#415064" stroke-width="1.5"/><text x="329.0" y="326" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#EFF4FA">6 on-device models</text>
+    <rect x="434" y="300" width="168" height="40" rx="20" fill="#1C2835" stroke="#415064" stroke-width="1.5"/><text x="518.0" y="326" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#EFF4FA">No Play Services</text>
+    <text x="64" y="376" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#B7C5D5">Android 8.0+ · free and open source (GPL-3.0)</text>
+  </g>
+  <g id="speech-proof">
+    <rect x="648" y="48" width="500" height="324" rx="18" fill="#1C2835" stroke="#415064" stroke-width="1.5"/>
+    <text x="684" y="92" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#B7C5D5">English · Kokoro af_heart</text>
+    <rect x="778.7" y="109" width="97.7" height="36" rx="9" fill="#263F61" stroke="#A5C8FF" stroke-width="1.5"/>
+    <text x="684.0" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#B7C5D5">A</text>
+    <text x="715.5" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#B7C5D5">quiet</text>
+    <text x="785.7" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="600" fill="#A5C8FF">evening</text>
+    <text x="885.4" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">falls</text>
+    <text x="942.9" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">beside</text>
+    <text x="1028.2" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">the</text>
+    <text x="1078.5" y="136" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">river.</text>
+    <rect x="684.0" y="180.8" width="3.5" height="10.4" rx="1.75" fill="#6F87A6"/>
+    <rect x="690.5" y="176.2" width="3.5" height="19.7" rx="1.75" fill="#6F87A6"/>
+    <rect x="697.0" y="178.5" width="3.5" height="14.9" rx="1.75" fill="#6F87A6"/>
+    <rect x="703.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="710.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="716.5" y="182.3" width="3.5" height="7.5" rx="1.75" fill="#6F87A6"/>
+    <rect x="723.0" y="177.6" width="3.5" height="16.7" rx="1.75" fill="#6F87A6"/>
+    <rect x="729.5" y="179.0" width="3.5" height="14.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="736.0" y="172.0" width="3.5" height="28.1" rx="1.75" fill="#6F87A6"/>
+    <rect x="742.5" y="171.2" width="3.5" height="29.6" rx="1.75" fill="#6F87A6"/>
+    <rect x="749.0" y="176.9" width="3.5" height="18.3" rx="1.75" fill="#6F87A6"/>
+    <rect x="755.5" y="177.7" width="3.5" height="16.6" rx="1.75" fill="#6F87A6"/>
+    <rect x="762.0" y="179.9" width="3.5" height="12.3" rx="1.75" fill="#6F87A6"/>
+    <rect x="768.5" y="182.0" width="3.5" height="7.9" rx="1.75" fill="#6F87A6"/>
+    <rect x="775.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="781.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="788.0" y="182.1" width="3.5" height="7.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="794.5" y="179.7" width="3.5" height="12.7" rx="1.75" fill="#A5C8FF"/>
+    <rect x="801.0" y="180.5" width="3.5" height="11.0" rx="1.75" fill="#A5C8FF"/>
+    <rect x="807.5" y="179.5" width="3.5" height="12.9" rx="1.75" fill="#A5C8FF"/>
+    <rect x="814.0" y="176.1" width="3.5" height="19.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="820.5" y="173.3" width="3.5" height="25.3" rx="1.75" fill="#A5C8FF"/>
+    <rect x="827.0" y="174.0" width="3.5" height="24.1" rx="1.75" fill="#A5C8FF"/>
+    <rect x="833.5" y="176.7" width="3.5" height="18.6" rx="1.75" fill="#A5C8FF"/>
+    <rect x="840.0" y="178.7" width="3.5" height="14.7" rx="1.75" fill="#A5C8FF"/>
+    <rect x="846.5" y="176.3" width="3.5" height="19.4" rx="1.75" fill="#A5C8FF"/>
+    <rect x="853.0" y="179.7" width="3.5" height="12.5" rx="1.75" fill="#A5C8FF"/>
+    <rect x="859.5" y="178.9" width="3.5" height="14.2" rx="1.75" fill="#A5C8FF"/>
+    <rect x="866.0" y="182.1" width="3.5" height="7.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="872.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="879.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="885.5" y="182.7" width="3.5" height="6.6" rx="1.75" fill="#415064"/>
+    <rect x="892.0" y="176.9" width="3.5" height="18.3" rx="1.75" fill="#415064"/>
+    <rect x="898.5" y="175.5" width="3.5" height="21.0" rx="1.75" fill="#415064"/>
+    <rect x="905.0" y="172.4" width="3.5" height="27.2" rx="1.75" fill="#415064"/>
+    <rect x="911.5" y="175.5" width="3.5" height="21.1" rx="1.75" fill="#415064"/>
+    <rect x="918.0" y="177.9" width="3.5" height="16.2" rx="1.75" fill="#415064"/>
+    <rect x="924.5" y="181.4" width="3.5" height="9.2" rx="1.75" fill="#415064"/>
+    <rect x="931.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="937.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="944.0" y="182.4" width="3.5" height="7.1" rx="1.75" fill="#415064"/>
+    <rect x="950.5" y="181.3" width="3.5" height="9.5" rx="1.75" fill="#415064"/>
+    <rect x="957.0" y="176.5" width="3.5" height="19.0" rx="1.75" fill="#415064"/>
+    <rect x="963.5" y="174.9" width="3.5" height="22.3" rx="1.75" fill="#415064"/>
+    <rect x="970.0" y="174.2" width="3.5" height="23.7" rx="1.75" fill="#415064"/>
+    <rect x="976.5" y="177.4" width="3.5" height="17.2" rx="1.75" fill="#415064"/>
+    <rect x="983.0" y="176.2" width="3.5" height="19.6" rx="1.75" fill="#415064"/>
+    <rect x="989.5" y="173.2" width="3.5" height="25.6" rx="1.75" fill="#415064"/>
+    <rect x="996.0" y="176.8" width="3.5" height="18.4" rx="1.75" fill="#415064"/>
+    <rect x="1002.5" y="179.8" width="3.5" height="12.5" rx="1.75" fill="#415064"/>
+    <rect x="1009.0" y="182.7" width="3.5" height="6.7" rx="1.75" fill="#415064"/>
+    <rect x="1015.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="1022.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="1028.5" y="181.7" width="3.5" height="8.5" rx="1.75" fill="#415064"/>
+    <rect x="1035.0" y="179.4" width="3.5" height="13.1" rx="1.75" fill="#415064"/>
+    <rect x="1041.5" y="175.2" width="3.5" height="21.6" rx="1.75" fill="#415064"/>
+    <rect x="1048.0" y="175.4" width="3.5" height="21.1" rx="1.75" fill="#415064"/>
+    <rect x="1054.5" y="178.6" width="3.5" height="14.8" rx="1.75" fill="#415064"/>
+    <rect x="1061.0" y="182.0" width="3.5" height="8.0" rx="1.75" fill="#415064"/>
+    <rect x="1067.5" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="1074.0" y="185.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="1080.5" y="182.5" width="3.5" height="7.0" rx="1.75" fill="#415064"/>
+    <rect x="1087.0" y="179.6" width="3.5" height="12.7" rx="1.75" fill="#415064"/>
+    <rect x="1093.5" y="174.5" width="3.5" height="23.1" rx="1.75" fill="#415064"/>
+    <rect x="1100.0" y="176.7" width="3.5" height="18.6" rx="1.75" fill="#415064"/>
+    <rect x="1106.5" y="174.0" width="3.5" height="24.0" rx="1.75" fill="#415064"/>
+    <rect x="1113.0" y="175.0" width="3.5" height="22.0" rx="1.75" fill="#415064"/>
+    <rect x="1119.5" y="176.0" width="3.5" height="20.0" rx="1.75" fill="#415064"/>
+    <rect x="1126.0" y="180.4" width="3.5" height="11.3" rx="1.75" fill="#415064"/>
+    <text x="684" y="238" font-family="ui-monospace, SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#B7C5D5">Russian · Silero Xenia</text>
+    <rect x="839.9" y="255" width="121.1" height="36" rx="9" fill="#263F61" stroke="#A5C8FF" stroke-width="1.5"/>
+    <text x="684.0" y="282" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#B7C5D5">Тихий</text>
+    <text x="765.4" y="282" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#B7C5D5">вечер</text>
+    <text x="846.9" y="282" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" font-weight="600" fill="#A5C8FF">наступает</text>
+    <text x="970.0" y="282" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">у</text>
+    <text x="997.6" y="282" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="24" fill="#EFF4FA">реки.</text>
+    <rect x="684.0" y="329.0" width="3.5" height="5.9" rx="1.75" fill="#6F87A6"/>
+    <rect x="690.5" y="326.8" width="3.5" height="10.4" rx="1.75" fill="#6F87A6"/>
+    <rect x="697.0" y="324.8" width="3.5" height="14.5" rx="1.75" fill="#6F87A6"/>
+    <rect x="703.5" y="324.4" width="3.5" height="15.2" rx="1.75" fill="#6F87A6"/>
+    <rect x="710.0" y="322.0" width="3.5" height="20.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="716.5" y="319.0" width="3.5" height="26.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="723.0" y="318.7" width="3.5" height="26.6" rx="1.75" fill="#6F87A6"/>
+    <rect x="729.5" y="322.3" width="3.5" height="19.4" rx="1.75" fill="#6F87A6"/>
+    <rect x="736.0" y="322.8" width="3.5" height="18.3" rx="1.75" fill="#6F87A6"/>
+    <rect x="742.5" y="325.4" width="3.5" height="13.1" rx="1.75" fill="#6F87A6"/>
+    <rect x="749.0" y="329.2" width="3.5" height="5.5" rx="1.75" fill="#6F87A6"/>
+    <rect x="755.5" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="762.0" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="768.5" y="328.6" width="3.5" height="6.8" rx="1.75" fill="#6F87A6"/>
+    <rect x="775.0" y="325.9" width="3.5" height="12.2" rx="1.75" fill="#6F87A6"/>
+    <rect x="781.5" y="325.4" width="3.5" height="13.3" rx="1.75" fill="#6F87A6"/>
+    <rect x="788.0" y="322.3" width="3.5" height="19.4" rx="1.75" fill="#6F87A6"/>
+    <rect x="794.5" y="317.2" width="3.5" height="29.5" rx="1.75" fill="#6F87A6"/>
+    <rect x="801.0" y="320.3" width="3.5" height="23.3" rx="1.75" fill="#6F87A6"/>
+    <rect x="807.5" y="324.0" width="3.5" height="16.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="814.0" y="321.3" width="3.5" height="21.4" rx="1.75" fill="#6F87A6"/>
+    <rect x="820.5" y="326.2" width="3.5" height="11.7" rx="1.75" fill="#6F87A6"/>
+    <rect x="827.0" y="327.0" width="3.5" height="10.1" rx="1.75" fill="#6F87A6"/>
+    <rect x="833.5" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="840.0" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#6F87A6"/>
+    <rect x="846.5" y="329.7" width="3.5" height="4.6" rx="1.75" fill="#A5C8FF"/>
+    <rect x="853.0" y="327.3" width="3.5" height="9.4" rx="1.75" fill="#A5C8FF"/>
+    <rect x="859.5" y="326.8" width="3.5" height="10.4" rx="1.75" fill="#A5C8FF"/>
+    <rect x="866.0" y="326.6" width="3.5" height="10.7" rx="1.75" fill="#A5C8FF"/>
+    <rect x="872.5" y="321.9" width="3.5" height="20.3" rx="1.75" fill="#A5C8FF"/>
+    <rect x="879.0" y="323.6" width="3.5" height="16.7" rx="1.75" fill="#A5C8FF"/>
+    <rect x="885.5" y="322.5" width="3.5" height="19.0" rx="1.75" fill="#A5C8FF"/>
+    <rect x="892.0" y="322.4" width="3.5" height="19.2" rx="1.75" fill="#A5C8FF"/>
+    <rect x="898.5" y="317.7" width="3.5" height="28.7" rx="1.75" fill="#A5C8FF"/>
+    <rect x="905.0" y="323.6" width="3.5" height="16.9" rx="1.75" fill="#A5C8FF"/>
+    <rect x="911.5" y="319.4" width="3.5" height="25.2" rx="1.75" fill="#A5C8FF"/>
+    <rect x="918.0" y="324.1" width="3.5" height="15.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="924.5" y="323.0" width="3.5" height="18.0" rx="1.75" fill="#A5C8FF"/>
+    <rect x="931.0" y="322.1" width="3.5" height="19.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="937.5" y="324.1" width="3.5" height="15.8" rx="1.75" fill="#A5C8FF"/>
+    <rect x="944.0" y="327.7" width="3.5" height="8.5" rx="1.75" fill="#A5C8FF"/>
+    <rect x="950.5" y="328.1" width="3.5" height="7.9" rx="1.75" fill="#A5C8FF"/>
+    <rect x="957.0" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="963.5" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="970.0" y="326.7" width="3.5" height="10.7" rx="1.75" fill="#415064"/>
+    <rect x="976.5" y="319.7" width="3.5" height="24.6" rx="1.75" fill="#415064"/>
+    <rect x="983.0" y="328.9" width="3.5" height="6.1" rx="1.75" fill="#415064"/>
+    <rect x="989.5" y="331.0" width="3.5" height="2.0" rx="1.75" fill="#415064"/>
+    <rect x="996.0" y="329.9" width="3.5" height="4.3" rx="1.75" fill="#415064"/>
+    <rect x="1002.5" y="327.8" width="3.5" height="8.3" rx="1.75" fill="#415064"/>
+    <rect x="1009.0" y="326.1" width="3.5" height="11.8" rx="1.75" fill="#415064"/>
+    <rect x="1015.5" y="322.4" width="3.5" height="19.2" rx="1.75" fill="#415064"/>
+    <rect x="1022.0" y="320.9" width="3.5" height="22.3" rx="1.75" fill="#415064"/>
+    <rect x="1028.5" y="318.1" width="3.5" height="27.8" rx="1.75" fill="#415064"/>
+    <rect x="1035.0" y="322.0" width="3.5" height="20.1" rx="1.75" fill="#415064"/>
+    <rect x="1041.5" y="325.3" width="3.5" height="13.4" rx="1.75" fill="#415064"/>
+    <rect x="1048.0" y="326.2" width="3.5" height="11.5" rx="1.75" fill="#415064"/>
+    <rect x="1054.5" y="328.7" width="3.5" height="6.6" rx="1.75" fill="#415064"/>
+  </g>
+</svg>
