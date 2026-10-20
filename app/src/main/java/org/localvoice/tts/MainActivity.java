@@ -38,7 +38,7 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
     private List<Catalog.Model> renderedCatalog;
     private final PreviewSession previews=new PreviewSession();
     private TextToSpeech tts;
-    private boolean ttsReady,rebuildingLanguages;
+    private boolean ttsReady,rebuildingLanguages,snapshotPending;
     private final Map<String,DownloadCard> modelCards=new LinkedHashMap<>();
     private final ExecutorService catalogWorker=Executors.newSingleThreadExecutor();
     private final ExecutorService voiceWorker=Executors.newSingleThreadExecutor();
@@ -137,9 +137,9 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
 
     @Override public void changed(){
         List<Catalog.Model> catalog=Catalog.MODELS;
-        String previousSelection=selectedVoice;selectedVoice=store.selectedVoice();
+        String previousSelection=selectedVoice;selectedVoice=store.selectedVoice();boolean pending=false;
         for(Catalog.Model model:catalog){DownloadCard card=modelCards.get(model.id);if(card==null)continue;if(card.boundModel!=model){setTextIfChanged(card.metadata,modelMetadata(model));card.boundModel=model;}ModelStore.Progress progress=store.progress(model.id);boolean installed=store.isInstalled(model.id),failed=progress.state.contains("failed");String status=installed?(model.network?"Enabled":"Installed"):progress.state;
-            boolean checking=progress.state.equals("Checking files");
+            boolean checking=progress.state.equals("Checking files"),unknown=progress.state.equals(ModelStore.CHECKING);pending|=unknown;
             long shownBytes=progress.state.equals("Downloading")?progress.bytes:progress.phaseBytes,shownTotal=progress.state.equals("Downloading")?progress.total:progress.phaseTotal;
             if(checking){shownBytes=progress.filesDone;shownTotal=progress.filesTotal;}
             if(progress.running){status=progress.state;if(checking&&shownTotal>0)status+=" · "+shownBytes+" / "+shownTotal+" files";else if(shownTotal>0)status+=" · "+Math.min(100,100*shownBytes/shownTotal)+"%\n"+formatBytes(shownBytes)+" / "+formatBytes(shownTotal);}else if(failed&&!progress.detail.isEmpty())status+="\n"+progress.detail;
@@ -147,10 +147,10 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
             boolean indeterminate=shownTotal<=0;int amount=shownTotal>0?(int)(1000*shownBytes/shownTotal):0;
             if(card.progress.isIndeterminate()!=indeterminate)card.progress.setIndeterminate(indeterminate);
             if(card.progress.getProgress()!=amount)card.progress.setProgress(amount);
-            setVisibleIfChanged(card.action,installed||progress.running?View.GONE:View.VISIBLE);setTextIfChanged(card.action,model.network?"Enable":failed||progress.state.equals("Cancelled")?"Retry":"Download");setVisibleIfChanged(card.cancel,progress.running?View.VISIBLE:View.GONE);
+            setVisibleIfChanged(card.action,installed||progress.running||unknown?View.GONE:View.VISIBLE);setTextIfChanged(card.action,model.network?"Enable":failed||progress.state.equals("Cancelled")?"Retry":"Download");setVisibleIfChanged(card.cancel,progress.running?View.VISIBLE:View.GONE);
         }
         List<Catalog.VoiceSpec> voices=store.installedVoices();StringBuilder signature=new StringBuilder();for(Catalog.VoiceSpec voice:voices)signature.append('|').append(voice.id);
-        if(renderedCatalog!=catalog||!signature.toString().equals(voiceSignature)){voiceSignature=signature.toString();availableVoices=voices;rebuildLanguageFilter();filterVoices();}
+        if(renderedCatalog!=catalog||!signature.toString().equals(voiceSignature)||pending!=snapshotPending){snapshotPending=pending;voiceSignature=signature.toString();availableVoices=voices;rebuildLanguageFilter();filterVoices();}
         else if(!previousSelection.equals(selectedVoice))voiceAdapter.notifyDataSetChanged();
         renderedCatalog=catalog;
         updateCatalogStatus();
@@ -164,14 +164,14 @@ public final class MainActivity extends Activity implements ModelStore.Listener 
         if(pendingFilter!=null)uiHandler.removeCallbacks(pendingFilter);
         final int generation=++filterGeneration;
         final String query=search.getText().toString().trim().toLowerCase(Locale.ROOT),tag=languageTag;
-        final List<Catalog.VoiceSpec> source=availableVoices;
+        final List<Catalog.VoiceSpec> source=availableVoices;final boolean pending=snapshotPending;
         pendingFilter=()->voiceWorker.execute(()->{
             List<Catalog.VoiceSpec> result=new ArrayList<>();
             for(Catalog.VoiceSpec voice:source)if(VoiceFilter.matches(voice.id,voice.label,voice.languageTag,tag,query,Locale.getDefault()))result.add(voice);
             uiHandler.post(()->{
                 if(isDestroyed()||generation!=filterGeneration)return;
                 filteredVoices=result;filtering=!query.isEmpty()||!tag.isEmpty();if(!filterKey.equals(tag+"\n"+query)){filterKey=tag+"\n"+query;filterFolds.clear();}
-                voiceCount.setText(voiceCountLabel(result.size()));empty.setText(source.isEmpty()?"No voices installed":"No matching voices");empty.setVisibility(result.isEmpty()?View.VISIBLE:View.GONE);getVoices.setVisibility(source.isEmpty()?View.VISIBLE:View.GONE);rebuildRows();
+                voiceCount.setText(voiceCountLabel(result.size()));empty.setText(source.isEmpty()?pending?"Checking installed voices…":"No voices installed":"No matching voices");empty.setVisibility(result.isEmpty()?View.VISIBLE:View.GONE);getVoices.setVisibility(source.isEmpty()&&!pending?View.VISIBLE:View.GONE);rebuildRows();
             });
         });
         uiHandler.postDelayed(pendingFilter,100);

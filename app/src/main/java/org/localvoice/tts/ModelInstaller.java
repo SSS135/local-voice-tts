@@ -32,8 +32,14 @@ final class ModelInstaller {
         return directory(root, model, staging);
     }
 
-    /** Receipt and file sizes only; no hashing. */
+    /** Receipt and file sizes only; no hashing. Every inspection updates the shared installed snapshot. */
     boolean inspectInstalled(Catalog.Model model) {
+        boolean installed = inspect(model);
+        ModelStore.recordInstalled(directory(model, false), installed);
+        return installed;
+    }
+
+    private boolean inspect(Catalog.Model model) {
         File dir = directory(model, false);
         if (!ModelFiles.receiptMatches(dir, model.revision)) return false;
         try {
@@ -55,8 +61,7 @@ final class ModelInstaller {
             if (VERIFIED.verified(ModelFiles.child(dir, file.path), file.bytes, file.sha256, model.revision, cancelled, n -> {})) continue;
             new File(dir, "installed.manifest").delete();
             VERIFIED.forget(dir);
-            ModelStore.INSTALLED.put(dir.getAbsolutePath(), false);
-            ModelStore.changed();
+            ModelStore.recordInstalled(dir, false);
             throw new IOException("Model is damaged. Download it again in LocalVoice");
         }
     }
@@ -70,7 +75,7 @@ final class ModelInstaller {
         File installed = directory(model, false);
         ModelFiles.remove(installed);
         VERIFIED.forget(installed);
-        ModelStore.INSTALLED.put(installed.getAbsolutePath(), false);
+        ModelStore.recordInstalled(installed, false);
     }
 
     /** Deletes directories of model ids/revisions no longer in the catalog; the UI cannot reach them, so they would leak disk. */
@@ -113,7 +118,7 @@ final class ModelInstaller {
                 VERIFIED.forget(damaged);
                 ModelStore.checkCancelled(job);
                 if (!from.renameTo(to)) throw new IOException("Cannot prepare damaged model for repair");
-                ModelStore.INSTALLED.put(damaged.getAbsolutePath(), false);
+                ModelStore.recordInstalled(damaged, false);
             }
             boolean freshStaging = ModelFiles.prepareStaging(root, staging);
             ModelFiles.DownloadPaths paths = new ModelFiles.DownloadPaths(root, staging);
@@ -250,7 +255,7 @@ final class ModelInstaller {
             VERIFIED.forget(staging);
             VERIFIED.forget(target);
         }
-        ModelStore.INSTALLED.put(target.getAbsolutePath(), true);
+        ModelStore.recordInstalled(target, true);
         return true;
     }
 }

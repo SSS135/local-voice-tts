@@ -18,6 +18,8 @@ public final class ModelStore {
     public static String profileJson() {return StorageMetrics.json();}
     public static String finishProfile() {return StorageMetrics.finish();}
     public interface Listener { void changed(); }
+    /** Progress state while the installed snapshot is not yet known. */
+    public static final String CHECKING = "Checking…";
     public static final class Progress {
         public final String state, detail;
         public final long bytes, total;
@@ -38,7 +40,7 @@ public final class ModelStore {
     private static final ExecutorService CANCEL_IO=Executors.newSingleThreadExecutor();
     private static final Map<String, Job> JOBS = new ConcurrentHashMap<>();
     private static final Map<String, Progress> PROGRESS = new ConcurrentHashMap<>();
-    /** Installed-directory path -> last inspected state; served to bursty TTS metadata calls. */
+    /** Installed-directory path -> last inspected state; served to bursty TTS metadata calls. Written only by recordInstalled. */
     static final Map<String,Boolean> INSTALLED = new ConcurrentHashMap<>();
     private static final java.util.concurrent.atomic.AtomicBoolean CHANGE_PENDING=new java.util.concurrent.atomic.AtomicBoolean();
     private static final java.util.concurrent.atomic.AtomicBoolean ORPHANS_CHECKED=new java.util.concurrent.atomic.AtomicBoolean();
@@ -63,9 +65,10 @@ public final class ModelStore {
         this.context = context.getApplicationContext();
         prefs = new VoicePreferences(this.context);
         installer = new ModelInstaller(this, storageRoot(this.context));
+        // The first snapshot is queued ahead of orphan cleanup, which can spend seconds deleting a stale tree.
+        refreshInstalled();
         if (ORPHANS_CHECKED.compareAndSet(false, true)) WORK.execute(installer::removeOrphans);
         EdgeCatalogRepository.initialize(this.context).thenRun(ModelStore::changed);
-        refreshInstalled();
     }
     private static File storageRoot(Context context) {
         return new File(context.getApplicationContext().getNoBackupFilesDir(), "models");
@@ -95,23 +98,29 @@ public final class ModelStore {
         // model file per call took minutes. Serve the snapshot, refresh it in the background; synthesis still verifies.
         Boolean cached=INSTALLED.get(path);
         if(cached!=null){refreshInstalled();return cached;}
-        boolean result=installer.inspectInstalled(model);
-        INSTALLED.put(path,result);
-        return result;
+        return installer.inspectInstalled(model);
         } finally {StorageMetrics.elapsed(StorageMetrics.INSTALLED_NANOS,before);}
+    }
+    /** False only while a local model's first snapshot is pending; the UI shows CHECKING then, never "Not downloaded". */
+    public boolean installedKnown(String id) {
+        Catalog.Model model = Catalog.findModel(id);
+        return model == null || model.network || INSTALLED.containsKey(installer.directory(model,false).getAbsolutePath());
+    }
+    /**
+     * The only snapshot writer. Any change, from any thread, notifies listeners: a binder thread that fills the
+     * snapshot first must not leave the UI showing its pre-snapshot render.
+     */
+    static void recordInstalled(File directory,boolean installed) {
+        Boolean previous=INSTALLED.put(directory.getAbsolutePath(),installed);
+        if(previous==null||previous!=installed)changed();
     }
     private synchronized void refreshInstalled() {
         if(refreshPending||System.nanoTime()-refreshedAt<1_000_000_000L)return;
         refreshPending=true;
         WORK.execute(()->{
-            boolean different=false;
             try {
-                for(Catalog.Model model:Catalog.MODELS)if(!model.network){
-                    boolean result=installer.inspectInstalled(model);
-                    Boolean previous=INSTALLED.put(installer.directory(model,false).getAbsolutePath(),result);
-                    different|=previous==null||previous!=result;
-                }
-            }finally{synchronized(this){refreshPending=false;refreshedAt=System.nanoTime();}if(different)changed();}
+                for(Catalog.Model model:Catalog.MODELS)if(!model.network)installer.inspectInstalled(model);
+            }finally{synchronized(this){refreshPending=false;refreshedAt=System.nanoTime();}}
         });
     }
     /** Call on the inference worker before opening a model. Never on a binder/UI thread. */
@@ -190,7 +199,7 @@ public final class ModelStore {
         Catalog.Model model = Catalog.findModel(id);
         Progress value = PROGRESS.get(id);
         if (value != null && (!value.state.equals("Installed") || isInstalled(id))) return value;
-        return new Progress(isInstalled(id) ? "Installed" : "Not downloaded", "", 0, model == null ? 0 : model.bytes(), false);
+        return new Progress(isInstalled(id) ? "Installed" : installedKnown(id) ? "Not downloaded" : CHECKING, "", 0, model == null ? 0 : model.bytes(), false);
     }
     static void update(Catalog.Model model, String state, String detail, long bytes, boolean running) {
         publish(model.id,new Progress(state, detail, bytes, model.bytes(), running));
