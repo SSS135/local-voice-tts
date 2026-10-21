@@ -24,7 +24,7 @@ public final class NeuTtsCli {
     public static void main(String[] args) throws Exception {
         File dir = new File(args[1]);
         Map<String,String> config = new HashMap<>();
-        config.put("model", "neutts-nano-Q4_0.gguf"); config.put("decoder", "neucodec-decoder-int8.onnx");
+        config.put("model", "neutts-nano-Q4_0.gguf"); config.put("decoder", "neucodec-decoder-int8-conv.onnx");
         config.put("espeakData", "espeak-ng-data"); config.put("voiceDir", "voices");
         config.put("voices", "dave,jo,emily,paul,sophie,steven");
         if (args[0].equals("phon")) {

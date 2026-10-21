@@ -1,10 +1,16 @@
-NeuTTS Nano for LocalVoice (release neutts-nano-model-v1)
+NeuTTS Nano for LocalVoice (release neutts-nano-model-v2)
+The decoder and this file are new in neutts-nano-model-v2; every other file is served unchanged from
+release neutts-nano-model-v1.
 
-Model files are redistributed unchanged from Neuphonic Ltd under the NeuTTS Open License v1.0
+The backbone is redistributed unchanged from Neuphonic Ltd under the NeuTTS Open License v1.0
 (LICENCE-NeuTTS-Open-1.0.txt, copied from https://huggingface.co/neuphonic/neutts-nano-q4-gguf):
 - neutts-nano-Q4_0.gguf: neuphonic/neutts-nano-q4-gguf @ d775fb6ff95c60a076c68994d9f084473ad9fb86
-- neucodec-decoder-int8.onnx: neuphonic/neucodec-onnx-decoder-int8 @ d4b449d34211ffe3b5efc57fa464b37393f8ce7f
-  (model.onnx, Apache-2.0 per its model card; NeuCodec by Neuphonic)
+
+Decoder (Apache-2.0 per its model card; NeuCodec by Neuphonic):
+- neucodec-decoder-int8-conv.onnx: modified from neuphonic/neucodec-onnx-decoder-int8
+  @ d4b449d34211ffe3b5efc57fa464b37393f8ce7f (model.onnx). Modified by the LocalVoice project: its 9 fp32
+  Conv1d layers are re-expressed as im2col + per-output-channel int8 MatMul (tools/models/neutts/quant_conv.py,
+  mode mm); the rest of the graph is unchanged. Apache-2.0 is retained.
 
 Voices: reference codes and transcripts of the dave, jo, emily, paul, sophie and steven samples from
 https://github.com/neuphonic/neutts @ ac69851f28fc63a487917e7c2e27f0d75c759cba (samples/*.pt, samples/*.txt).

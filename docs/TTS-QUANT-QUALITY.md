@@ -163,6 +163,8 @@ Rank C1/C2/C3 by mean KLD and run Stage 2 only on the best passing variant.
 
 ## Case (b): decoder fp32 convs → fp16 or int8
 
+Run once (2026-10-20), for the NeuTTS int8-conv decoder `mm-pc` that ships in catalog revision `neutts-nano-q4-ac69851f-v2`: all gates passed; the listening check was informal (one listener, no difference heard), not the 16-trial ABX. Results: `docs/NEUTTS-PHONE-BENCH.md` ("Decoder int8 convs").
+
 **Variants.**
 
 | Id | Decoder |

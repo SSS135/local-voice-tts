@@ -53,7 +53,7 @@ public final class CatalogDataTest {
         assertEquals("llama-neutts", neutts.backend);
         assertEquals(6, neutts.voices.size());
         assertEquals("en-GB", Catalog.findVoice("neutts-nano-en:dave").languageTag);
-        assertEquals(507751870L, neutts.bytes());
+        assertEquals(410290022L, neutts.bytes());
     }
 
     @Test public void malformedRowsAreRejected() {

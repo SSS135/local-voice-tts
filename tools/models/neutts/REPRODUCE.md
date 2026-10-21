@@ -1,18 +1,19 @@
 # NeuTTS Nano (English): runtime pack and native runtime
 
-Catalog `neutts-nano-en`, backend `llama-neutts` (`NeuTtsBackend`), release `neutts-nano-model-v1`. Pins: `runtime-manifest.json` (must match `app/src/main/resources/org/localvoice/tts/models.json`). Measurements: `device-results.json`.
+Catalog `neutts-nano-en`, backend `llama-neutts` (`NeuTtsBackend`), revision `neutts-nano-q4-ac69851f-v2`: release `neutts-nano-model-v2` holds the decoder and `ATTRIBUTION.txt`, every other asset stays on `neutts-nano-model-v1`. Pins: `runtime-manifest.json` (must match `app/src/main/resources/org/localvoice/tts/models.json`). Measurements: `device-results.json`.
 
 ## Pack
 
 ```powershell
 .\tools\models\neutts\download-inputs.ps1     # pinned inputs -> build/; gated HF files need $env:HF_TOKEN or ~/.cache/huggingface/token
-uv run --no-project --with numpy python -I tools/models/neutts/build_pack.py   # build/pack/ + runtime-manifest.json + build/catalog-files.json
+uv run --no-project --python 3.12 --with numpy --with onnx==1.19.1 python -I tools/models/neutts/build_pack.py   # build/pack/ + runtime-manifest.json + build/catalog-files.json
 ```
 
-- GGUF backbone and int8 NeuCodec decoder: unchanged upstream files (`source-input-manifest.json`).
+- GGUF backbone: unchanged upstream file (`source-input-manifest.json`).
+- Decoder `neucodec-decoder-int8-conv.onnx`: `build_pack.py` runs `quant_conv.py build/neucodec-decoder-int8.onnx build/pack/neucodec-decoder-int8-conv.onnx mm` on the upstream int8 decoder; output is byte-identical (sha256 e872608a…). The 9 fp32 Conv1d layers become im2col + per-channel int8 MatMul; the rest of the graph is unchanged. Gate: `docs/NEUTTS-PHONE-BENCH.md` ("Decoder int8 convs").
 - Voices: `samples/{dave,jo,emily,paul,sophie,steven}.pt` from neutts @ ac69851f (the README's English references) read without torch and written as integer text; transcripts copied. Locales by a CommonAccent ECAPA classifier (speechbrain `Jzuluaga/accent-id-commonaccent_ecapa`): dave, sophie, steven en-GB (clear); jo, emily, paul en-US (medium; jo/paul also score Australian/NZ). Not listened to.
 - eSpeak data: `phontab phonindex phondata intonations en_dict lang/gmw/en-US` from the neutts 1.4.1 wheel (eSpeak NG 69bfd1ef, the commit neutts' CMakeLists builds); the en-us voice needs nothing else.
-- Release upload: `gh release create neutts-nano-model-v1 build/pack/*` with attribution notes; verify anonymous 200 + SHA-256 of every asset.
+- Release upload: v1 was `gh release create neutts-nano-model-v1 build/pack/*`; v2 uploads only the `NEW_IN_V2` assets (`build_pack.py`) to `neutts-nano-model-v2`, with attribution notes; verify anonymous 200 + SHA-256 of every asset.
 
 ## Native runtime (`app/src/main/cpp`, built by Gradle `externalNativeBuild`)
 

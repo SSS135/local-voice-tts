@@ -622,19 +622,19 @@
       "id": "neutts-nano-en",
       "label": "NeuTTS Nano · English (experimental)",
       "backend": "llama-neutts",
-      "revision": "neutts-nano-q4-ac69851f-v1",
+      "revision": "neutts-nano-q4-ac69851f-v2",
       "network": false,
       "available": true,
       "latency": 500,
       "languages": ["en-GB", "en-US"],
       "license": "NeuTTS Open License 1.0",
       "licenseUrl": "https://huggingface.co/neuphonic/neutts-nano-q4-gguf/blob/main/LICENCE",
-      "licenseText": "NeuTTS Nano by Neuphonic Ltd (Q4_0 GGUF backbone, reference voices dave, jo, emily, paul, sophie, steven): NeuTTS Open License v1.0, free for research and limited commercial use, paid licence above Neuphonic's revenue threshold. NeuCodec int8 ONNX decoder: Apache-2.0. eSpeak NG English data: GPL-3.0-or-later. Files redistributed unchanged except the reference codes (torch tensors converted to integer text). Full attribution: https://github.com/SSS135/local-voice-tts/releases/tag/neutts-nano-model-v1",
+      "licenseText": "NeuTTS Nano by Neuphonic Ltd (Q4_0 GGUF backbone, reference voices dave, jo, emily, paul, sophie, steven): NeuTTS Open License v1.0, free for research and limited commercial use, paid licence above Neuphonic's revenue threshold. NeuCodec int8 ONNX decoder: Apache-2.0, modified by Local Voice (its 9 fp32 convolutions re-expressed as per-channel int8 matrix multiplies). eSpeak NG English data: GPL-3.0-or-later. Files redistributed unchanged except the reference codes (torch tensors converted to integer text) and the decoder convolutions. Full attribution: https://github.com/SSS135/local-voice-tts/releases/tag/neutts-nano-model-v2",
       "licenseAsset": "NEUTTS-LICENSE.txt",
       "description": "Six English voices cloned from Neuphonic's reference samples; 229M-parameter speech language model plus NeuCodec, 24 kHz. Heavy: about real time on a Pixel 7 Pro CPU, warms the phone. Processed on this device.",
       "config": {
         "model": "neutts-nano-Q4_0.gguf",
-        "decoder": "neucodec-decoder-int8.onnx",
+        "decoder": "neucodec-decoder-int8-conv.onnx",
         "espeakData": "espeak-ng-data",
         "espeakVoice": "en-us",
         "voiceDir": "voices",
@@ -657,7 +657,7 @@
       ],
       "files": [
         {"path":"neutts-nano-Q4_0.gguf","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/neutts-nano-Q4_0.gguf","bytes":194600640,"sha256":"85466ca06aeb487e5e8d0263367166e125969e3f4b07245db009aee223702c86"},
-        {"path":"neucodec-decoder-int8.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/neucodec-decoder-int8.onnx","bytes":312292102,"sha256":"3ddd9e56396e6029e0e948ac0255c89c803f981f23dcf4c154f50820bd74a6b3"},
+        {"path":"neucodec-decoder-int8-conv.onnx","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v2/neucodec-decoder-int8-conv.onnx","bytes":214829861,"sha256":"e872608a0fe564d14dafb0b48d8eb322fd1c3a1db2a77f3073638dddfc6a74f0"},
         {"path":"voices/dave.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-dave.codes","bytes":2180,"sha256":"ca58618b9ee515538050b092337f323a46b61975c65d52a6618d3d635f39020f"},
         {"path":"voices/dave.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-dave.txt","bytes":172,"sha256":"2b94a10f7bc2e181e29fa400267771bbc8f258e36ec19846607864906c4cd9fa"},
         {"path":"voices/jo.codes","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/voice-jo.codes","bytes":3820,"sha256":"f4a994f5fe48f03b69a87f1ae1631672d730bb7a6170c16a810be78ad5e58f25"},
@@ -677,7 +677,7 @@
         {"path":"espeak-ng-data/en_dict","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-en_dict","bytes":168208,"sha256":"0348fa93ffa5a102cde4c5098f3f7866ba448ed65d90e44818e974f32f41dd0e"},
         {"path":"espeak-ng-data/lang/gmw/en-US","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/espeak-lang-gmw-en-US","bytes":272,"sha256":"4c5f247313a4206d2d5b2b411b973a007b0617f0633add363a74717aba8d421c"},
         {"path":"LICENCE-NeuTTS-Open-1.0.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/LICENCE-NeuTTS-Open-1.0.txt","bytes":11084,"sha256":"2d398562eabe1e74541435859baaca9c9747bd040b5a14df85c6172e5671f14a"},
-        {"path":"ATTRIBUTION.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v1/ATTRIBUTION.txt","bytes":1193,"sha256":"9455341c74d429a339239ee1af1149c7cade4726b3f956d3879a912abf4d3a95"}
+        {"path":"ATTRIBUTION.txt","url":"https://github.com/SSS135/local-voice-tts/releases/download/neutts-nano-model-v2/ATTRIBUTION.txt","bytes":1586,"sha256":"c2474b33914ca8372493897142b0f1d1fb4c57b7d033a18131754611843543dc"}
       ]
     }
   ]

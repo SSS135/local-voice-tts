@@ -26,7 +26,7 @@
 | PocketTTS English | English (UK) | 1 | 120.7 MiB | CC-BY-4.0 |
 | Shtorm Russian | Russian | 1 | 419.7 MiB | CC-BY-4.0 |
 | Silero v5.6 | Russian | 5 | 152.9 MiB | CC BY-NC-SA 4.0, **non-commercial** |
-| NeuTTS Nano *(experimental)* | English (US/UK) | 6 | 484.2 MiB | NeuTTS Open License 1.0 |
+| NeuTTS Nano *(experimental)* | English (US/UK) | 6 | 391.3 MiB | NeuTTS Open License 1.0 |
 | Microsoft Edge *(online, opt-in)* | 142 languages and regions | 322 | none | Microsoft service terms |
 
 ## Install and set up

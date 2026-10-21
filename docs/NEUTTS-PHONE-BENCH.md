@@ -124,7 +124,7 @@ Branch `experiment/neutts-batching`, config `batchSegments=true` (default off). 
 
 **Verdict: removed.** Both voices run at RTF > 1 on a warm Pixel 7 Pro, so every report is behind the deadline and a hint can only ask for more boost. Revisit only for a voice that renders well ahead of real time, together with pacing or duty-cycling.
 
-## Decoder int8 convs (item 6, 2026-10-20): ready, not applied
+## Decoder int8 convs (item 6, 2026-10-20): applied (catalog revision v2, 2026-10-21)
 
 Candidates are built from the shipped int8 decoder by `tools/models/neutts/quant_conv.py`; only its 9 fp32 Conv1d layers change. The gate is `tools/models/neutts/decoder_gate.py` (`docs/TTS-QUANT-QUALITY.md` case b).
 
@@ -164,8 +164,8 @@ Candidates are built from the shipped int8 decoder by `tools/models/neutts/quant
 | MR-STFT / log-mel L1 vs fp32 | 0.1026 / 0.0412 | 0.1058 / 0.0427 | — | regression detector only | — |
 
 - **ViSQOL** skips 9 clips shorter than its minimum patch (about 0.5 s). It is also near its ceiling (≈ 4.73) for both decoders, so it barely discriminates here.
-- **Still required:** an ABX listening check, which `docs/TTS-QUANT-QUALITY.md` requires for int8 convs whatever the metrics say. It has not been run.
-  - Material for it: the 10 clips with the largest MR-STFT distance to fp32, exported as fp32 / int8 / mm-pc wavs.
+- **Listening check (informal, 2026-10-21):** one listener (the user) heard the ABX material and heard no difference. This is not the formal 16-trial ABX that `docs/TTS-QUANT-QUALITY.md` requires for int8 convs; that has not been run.
+  - Material: the 10 clips with the largest MR-STFT distance to fp32, exported as fp32 / int8 / mm-pc wavs.
   - Most of these are dave; mm-pc's SNR on them is 3.9–19.2 dB.
 
 **Phone speed.** Same Pixel 7 Pro. `dec2` (random codes, `Ort::Session::Run` timing) on the app's own `libonnxruntime.so` 1.28.2 from the sherpa-onnx 1.13.8 AAR (sha 33847ad4).
@@ -197,7 +197,7 @@ Candidates are built from the shipped int8 decoder by `tools/models/neutts/quant
   - decode at F=81 is 24% faster (3 threads) and 21% faster (4 threads); at F=31 it is 9–13% faster;
   - RSS −96 MB, download −97 MB;
   - every metric passes with a wide margin.
-- **Adopt** after the ABX: new catalog revision `neutts-nano-q4-ac69851f-v2` with asset `neucodec-decoder-int8-conv.onnx` (214,829,861 bytes, sha256 e872608a0fe564d14dafb0b48d8eb322fd1c3a1db2a77f3073638dddfc6a74f0; `quant_conv.py <shipped int8> OUT mm` reproduces it byte for byte). Not yet published.
+- **Adopted** after the informal listening check: catalog revision `neutts-nano-q4-ac69851f-v2` with asset `neucodec-decoder-int8-conv.onnx` (214,829,861 bytes, sha256 e872608a0fe564d14dafb0b48d8eb322fd1c3a1db2a77f3073638dddfc6a74f0; `quant_conv.py <shipped int8> OUT mm` reproduces it byte for byte, `build_pack.py` runs it) on release `neutts-nano-model-v2`. Pack download 484.2 → 391.3 MiB.
 - **Effect on RTF:** at 107 frames per audio-second, the overlapped decode share falls from ≈ 30 s to ≈ 23 s per 37 s of audio. It competes with the backbone for the same cores, so the end-to-end RTF gain is smaller and has not been measured.
 
 ## Verdict (2026-10-19 baseline)

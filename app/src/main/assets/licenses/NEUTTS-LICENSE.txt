@@ -3,15 +3,17 @@ Licence: NeuTTS Open License v1.0 (full text below; also LICENCE-NeuTTS-Open-1.0
 Free for research and limited commercial use; a paid Neuphonic licence is required for commercial deployments
 by entities at or above the licence's revenue threshold.
 
-Files (redistributed unchanged from the LocalVoice GitHub release neutts-nano-model-v1):
-  neutts-nano-Q4_0.gguf       neuphonic/neutts-nano-q4-gguf @ d775fb6ff95c60a076c68994d9f084473ad9fb86
-  neucodec-decoder-int8.onnx  neuphonic/neucodec-onnx-decoder-int8 @ d4b449d34211ffe3b5efc57fa464b37393f8ce7f (Apache-2.0)
-  voices/*                    samples dave, jo, emily, paul, sophie, steven from neuphonic/neutts @ ac69851f
-                              (reference codes converted from torch tensors to integer text; values unchanged)
-  espeak-ng-data/*            eSpeak NG 69bfd1ef data (GPL-3.0-or-later), English subset, from the neutts 1.4.1 wheel
+Files (from the LocalVoice GitHub releases neutts-nano-model-v1 and, for the decoder, neutts-nano-model-v2):
+  neutts-nano-Q4_0.gguf            neuphonic/neutts-nano-q4-gguf @ d775fb6ff95c60a076c68994d9f084473ad9fb86, unchanged
+  neucodec-decoder-int8-conv.onnx  modified from neuphonic/neucodec-onnx-decoder-int8 @ d4b449d34211ffe3b5efc57fa464b37393f8ce7f
+                                   (Apache-2.0, retained): its 9 Conv1d layers are re-expressed as im2col + per-channel
+                                   int8 MatMul; the rest of the graph is unchanged
+  voices/*                         samples dave, jo, emily, paul, sophie, steven from neuphonic/neutts @ ac69851f
+                                   (reference codes converted from torch tensors to integer text; values unchanged)
+  espeak-ng-data/*                 eSpeak NG 69bfd1ef data (GPL-3.0-or-later), English subset, from the neutts 1.4.1 wheel
 
 Changes by Local Voice (https://github.com/SSS135/local-voice-tts, tools/models/neutts): format conversion of
-the reference codes only. Neuphonic's optional Perth watermark is not applied.
+the reference codes; int8 re-expression of the decoder's Conv1d layers (quant_conv.py). Neuphonic's optional Perth watermark is not applied.
 
 ----------------------------------------------------------------------------------------------------------------
 NeuTTS License 
